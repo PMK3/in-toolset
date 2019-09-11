@@ -96,10 +96,15 @@ class ItemDragger:
 				for item, base in zip(self.items, self.itemBase):
 					item.setPos(base)
 					item.setInvalid(False)
-					
+		
+		for item in self.items:
+			item.setZValue(0)
+		
 		self.reset()
 				
 	def setItems(self, items):
+		for item in items:
+			item.setZValue(1)
 		self.items = items
 		self.itemBase = [item.pos() for item in items]
 		
