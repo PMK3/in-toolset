@@ -23,20 +23,26 @@ class PetriNet:
 	def __init__(self):
 		self.nextPlaceId = 0
 		self.nextTransitionId = 0
-		self.nextPlaceName = "A"
-		self.nextTransitionName = "a"
 		self.places = {}
 		self.transitions = {}
 
-	def addPlace(self, x, y):
-		self.places[self.nextPlaceId] = Place(self.nextPlaceName, x, y))
+	def addPlace(self, name, x, y):
+		id = self.nextPlaceId
+		self.places[id] = Place(name, x, y))
 		self.nextPlaceId += 1
-		self.nextPlaceName += 1
+		return id
 
-	def addTransition(self, x, y):
-		self.transitions[self.nextTransitionId].append(Transition(self.nextTransitionName, x, y))
+	def addTransition(self, name, x, y):
+		id = self.nextPlaceId
+		elf.transitions[id].append(Transition(name, x, y))
 		self.nextTransitionId += 1
-		self.nextTransitionName += 1
+		return id
+
+	def removePlace(self, id):
+		del self.places[id]
+
+	def removeTransition(self, id):
+		del self.transitions[id]
 
 	def addArrowPlaceToTransition(self, placeId, transitionId):
 		self.places[placeId].output += [transitionId]
