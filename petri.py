@@ -28,13 +28,13 @@ class PetriNet:
 
 	def addPlace(self, name, x, y):
 		id = self.nextPlaceId
-		self.places[id] = Place(name, x, y))
+		self.places[id] = Place(name, x, y)
 		self.nextPlaceId += 1
 		return id
 
 	def addTransition(self, name, x, y):
 		id = self.nextPlaceId
-		elf.transitions[id].append(Transition(name, x, y))
+		elf.transitions[id] = Transition(name, x, y)
 		self.nextTransitionId += 1
 		return id
 
