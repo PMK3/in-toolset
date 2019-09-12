@@ -3,8 +3,11 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from ui.menu import MenuBar
+from ui import settings
+import petri
 import math
 import sys
+import os
 
 
 GRID_SIZE = 20
@@ -123,6 +126,14 @@ class PetriScene(QGraphicsScene):
 		self.placedItem = None
 		self.dragButton = None
 		
+	def setProject(self, project):
+		self.project = project
+		self.reloadProject()
+		
+	def reloadProject(self):
+		self.clear()
+		#TODO: Load net from project
+		
 	def selectAll(self):
 		for item in self.items():
 			if isinstance(item, PetriNode):
@@ -229,12 +240,88 @@ class MainWindow(QMainWindow):
 		self.view = PetriView(self.scene)
 		self.setCentralWidget(self.view)
 		
+		self.createProject()
+		
 		menuBar = MenuBar()
+		menuBar.file.new.triggered.connect(self.handleNew)
+		menuBar.file.open.triggered.connect(self.handleOpen)
+		menuBar.file.save.triggered.connect(self.handleSave)
+		menuBar.file.saveAs.triggered.connect(self.handleSaveAs)
 		menuBar.file.quit.triggered.connect(self.close)
 		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
 		self.setMenuBar(menuBar)
 		
-		self.setWindowTitle("Petri nets")
+		self.updateWindowTitle()
+		
+	def closeEvent(self, e):
+		if self.checkUnsaved():
+			e.accept()
+		else:
+			e.ignore()
+			
+	def updateWindowTitle(self):
+		name = self.project.filename
+		if name is None:
+			name = "untitled"
+		self.setWindowTitle("Petri - %s%s" %(name, "*" * self.project.unsaved))
+			
+	def createProject(self, filename=None):
+		self.project = petri.Project()
+		self.project.filenameChanged.connect(self.updateWindowTitle)
+		self.project.unsavedChanged.connect(self.updateWindowTitle)
+		self.scene.setProject(self.project)
+		
+		if filename:
+			self.project.load(filename)
+			
+	def checkUnsaved(self):
+		if self.project.unsaved:
+			msg = "This model has unsaved changes. Do you want to save them?"
+			buttons = QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel
+			result = QMessageBox.question(self, "Save changes?", msg, buttons)
+			if result == QMessageBox.Save: return self.handleSave()
+			elif result == QMessageBox.Discard: return True
+			else: return False
+		return True
+		
+	def handleNew(self):
+		if self.checkUnsaved():
+			self.createProject()
+			return True
+		return False
+	
+	def handleOpen(self):
+		if not self.checkUnsaved():
+			return False
+		
+		filename, filter = QFileDialog.getOpenFileName(
+			self, "Load model", settings.getLastPath(),
+			"Workflow model (*.flow);;All files (*.*)"
+		)
+		if not filename:
+			return False
+		
+		settings.setLastPath(os.path.dirname(filename))
+		self.createProject(filename)
+		return True
+		
+	def handleSave(self):
+		if not self.project.filename:
+			return self.handleSaveAs()
+		self.project.save(self.project.filename)
+		return True
+		
+	def handleSaveAs(self):
+		filename, filter = QFileDialog.getSaveFileName(
+			self, "Save model", settings.getLastPath(),
+			"Workflow model (*.flow);;All files (*.*)"
+		)
+		if not filename:
+			return False
+		
+		settings.setLastPath(os.path.dirname(filename))
+		self.project.save(filename)
+		return True
 
 
 class Application:
