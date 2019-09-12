@@ -25,9 +25,9 @@ class PetriNet:
 		self.transitions.append(Transition(x, y))
 
 	def addArrowPlaceToTransition(self, placeId, transitionId):
-		self.places[placeId].output = transitionId
-		self.transitions[transitionId].input = placeId
+		self.places[placeId].output += [transitionId]
+		self.transitions[transitionId].input +=[placeId]
 
 	def addArrowTransitionToPlace(self, transitionId, placeId):
-		self.places[placeId].output = transitionId
-		self.transitions[transitionId].input = placeId
+		self.places[placeId].output += [transitionId]
+		self.transitions[transitionId].input += [placeId]
