@@ -1,0 +1,17 @@
+
+{
+	"place": {
+		"rect": [-20, -20, 40, 40],
+		"elements": [
+			{"type": "brush", "color": "white"},
+			{"type": "circle", "x": 0, "y": 0, "r": 20}
+		]
+	},
+	"transition": {
+		"rect": [-20, -20, 40, 40],
+		"elements": [
+			{"type": "brush", "color": "white"},
+			{"type": "rect", "x": -20, "y": -20, "w": 40, "h": 40}
+		]
+	}
+}

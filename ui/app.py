@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from ui.menu import MenuBar
 from ui import settings
 import petri
+import json
 import math
 import sys
 import os
@@ -15,15 +16,80 @@ GRID_SIZE = 20
 
 def round(value, base):
 	return math.floor(value / base + 0.5) * base
+	
+	
+class ShapeElement:
+	colors = {
+		"black": Qt.black,
+		"white": Qt.white
+	}
+	
+	def load(self, data):
+		self.type = data["type"]
+		if self.type == "line":
+			self.x1, self.y1 = data["x1"], data["y1"]
+			self.x2, self.y2 = data["x2"], data["y2"]
+		elif self.type == "arc":
+			self.x, self.y = data["x"], data["y"]
+			self.w, self.h = data["w"], data["h"]
+			self.start, self.span = data["start"], data["span"]
+		elif self.type == "circle":
+			self.x, self.y = data["x"], data["y"]
+			self.r = data["r"]
+		elif self.type == "rect":
+			self.x, self.y = data["x"], data["y"]
+			self.w, self.h = data["w"], data["h"]
+			
+		elif self.type == "pen":
+			self.width = data["width"]
+		elif self.type == "brush":
+			self.color = self.colors[data["color"]]
+	
+	
+class Shape:
+	def __init__(self):
+		self.rect = [-80, -80, 160, 160]
+		self.elements = []
+		
+	def load(self, data):
+		self.rect = data["rect"]
+		
+		self.elements = []
+		for element in data["elements"]:
+			ele = ShapeElement()
+			ele.load(element)
+			self.elements.append(ele)
+			
+	def draw(self, painter):
+		painter.save()
+		for element in self.elements:
+			if element.type == "line":
+				painter.drawLine(element.x1, element.y1, element.x2, element.y2)
+			elif element.type == "arc":
+				painter.drawArc(element.x, element.y, element.w, element.h, element.start * 16, element.span * 16)
+			elif element.type == "circle":
+				painter.drawEllipse(QPointF(element.x, element.y), element.r, element.r)
+			elif element.type == "rect":
+				painter.drawRect(element.x, element.y, element.w, element.h)
+				
+			elif element.type == "pen":
+				pen = QPen()
+				pen.setWidth(element.width)
+				painter.setPen(pen)
+			elif element.type == "brush":
+				brush = QBrush(element.color)
+				painter.setBrush(brush)
+		painter.restore()
 
 
 class PetriNode(QGraphicsItem):
-	def __init__(self, selectable):
+	def __init__(self, shape, selectable):
 		super().__init__()
 		self.setFlag(QGraphicsItem.ItemIsSelectable, selectable)
 		self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
 		
 		self.invalid = False
+		self.shape = shape
 		
 	def setInvalid(self, invalid):
 		self.invalid = invalid
@@ -46,26 +112,33 @@ class PetriNode(QGraphicsItem):
 		return super().itemChange(change, value)
 		
 	def boundingRect(self):
-		return QRectF(-22, -22, 44, 44)
+		x, y, w, h = self.shape.rect
+		return QRectF(x - 2, y - 2, w + 4, h + 4)
 		
 	def paint(self, painter, option, widget):
-		rect = QRectF(-20, -20, 40, 40)
-		
-		painter.setBrush(QBrush(Qt.white))
-		painter.drawEllipse(rect)
+		self.shape.draw(painter)
 		
 		if self.isSelected():
 			pen = QPen(Qt.blue)
 			pen.setWidth(2)
 			painter.setPen(pen)
-			painter.setBrush(Qt.NoBrush)
-			painter.drawRect(rect)
+			painter.drawRect(*self.shape.rect)
 			
 		if self.invalid:
 			brush = QBrush(Qt.red, Qt.BDiagPattern)
 			painter.setBrush(brush)
 			painter.setPen(Qt.NoPen)
-			painter.drawRect(rect)
+			painter.drawRect(*self.shape.rect)
+			
+	
+class PlaceNode(PetriNode):
+	def __init__(self, shapes, selectable):
+		super().__init__(shapes["place"], selectable)
+		
+		
+class TransitionNode(PetriNode):
+	def __init__(self, shapes, selectable):
+		super().__init__(shapes["transition"], selectable)
 			
 			
 class ItemDragger:
@@ -122,6 +195,15 @@ class PetriScene(QGraphicsScene):
 	def __init__(self, parent):
 		super().__init__(-10000, -10000, 20000, 20000, parent)
 		
+		self.shapes = {}
+		with open("data/shapes.json") as f:
+			shapes = json.load(f)
+		
+		for name, data in shapes.items():
+			shape = Shape()
+			shape.load(data)
+			self.shapes[name] = shape
+		
 		self.dragger = ItemDragger()
 		self.placedItem = None
 		self.dragButton = None
@@ -177,7 +259,7 @@ class PetriScene(QGraphicsScene):
 			elif e.button() == Qt.RightButton:
 				self.dragButton = Qt.RightButton
 				
-				self.placedItem = PetriNode(False)
+				self.placedItem = PlaceNode(self.shapes, False)
 				self.placedItem.setPos(e.scenePos())
 				self.addItem(self.placedItem)
 				
@@ -200,7 +282,7 @@ class PetriScene(QGraphicsScene):
 				self.removeItem(self.placedItem)
 				if not self.placedItem.invalid:
 					#TODO: Add item to petri net
-					node = PetriNode(True)
+					node = PlaceNode(self.shapes, True)
 					node.setPos(e.scenePos())
 					self.addItem(node)
 				self.placedItem = None
