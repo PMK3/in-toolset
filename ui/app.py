@@ -210,11 +210,13 @@ class PetriScene(QGraphicsScene):
 		
 	def setProject(self, project):
 		self.project = project
-		self.reloadProject()
-		
-	def reloadProject(self):
+		self.project.net.placeAdded.connect(self.addPlace)
 		self.clear()
-		#TODO: Load net from project
+		
+	def addPlace(self, place):
+		p = PlaceNode(self.shapes, True)
+		p.setPos(place.x, place.y)
+		self.addItem(p)
 		
 	def selectAll(self):
 		for item in self.items():
@@ -281,10 +283,9 @@ class PetriScene(QGraphicsScene):
 			if self.placedItem:
 				self.removeItem(self.placedItem)
 				if not self.placedItem.invalid:
-					#TODO: Add item to petri net
-					node = PlaceNode(self.shapes, True)
-					node.setPos(e.scenePos())
-					self.addItem(node)
+					pos = e.scenePos()
+					place = petri.Place(pos.x(), pos.y())
+					self.project.net.addPlace(place)
 				self.placedItem = None
 			self.dragButton = None
 
