@@ -52,26 +52,18 @@ class Node(Object):
 		data["label"] = self.label
 		return data
 
+	def __repr__(self):
+		return json.dump(self.safe())
+
 
 class Place(Node):
 	def __init__(self, x=0, y=0):
 		super().__init__(x, y)
 		self.tokens = 0
-		
-	def __repr__(self):
-		return "(label: " + str(self.label) \
-			+ ", tokens: " + str(self.tokens) \
-			+ ", input: " + str(self.input) \
-			+ ", output: " + str(self.output) \
-			+ ")"
 
 
 class Transition(Node):
-	def __repr__(self):
-		return "(label: " + str(self.label) \
-			+ ", input: " + str(self.input) \
-			+ ", output: " + str(self.output) \
-			+ ")"
+	pass
 
 
 class PetriNet:
@@ -86,9 +78,7 @@ class PetriNet:
 		self.transitions = {}
 
 	def __repr__(self):
-		return "(places: " + str(self.places) \
-			+ ", transitions: " + str(self.transitions) \
-			+ ")"
+		return json.dump(self.safe())
 			
 	def load(self, data):
 		for place in data["places"]:
