@@ -80,35 +80,126 @@ class Shape:
 				brush = QBrush(element.color)
 				painter.setBrush(brush)
 		painter.restore()
+		
+		
+class ShapeStore:
+	def __init__(self):
+		self.shapes = {}
+		
+	def __getitem__(self, item):
+		return self.shapes[item]
+		
+	def load(self, filename):
+		with open(filename) as f:
+			shapes = json.load(f)
+		
+		for name, data in shapes.items():
+			shape = Shape()
+			shape.load(data)
+			self.shapes[name] = shape
+			
+			
+class ObjectType:
+	PLACE = 0
+	TRANSITION = 1
+			
+			
+class ObjectButton(QToolButton):
+	def __init__(self, type, shape):
+		super().__init__()
+		self.setFixedWidth(shape.rect[2] + 12)
+		self.setFixedHeight(shape.rect[3] + 12)
+		self.setCheckable(True)
+		self.shape = shape
+		self.type = type
+	
+	def paintEvent(self, e):
+		super().paintEvent(e)
+		
+		painter = QPainter()
+		painter.begin(self)
+		painter.translate(self.width() / 2, self.height() / 2)
+		self.shape.draw(painter)		
+		painter.end()
+			
+			
+class ObjectMenu(QToolBar):
+	def __init__(self, shapes):
+		super().__init__()
+		self.setFloatable(False)
+		
+		self.group = QButtonGroup(self)
+		self.addButton(ObjectType.PLACE, shapes["place"])
+		self.addButton(ObjectType.TRANSITION, shapes["transition"])
+		
+	def addButton(self, type, shape):
+		button = ObjectButton(type, shape)
+		button.clicked.connect(lambda: button.setChecked(True))
+		self.group.addButton(button)
+		self.addWidget(button)
+		
+	def currentItem(self):
+		button = self.group.checkedButton()
+		if button:
+			return button.type
+		return -1
+		
+		
+class ObjectState:
+	PLACING = 0
+	ACTIVE = 1
 
 
 class PetriNode(QGraphicsItem):
-	def __init__(self, shape, selectable):
+	def __init__(self, scene, obj, shape, state):
 		super().__init__()
-		self.setFlag(QGraphicsItem.ItemIsSelectable, selectable)
+		if state == ObjectState.ACTIVE:
+			self.setFlag(QGraphicsItem.ItemIsSelectable)
 		self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
 		
-		self.invalid = False
+		self.obj = obj
+		if state == ObjectState.ACTIVE:
+			self.obj.deleted.connect(self.removeFromScene)
+			self.obj.positionChanged.connect(self.updatePos)
+		
+		self.scene = scene
 		self.shape = shape
+		self.invalid = False
+
+		self.updatePos()
+		self.addToScene()
+	
+	def delete(self):
+		self.obj.delete()
 		
 	def setInvalid(self, invalid):
 		self.invalid = invalid
 		self.update()
 		
+	def removeFromScene(self):
+		self.scene.removeItem(self)
+
+	def addToScene(self):
+		self.scene.addItem(self)
+		
+	def updatePos(self):
+		self.setPos(self.obj.x, self.obj.y)
+		
 	def checkCollisions(self):
-		scene = self.scene()
-		if scene:
-			items = self.scene().collidingItems(self)
-			if any(isinstance(item, PetriNode) for item in items):
-				self.setInvalid(True)
-			else:
-				self.setInvalid(False)
+		items = self.scene.collidingItems(self)
+		if any(isinstance(item, PetriNode) for item in items):
+			self.setInvalid(True)
+		else:
+			self.setInvalid(False)
 		
 	def itemChange(self, change, value):
 		if change == QGraphicsItem.ItemPositionChange:
 			x = round(value.x(), GRID_SIZE)
 			y = round(value.y(), GRID_SIZE)
 			return QPointF(x, y)
+		if change == QGraphicsItem.ItemPositionHasChanged:
+			self.obj.move(value.x(), value.y())
+			return value
 		return super().itemChange(change, value)
 		
 	def boundingRect(self):
@@ -132,15 +223,17 @@ class PetriNode(QGraphicsItem):
 			
 	
 class PlaceNode(PetriNode):
-	def __init__(self, shapes, selectable):
-		super().__init__(shapes["place"], selectable)
+	def __init__(self, scene, obj, shapes, state):
+		super().__init__(scene, obj, shapes["place"], state)
+		self.type = ObjectType.PLACE
 		
 		
 class TransitionNode(PetriNode):
-	def __init__(self, shapes, selectable):
-		super().__init__(shapes["transition"], selectable)
-			
-			
+	def __init__(self, scene, obj, shapes, state):
+		super().__init__(scene, obj, shapes["transition"], state)
+		self.type = ObjectType.TRANSITION
+
+		
 class ItemDragger:
 	def __init__(self):
 		self.reset()
@@ -192,17 +285,11 @@ class ItemDragger:
 
 
 class PetriScene(QGraphicsScene):
-	def __init__(self, parent):
-		super().__init__(-10000, -10000, 20000, 20000, parent)
+	def __init__(self, toolbar, shapes):
+		super().__init__(-10000, -10000, 20000, 20000)
 		
-		self.shapes = {}
-		with open("data/shapes.json") as f:
-			shapes = json.load(f)
-		
-		for name, data in shapes.items():
-			shape = Shape()
-			shape.load(data)
-			self.shapes[name] = shape
+		self.toolbar = toolbar
+		self.shapes = shapes
 		
 		self.dragger = ItemDragger()
 		self.placedItem = None
@@ -211,12 +298,14 @@ class PetriScene(QGraphicsScene):
 	def setProject(self, project):
 		self.project = project
 		self.project.net.placeAdded.connect(self.addPlace)
+		self.project.net.transitionAdded.connect(self.addTransition)
 		self.clear()
 		
 	def addPlace(self, place):
-		p = PlaceNode(self.shapes, True)
-		p.setPos(place.x, place.y)
-		self.addItem(p)
+		PlaceNode(self, place, self.shapes, ObjectState.ACTIVE)
+		
+	def addTransition(self, transition):
+		TransitionNode(self, transition, self.shapes, ObjectState.ACTIVE)
 		
 	def selectAll(self):
 		for item in self.items():
@@ -228,6 +317,25 @@ class PetriScene(QGraphicsScene):
 			if isinstance(item, classes):
 				return item
 				
+	def createItem(self, pos):
+		type = self.toolbar.currentItem()
+		if type == ObjectType.PLACE:			
+			obj = petri.Place(pos.x(), pos.y())
+			item = PlaceNode(self, obj, self.shapes, ObjectState.PLACING)
+			item.checkCollisions()
+			return item
+		elif type == ObjectType.TRANSITION:
+			obj = petri.Transition(pos.x(), pos.y())
+			item = TransitionNode(self, obj, self.shapes, ObjectState.PLACING)
+			item.checkCollisions()
+			return item
+	
+	def placeItem(self, type, obj):
+		if type == ObjectType.PLACE:
+			self.project.net.addPlace(obj)
+		elif type == ObjectType.TRANSITION:
+			self.project.net.addTransition(obj)
+	
 	def drawBackground(self, painter, rect):
 		pen = QPen()
 		pen.setColor(Qt.gray)
@@ -242,8 +350,7 @@ class PetriScene(QGraphicsScene):
 		if e.key() == Qt.Key_Delete:
 			for item in self.selectedItems():
 				self.dragger.removeItem(item)
-				#TODO: Remove item from petri net
-				self.removeItem(item)
+				item.delete()
 			if self.placedItem:
 				self.placedItem.checkCollisions()
 		
@@ -261,14 +368,10 @@ class PetriScene(QGraphicsScene):
 			elif e.button() == Qt.RightButton:
 				self.dragButton = Qt.RightButton
 				
-				self.placedItem = PlaceNode(self.shapes, False)
-				self.placedItem.setPos(e.scenePos())
-				self.addItem(self.placedItem)
-				
-				self.placedItem.checkCollisions()
-				
-				self.dragger.init(e.scenePos(), False)
-				self.dragger.setItems([self.placedItem])
+				self.placedItem = self.createItem(e.scenePos())
+				if self.placedItem:
+					self.dragger.init(e.scenePos(), False)
+					self.dragger.setItems([self.placedItem])
 				
 				e.accept()
 				
@@ -283,9 +386,7 @@ class PetriScene(QGraphicsScene):
 			if self.placedItem:
 				self.removeItem(self.placedItem)
 				if not self.placedItem.invalid:
-					pos = e.scenePos()
-					place = petri.Place(pos.x(), pos.y())
-					self.project.net.addPlace(place)
+					self.placeItem(self.placedItem.type, self.placedItem.obj)
 				self.placedItem = None
 			self.dragButton = None
 
@@ -310,16 +411,23 @@ class PetriView(QGraphicsView):
 			self.scale(zoom, zoom)
 			newPos = self.mapToScene(e.pos())
 			delta = newPos - prevPos
-			self.translate(delta.x(), delta.y())
-
-
+			self.translate(delta.x(), delta.y())		
+		
+		
 class MainWindow(QMainWindow):
 	def __init__(self):
 		super().__init__()
+		self.setContextMenuPolicy(Qt.PreventContextMenu)
+		
+		shapes = ShapeStore()
+		shapes.load("data/shapes.json")
 		
 		self.resize(1080, 720)
 		
-		self.scene = PetriScene(self)
+		objectMenu = ObjectMenu(shapes)
+		self.addToolBar(Qt.LeftToolBarArea, objectMenu)
+		
+		self.scene = PetriScene(objectMenu, shapes)
 		self.view = PetriView(self.scene)
 		self.setCentralWidget(self.view)
 		
@@ -356,6 +464,8 @@ class MainWindow(QMainWindow):
 		
 		if filename:
 			self.project.load(filename)
+			
+		self.updateWindowTitle()
 			
 	def checkUnsaved(self):
 		if self.project.unsaved:

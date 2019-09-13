@@ -3,27 +3,61 @@ from signal import Signal
 import json
 
 
-class Place:
-	def __init__(self, x=0, y=0, label=""):
+class Object:
+	def __init__(self):
+		self.changed = Signal()
+		self.deleted = Signal()
+		self.active = True
+		self.id = None
+		
+	def delete(self):
+		self.active = False
+		self.deleted.emit()
+		self.changed.emit()
+		
+	def load(self, data):
+		self.id = data["id"]
+	
+	def save(self):
+		return {"id": self.id}
+
+
+class Node(Object):
+	def __init__(self, x=0, y=0):
+		super().__init__()
+		self.positionChanged = Signal()
+		
 		self.x = x
 		self.y = y
-		self.label = label
-		self.tokens = 0
+		self.label = ""
 		self.input = []
 		self.output = []
 		
+	def move(self, x, y):
+		self.x = x
+		self.y = y
+		self.positionChanged.emit()
+		self.changed.emit()
+		
 	def load(self, data):
+		super().load(data)
 		self.x = data["x"]
 		self.y = data["y"]
 		self.label = data["label"]
 	
 	def save(self):
-		return {
-			"x": self.x,
-			"y": self.y,
-			"label": self.label
-		}
+		data = super().save()
+		data["x"] = self.x
+		data["y"] = self.y
+		data["label"] = self.label
+		return data
 
+
+class Place(Node):
+	def __init__(self, x=0, y=0):
+		super().__init__(x, y)
+		self.tokens = 0
+		
 	def __repr__(self):
 		return "(label: " + str(self.label) \
 			+ ", tokens: " + str(self.tokens) \
@@ -32,16 +66,9 @@ class Place:
 			+ ")"
 
 
-class Transition:
-	def __init__(self, name, x, y):
-		self.name = name
-		self.input = []
-		self.output = []
-		self.x = x
-		self.y = y
-
+class Transition(Node):
 	def __repr__(self):
-		return "(name: " + str(self.name) \
+		return "(label: " + str(self.label) \
 			+ ", input: " + str(self.input) \
 			+ ", output: " + str(self.output) \
 			+ ")"
@@ -49,7 +76,9 @@ class Transition:
 
 class PetriNet:
 	def __init__(self):
+		self.changed = Signal()
 		self.placeAdded = Signal()
+		self.transitionAdded = Signal()
 		
 		self.nextPlaceId = 0
 		self.nextTransitionId = 0
@@ -66,35 +95,49 @@ class PetriNet:
 			obj = Place()
 			obj.load(place)
 			self.addPlace(obj)
+		for transition in data["transitions"]:
+			obj = Transition()
+			obj.load(transition)
+			self.addTransition(obj)
 		
 	def save(self):
 		places = []
 		for place in self.places.values():
-			places.append(place.save())
+			if place.active:
+				places.append(place.save())
+				
+		transitions = []
+		for transition in self.transitions.values():
+			if transition.active:
+				transitions.append(transition.save())
 		
 		data = {
-			"places": places
+			"places": places,
+			"transitions": transitions
 		}
 		return data
 
 	def addPlace(self, place):
-		id = self.nextPlaceId
-		self.places[id] = place
-		self.nextPlaceId += 1
+		if place.id is None:
+			place.id = self.nextPlaceId
+			self.nextPlaceId += 1
+			
+		place.changed.connect(self.changed.emit)
+		
+		self.places[place.id] = place
 		self.placeAdded.emit(place)
-		return id
+		self.changed.emit()
 
-	def addTransition(self, name, x, y):
-		id = self.nextTransitionId
-		self.transitions[id] = Transition(name, x, y)
-		self.nextTransitionId += 1
-		return id
-
-	def removePlace(self, id):
-		del self.places[id]
-
-	def removeTransition(self, id):
-		del self.transitions[id]
+	def addTransition(self, transition):
+		if transition.id is None:
+			transition.id = self.nextTransitionId
+			self.nextTransitionId += 1
+			
+		transition.changed.connect(self.changed.emit)
+		
+		self.transitions[transition.id] = transition
+		self.transitionAdded.emit(transition)
+		self.changed.emit()
 
 	def addArrowPlaceToTransition(self, placeId, transitionId):
 		output = self.places[placeId].output
@@ -135,6 +178,7 @@ class Project:
 		self.unsavedChanged = Signal()
 
 		self.net = PetriNet()
+		self.net.changed.connect(self.setUnsaved)
 		self.filename = None
 		self.unsaved = False
 
@@ -143,7 +187,7 @@ class Project:
 			self.filename = filename
 			self.filenameChanged.emit()
 
-	def setUnsaved(self, unsaved):
+	def setUnsaved(self, unsaved=True):
 		if self.unsaved != unsaved:
 			self.unsaved = unsaved
 			self.unsavedChanged.emit()
@@ -159,7 +203,7 @@ class Project:
 	def save(self, filename):
 		data = self.net.save()
 		with open(filename, "w") as f:
-			json.dump(data, f)
+			json.dump(data, f, indent="\t")
 		
 		self.setFilename(filename)
 		self.setUnsaved(False)
