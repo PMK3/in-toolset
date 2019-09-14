@@ -53,7 +53,7 @@ class Node(Object):
 		return data
 
 	def __repr__(self):
-		return json.dumps(self.safe())
+		return json.dumps(self.save())
 
 
 class Place(Node):
@@ -78,7 +78,7 @@ class PetriNet:
 		self.transitions = {}
 
 	def __repr__(self):
-		return json.dumps(self.safe())
+		return json.dumps(self.save())
 			
 	def load(self, data):
 		for place in data["places"]:
