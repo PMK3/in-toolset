@@ -66,6 +66,23 @@ class Transition(Node):
 	pass
 
 
+class Arrow(Node):
+	def __init__(self, place, transition):
+		super().__init__()
+		self.place = place
+		self.transition = transition
+
+	def load(self, data):
+		super().load(data)
+		self.place = data["place"]
+		self.transition = data["transition"]
+
+	def save(self):
+		data = super().save()
+		data["place"] = self.place
+		data["transition"] = self.place
+
+
 class PetriNet:
 	def __init__(self):
 		self.changed = Signal()
