@@ -127,15 +127,11 @@ class PetriNet:
 
 		
 	def save(self):
-		places = []
-		for place in self.places.values():
-			if place.active:
-				places.append(place.save())
-				
-		transitions = []
-		for transition in self.transitions.values():
-			if transition.active:
-				transitions.append(transition.save())
+		def safeIfActive(lst):
+			return map(lambda x: x.save(), filter(lambda x: x.active, lst))
+
+		places = safeIfActive(self.places.values())
+		transitions = safeIfActive(self.transitions.values())
 
 		dependencies = []
 		outputs = []
