@@ -104,14 +104,14 @@ class PetriNet:
 		dependencies = []
 		outputs = []
 		for transition in self.transitions.values():
-			for output_id in transition.outputs:
+			for outputId in transition.outputs:
 				outputs.append({
 					"origin": transition.id,
-					"destination": output_id})
-			for input_id in transition.inputs:
+					"destination": outputId})
+			for inputId in transition.inputs:
 				dependencies.append({
-					"origin": input_id,
-					"destination": transition_id})
+					"origin": inputId,
+					"destination": transition.id})
 
 		data = {
 			"places": places,
