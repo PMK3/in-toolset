@@ -16,8 +16,8 @@ GRID_SIZE = 20
 
 def round(value, base):
 	return math.floor(value / base + 0.5) * base
-	
-	
+
+
 class ShapeElement:
 	colors = {
 		"black": Qt.black,
@@ -60,7 +60,14 @@ class Shape:
 			ele.load(element)
 			self.elements.append(ele)
 			
-	def draw(self, painter):
+	def adjustColor(self, color, hover):
+		color = QColor(color)
+		rgba = color.rgba()
+		if hover:
+			rgba ^= 0x555555
+		return QColor(rgba)
+			
+	def draw(self, painter, hover=False):
 		painter.save()
 		painter.setRenderHint(QPainter.Antialiasing)
 		for element in self.elements:
@@ -79,7 +86,7 @@ class Shape:
 				pen.setCapStyle(Qt.RoundCap)
 				painter.setPen(pen)
 			elif element.type == "brush":
-				brush = QBrush(element.color)
+				brush = QBrush(self.adjustColor(element.color, hover))
 				painter.setBrush(brush)
 		painter.restore()
 		
@@ -159,6 +166,7 @@ class PetriNode(QGraphicsItem):
 		super().__init__()
 		if state == ObjectState.ACTIVE:
 			self.setFlag(QGraphicsItem.ItemIsSelectable)
+			self.setAcceptHoverEvents(True)
 		self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
 		
 		self.obj = obj
@@ -169,6 +177,7 @@ class PetriNode(QGraphicsItem):
 		self.scene = scene
 		self.shape = shape
 		self.invalid = False
+		self.hover = False
 
 		self.updatePos()
 		self.addToScene()
@@ -196,6 +205,14 @@ class PetriNode(QGraphicsItem):
 		else:
 			self.setInvalid(False)
 		
+	def hoverEnterEvent(self, e):
+		self.hover = True
+		self.update()
+		
+	def hoverLeaveEvent(self, e):
+		self.hover = False
+		self.update()
+	
 	def itemChange(self, change, value):
 		if change == QGraphicsItem.ItemPositionChange:
 			x = round(value.x(), GRID_SIZE)
@@ -211,7 +228,7 @@ class PetriNode(QGraphicsItem):
 		return QRectF(x - 2, y - 2, w + 4, h + 4)
 		
 	def paint(self, painter, option, widget):
-		self.shape.draw(painter)
+		self.shape.draw(painter, self.hover)
 		
 		if self.isSelected():
 			pen = QPen(Qt.blue)
