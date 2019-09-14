@@ -13,5 +13,14 @@
 			{"type": "brush", "color": "white"},
 			{"type": "rect", "x": -20, "y": -20, "w": 40, "h": 40}
 		]
+	},
+	"arrow": {
+		"rect": [-20, -20, 40, 40],
+		"elements": [
+			{"type": "pen", "width": 4},
+			{"type": "line", "x1": -12, "y1": 0, "x2": 12, "y2": 0},
+			{"type": "line", "x1": 12, "y1": 0, "x2": 0, "y2": 10},
+			{"type": "line", "x1": 12, "y1": 0, "x2": 0, "y2": -10}
+		]
 	}
 }

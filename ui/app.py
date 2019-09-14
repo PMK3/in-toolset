@@ -62,6 +62,7 @@ class Shape:
 			
 	def draw(self, painter):
 		painter.save()
+		painter.setRenderHint(QPainter.Antialiasing)
 		for element in self.elements:
 			if element.type == "line":
 				painter.drawLine(element.x1, element.y1, element.x2, element.y2)
@@ -75,6 +76,7 @@ class Shape:
 			elif element.type == "pen":
 				pen = QPen()
 				pen.setWidth(element.width)
+				pen.setCapStyle(Qt.RoundCap)
 				painter.setPen(pen)
 			elif element.type == "brush":
 				brush = QBrush(element.color)
@@ -102,6 +104,7 @@ class ShapeStore:
 class ObjectType:
 	PLACE = 0
 	TRANSITION = 1
+	ARROW = 2
 			
 			
 class ObjectButton(QToolButton):
@@ -131,6 +134,7 @@ class ObjectMenu(QToolBar):
 		self.group = QButtonGroup(self)
 		self.addButton(ObjectType.PLACE, shapes["place"])
 		self.addButton(ObjectType.TRANSITION, shapes["transition"])
+		self.addButton(ObjectType.ARROW, shapes["arrow"])
 		
 	def addButton(self, type, shape):
 		button = ObjectButton(type, shape)
