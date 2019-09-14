@@ -111,6 +111,8 @@ class PetriNet:
 
 		nextPlaceId = getNextId(data["places"])
 		nextTransitionId = getNextId(data["transitions"])
+		nextDependencyId = getNextId(data["dependencies"])
+		nextOutputs = getNextId(data["outputs"])
 
 		for place in data["places"]:
 			obj = Place()
@@ -121,9 +123,13 @@ class PetriNet:
 			obj.load(transition)
 			self.addTransition(obj)
 		for dependency in data["dependencies"]:
-			self.addArrowPlaceToTransition(dependency["place"], dependency["transition"])
+			obj = Dependency()
+			obj.load(dependency)
+			self.addDependency(obj)
 		for output in data["outputs"]:
-			self.addArrowTransitionToPlace(dependency["transition"], dependency["place"])
+			obj = Output()
+			obj.load(output)
+			self.addOutput(obj)
 
 		
 	def save(self):
@@ -132,18 +138,8 @@ class PetriNet:
 
 		places = safeIfActive(self.places.values())
 		transitions = safeIfActive(self.transitions.values())
-
-		dependencies = []
-		outputs = []
-		for transition in self.transitions.values():
-			for outputId in transition.outputs:
-				outputs.append({
-					"transition": transition.id,
-					"place": outputId})
-			for inputId in transition.inputs:
-				dependencies.append({
-					"transition": transition.id,
-					"place": inputId})
+		dependencies = safeIfActive(self.dependencies.values())
+		outputs = safeIfActive(self.outputs.values())
 
 		data = {
 			"places": places,
