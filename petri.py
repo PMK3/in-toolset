@@ -175,6 +175,22 @@ class PetriNet:
 		self.transitionAdded.emit(transition)
 		self.changed.emit()
 
+	def getDependency(self, place, transition):
+		results = filter(
+			lambda x: x.place == place and x.transition == transition,
+			self.dependencies.values())
+		if results:
+			return results[0]
+		return None
+
+	def getOutput(self, place, transition):
+		results = filter(
+			lambda x: x.place == place and x.transition == transition,
+			self.outputs.values())
+		if results:
+			return results[0]
+		return None
+
 	def addArrowPlaceToTransition(self, placeId, transitionId):
 		output = self.places[placeId].output
 		input = self.transitions[transitionId].input
