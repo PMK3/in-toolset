@@ -225,6 +225,16 @@ class PetriNet:
 		self.outputAdded.emit(output)
 		self.changed.emit()
 
+	def removeDependency(self, placeId, transitionId):
+		dependency = self.getDependency(self, placeId, transitionId)
+		if dependency:
+			self.outputs.remove(output.id)
+
+	def removeOutput(self, placeId, transitionId):
+		output = self.getOutput(placeId, transitionId)
+		if output:
+			self.outputs.remove(output.id)
+
 	def addArrowPlaceToTransition(self, placeId, transitionId):
 		output = self.places[placeId].output
 		input = self.transitions[transitionId].input
