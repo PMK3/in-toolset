@@ -132,7 +132,7 @@ class PetriNet:
 		
 	def save(self):
 		def safeIfActive(lst):
-			return map(lambda x: x.save(), filter(lambda x: x.active, lst))
+			return list(map(lambda x: x.save(), filter(lambda x: x.active, lst)))
 
 		places = safeIfActive(self.places.values())
 		transitions = safeIfActive(self.transitions.values())
