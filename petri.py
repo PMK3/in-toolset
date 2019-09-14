@@ -193,6 +193,9 @@ class PetriNet:
 	def addDependency(self, dependency):
 		previous = self.getDependency(dependency.place, dependency.transition)
 		if previous:
+			if not previous.active:
+				previous.active = True
+				previous.changed.emit()
 			return previous
 
 		if dependency.id is None:
@@ -210,6 +213,9 @@ class PetriNet:
 	def addOutput(self, output):
 		previous = self.getOutput(output.place, output.transition)
 		if previous:
+			if not previous.active:
+				previous.active = True
+				previous.changed.emit()
 			return previous
 
 		if output.id is None:
