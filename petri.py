@@ -89,8 +89,8 @@ class PetriNet:
 
 		self.placeAdded = Signal()
 		self.transitionAdded = Signal()
-		self.DependencyAdded = Signal()
-		self.OutputAdded = Signal()
+		self.dependencyAdded = Signal()
+		self.outputAdded = Signal()
 		
 		self.nextPlaceId = 0
 		self.nextTransitionId = 0
