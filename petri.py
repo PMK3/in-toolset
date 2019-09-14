@@ -81,6 +81,12 @@ class PetriNet:
 		return json.dumps(self.save())
 			
 	def load(self, data):
+		def getNextId(lst):
+			return max(map(lambda x: x.id, lst))
+
+		nextPlaceId = getNextId(data["places"])
+		nextTransitionId = getNextId(data["transitions"])
+
 		for place in data["places"]:
 			obj = Place()
 			obj.load(place)
