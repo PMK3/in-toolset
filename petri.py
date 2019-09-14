@@ -191,6 +191,40 @@ class PetriNet:
 			return results[0]
 		return None
 
+	def addDependency(self, placeId, transitionId):
+		self.addDependency(Arrow(placeId, transitionId))
+
+	def addDependency(self, dependency):
+		previous = self.getDependency(dependency.place, dependency.transition)
+		if previous:
+			return previous
+
+		if dependency.id is None:
+			dependency.id = self.nextDependencyId
+			self.nextDependencyId += 1
+
+		dependency.changed.connect(self.changed.emit)
+		self.dependencies[dependency.id] = dependency
+		self.dependencyAdded.emit(dependency)
+		self.changed.emit()
+
+	def addOutput(self, placeId, transitionId):
+		self.addOutput(Arrow(placeId, transitionId))
+
+	def addOutput(self, output):
+		previous = self.getOutput(output.place, output.transition)
+		if previous:
+			return previous
+
+		if output.id is None:
+			output.id = self.nextOutputId
+			self.nextOutputId += 1
+
+		output.changed.connect(self.changed.emit)
+		self.outputs[output.id] = output
+		self.outputAdded.emit(output)
+		self.changed.emit()
+
 	def addArrowPlaceToTransition(self, placeId, transitionId):
 		output = self.places[placeId].output
 		input = self.transitions[transitionId].input
