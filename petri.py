@@ -86,13 +86,21 @@ class Arrow(Node):
 class PetriNet:
 	def __init__(self):
 		self.changed = Signal()
+
 		self.placeAdded = Signal()
 		self.transitionAdded = Signal()
+		self.DependencyAdded = Signal()
+		self.OutputAdded = Signal()
 		
 		self.nextPlaceId = 0
 		self.nextTransitionId = 0
+		self.nextDependencyId = 0
+		self.nextOutputId = 0
+
 		self.places = {}
 		self.transitions = {}
+		self.dependencies = {}
+		self.outputs = {}
 
 	def __repr__(self):
 		return json.dumps(self.save())
