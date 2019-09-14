@@ -30,8 +30,6 @@ class Node(Object):
 		self.x = x
 		self.y = y
 		self.label = ""
-		self.input = []
-		self.output = []
 		
 	def move(self, x, y):
 		self.x = x
@@ -236,38 +234,6 @@ class PetriNet:
 		output = self.getOutput(placeId, transitionId)
 		if output:
 			self.outputs.remove(output.id)
-
-	def addArrowPlaceToTransition(self, placeId, transitionId):
-		output = self.places[placeId].output
-		input = self.transitions[transitionId].input
-		if transitionId not in output:
-			output.append(transitionId)
-		if placeId not in input:
-			input.append(placeId)
-
-	def addArrowTransitionToPlace(self, transitionId, placeId):
-		output = self.transitions[transitionId].output
-		input = self.places[placeId].input
-		if placeId not in output:
-			output.append(placeId)
-		if transitionId not in input:
-			input.append(transitionId)
-
-	def removeArrowPlaceToTransition(self, placeId, transitionId):
-		output = self.places[placeId].output
-		input = self.transitions[transitionId].input
-		if transitionId in output:
-			output.remove(transitionId)
-		if placeId in input:
-			input.remove(placeId)
-
-	def removeArrowTransitionToPlace(self, placeId, transitionId):
-		output = self.transitions[transitionId].output
-		input = self.places[placeId].input
-		if placeId in output:
-			output.remove(placeId)
-		if transitionId in input:
-			input.remove(transitionId)
 
 
 class Project:
