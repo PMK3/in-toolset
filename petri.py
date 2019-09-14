@@ -9,15 +9,15 @@ class Object:
 		self.deleted = Signal()
 		self.active = True
 		self.id = None
-		
+
 	def delete(self):
 		self.active = False
 		self.deleted.emit()
 		self.changed.emit()
-		
+
 	def load(self, data):
 		self.id = data["id"]
-	
+
 	def save(self):
 		return {"id": self.id}
 
@@ -26,23 +26,23 @@ class Node(Object):
 	def __init__(self, x=0, y=0):
 		super().__init__()
 		self.positionChanged = Signal()
-		
+
 		self.x = x
 		self.y = y
 		self.label = ""
-		
+
 	def move(self, x, y):
 		self.x = x
 		self.y = y
 		self.positionChanged.emit()
 		self.changed.emit()
-		
+
 	def load(self, data):
 		super().load(data)
 		self.x = data["x"]
 		self.y = data["y"]
 		self.label = data["label"]
-	
+
 	def save(self):
 		data = super().save()
 		data["x"] = self.x
@@ -89,7 +89,7 @@ class PetriNet:
 		self.transitionAdded = Signal()
 		self.dependencyAdded = Signal()
 		self.outputAdded = Signal()
-		
+
 		self.nextPlaceId = 0
 		self.nextTransitionId = 0
 		self.nextDependencyId = 0
@@ -102,7 +102,7 @@ class PetriNet:
 
 	def __repr__(self):
 		return json.dumps(self.save())
-			
+
 	def load(self, data):
 		def getNextId(lst):
 			return max(map(lambda x: x.id, lst))
@@ -129,7 +129,6 @@ class PetriNet:
 			obj.load(output)
 			self.addOutput(obj)
 
-		
 	def save(self):
 		def safeIfActive(lst):
 			return list(map(lambda x: x.save(), filter(lambda x: x.active, lst)))
@@ -151,9 +150,9 @@ class PetriNet:
 		if place.id is None:
 			place.id = self.nextPlaceId
 			self.nextPlaceId += 1
-			
+
 		place.changed.connect(self.changed.emit)
-		
+
 		self.places[place.id] = place
 		self.placeAdded.emit(place)
 		self.changed.emit()
@@ -162,9 +161,9 @@ class PetriNet:
 		if transition.id is None:
 			transition.id = self.nextTransitionId
 			self.nextTransitionId += 1
-			
+
 		transition.changed.connect(self.changed.emit)
-		
+
 		self.transitions[transition.id] = transition
 		self.transitionAdded.emit(transition)
 		self.changed.emit()
@@ -260,7 +259,7 @@ class Project:
 		with open(filename) as f:
 			data = json.load(f)
 		self.net.load(data)
-		
+
 		self.setFilename(filename)
 		self.setUnsaved(False)
 
@@ -268,6 +267,6 @@ class Project:
 		data = self.net.save()
 		with open(filename, "w") as f:
 			json.dump(data, f, indent="\t")
-		
+
 		self.setFilename(filename)
 		self.setUnsaved(False)
