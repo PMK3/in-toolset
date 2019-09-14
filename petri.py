@@ -89,6 +89,11 @@ class PetriNet:
 			obj = Transition()
 			obj.load(transition)
 			self.addTransition(obj)
+		for dependency in data["dependencies"]:
+			self.addArrowPlaceToTransition(dependency["place"], dependency["transition"])
+		for output in data["outputs"]:
+			self.addArrowTransitionToPlace(dependency["transition"], dependency["place"])
+
 		
 	def save(self):
 		places = []
@@ -106,12 +111,12 @@ class PetriNet:
 		for transition in self.transitions.values():
 			for outputId in transition.outputs:
 				outputs.append({
-					"origin": transition.id,
-					"destination": outputId})
+					"transition": transition.id,
+					"place": outputId})
 			for inputId in transition.inputs:
 				dependencies.append({
-					"origin": inputId,
-					"destination": transition.id})
+					"transition": transition.id,
+					"place": inputId})
 
 		data = {
 			"places": places,
