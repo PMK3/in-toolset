@@ -13,9 +13,10 @@ class Object:
 		self.label = ""
 
 	def delete(self):
-		self.active = False
-		self.deleted.emit()
-		self.changed.emit()
+		if self.active:
+			self.active = False
+			self.deleted.emit()
+			self.changed.emit()
 
 	def load(self, data):
 		self.id = data["id"]
@@ -68,7 +69,9 @@ class Arrow(Object):
 	def __init__(self, net, place=None, transition=None):
 		super().__init__(net)
 		self.place = place
+		self.place.deleted.connect(self.delete)
 		self.transition = transition
+		self.transition.deleted.connect(self.delete)
 
 	def load(self, data):
 		super().load(data)
