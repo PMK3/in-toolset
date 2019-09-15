@@ -4,11 +4,13 @@ import json
 
 
 class Object:
-	def __init__(self):
+	def __init__(self, net):
+		self.net = net
 		self.changed = Signal()
 		self.deleted = Signal()
 		self.active = True
 		self.id = None
+		self.label = ""
 
 	def delete(self):
 		self.active = False
@@ -17,46 +19,44 @@ class Object:
 
 	def load(self, data):
 		self.id = data["id"]
+		self.label = data["label"]
 
 	def save(self):
-		return {"id": self.id}
+		return {
+			"id": self.id,
+			"label": self.label
+		}
 
 
 class Node(Object):
-	def __init__(self, x=0, y=0):
-		super().__init__()
+	def __init__(self, net, x=0, y=0):
+		super().__init__(net)
 		self.positionChanged = Signal()
 
 		self.x = x
 		self.y = y
-		self.label = ""
 
 	def move(self, x, y):
 		self.x = x
 		self.y = y
-		self.positionChanged.emit()
+		self.positionChanged.emit(x, y)
 		self.changed.emit()
 
 	def load(self, data):
 		super().load(data)
 		self.x = data["x"]
 		self.y = data["y"]
-		self.label = data["label"]
 
 	def save(self):
 		data = super().save()
 		data["x"] = self.x
 		data["y"] = self.y
-		data["label"] = self.label
 		return data
-
-	def __repr__(self):
-		return json.dumps(self.save())
-
+	
 
 class Place(Node):
-	def __init__(self, x=0, y=0):
-		super().__init__(x, y)
+	def __init__(self, net, x=0, y=0):
+		super().__init__(net, x, y)
 		self.tokens = 0
 
 
@@ -64,179 +64,91 @@ class Transition(Node):
 	pass
 
 
-class Arrow(Node):
-	def __init__(self, place, transition):
-		super().__init__()
+class Arrow(Object):
+	def __init__(self, net, place=None, transition=None):
+		super().__init__(net)
 		self.place = place
 		self.transition = transition
 
 	def load(self, data):
 		super().load(data)
-		self.place = data["place"]
-		self.transition = data["transition"]
+		self.place = self.net.places[data["place"]]
+		self.transition = self.net.transitions[data["transition"]]
 
 	def save(self):
 		data = super().save()
-		data["place"] = self.place
-		data["transition"] = self.place
+		data["place"] = self.place.id
+		data["transition"] = self.transition.id
+		return data
+		
+		
+class ObjectList:
+	def __init__(self, net, cls):
+		self.changed = Signal()
+		self.added = Signal()
+		
+		self.net = net
+		self.cls = cls
+		self.objects = {}
+		self.nextId = 0
+		
+	def __getitem__(self, item):
+		return self.objects[item]
+		
+	def add(self, obj):
+		if obj.id is None:
+			obj.id = self.nextId
+			self.nextId += 1
+		
+		obj.changed.connect(self.changed.emit)
+		
+		self.objects[obj.id] = obj
+		self.added.emit(obj)
+		self.changed.emit()
+		
+	def load(self, infos):
+		for info in infos:
+			obj = self.cls(self.net)
+			obj.load(info)
+			self.add(obj)
+		self.nextId = max(self.objects, default=0) + 1
+			
+	def save(self):
+		list = []
+		for obj in self.objects.values():
+			if obj.active:
+				list.append(obj.save())
+		return list
 
 
 class PetriNet:
 	def __init__(self):
 		self.changed = Signal()
 
-		self.placeAdded = Signal()
-		self.transitionAdded = Signal()
-		self.dependencyAdded = Signal()
-		self.outputAdded = Signal()
-
-		self.nextPlaceId = 0
-		self.nextTransitionId = 0
-		self.nextDependencyId = 0
-		self.nextOutputId = 0
-
-		self.places = {}
-		self.transitions = {}
-		self.dependencies = {}
-		self.outputs = {}
-
-	def __repr__(self):
-		return json.dumps(self.save())
-
+		self.places = ObjectList(self, Place)
+		self.transitions = ObjectList(self, Transition)
+		self.inputs = ObjectList(self, Arrow)
+		self.outputs = ObjectList(self, Arrow)
+		
+		self.places.changed.connect(self.changed.emit)
+		self.transitions.changed.connect(self.changed.emit)
+		self.inputs.changed.connect(self.changed.emit)
+		self.outputs.changed.connect(self.changed.emit)
+		
 	def load(self, data):
-		def getNextId(lst):
-			return max(map(lambda x: x.id, lst))
-
-		nextPlaceId = getNextId(data["places"])
-		nextTransitionId = getNextId(data["transitions"])
-		nextDependencyId = getNextId(data["dependencies"])
-		nextOutputs = getNextId(data["outputs"])
-
-		for place in data["places"]:
-			obj = Place()
-			obj.load(place)
-			self.addPlace(obj)
-		for transition in data["transitions"]:
-			obj = Transition()
-			obj.load(transition)
-			self.addTransition(obj)
-		for dependency in data["dependencies"]:
-			obj = Dependency()
-			obj.load(dependency)
-			self.addDependency(obj)
-		for output in data["outputs"]:
-			obj = Output()
-			obj.load(output)
-			self.addOutput(obj)
+		self.places.load(data["places"])
+		self.transitions.load(data["transitions"])
+		self.inputs.load(data["inputs"])
+		self.outputs.load(data["outputs"])
 
 	def save(self):
-		def safeIfActive(lst):
-			return list(map(lambda x: x.save(), filter(lambda x: x.active, lst)))
-
-		places = safeIfActive(self.places.values())
-		transitions = safeIfActive(self.transitions.values())
-		dependencies = safeIfActive(self.dependencies.values())
-		outputs = safeIfActive(self.outputs.values())
-
-		data = {
-			"places": places,
-			"transitions": transitions,
-			"dependencies": dependencies,
-			"outputs": outputs
+		return {
+			"places": self.places.save(),
+			"transitions": self.transitions.save(),
+			"inputs": self.inputs.save(),
+			"outputs": self.outputs.save()
 		}
 		return data
-
-	def addPlace(self, place):
-		if place.id is None:
-			place.id = self.nextPlaceId
-			self.nextPlaceId += 1
-
-		place.changed.connect(self.changed.emit)
-
-		self.places[place.id] = place
-		self.placeAdded.emit(place)
-		self.changed.emit()
-
-	def addTransition(self, transition):
-		if transition.id is None:
-			transition.id = self.nextTransitionId
-			self.nextTransitionId += 1
-
-		transition.changed.connect(self.changed.emit)
-
-		self.transitions[transition.id] = transition
-		self.transitionAdded.emit(transition)
-		self.changed.emit()
-
-	def getDependency(self, place, transition):
-		results = filter(
-			lambda x: x.place == place and x.transition == transition,
-			self.dependencies.values())
-		if results:
-			return results[0]
-		return None
-
-	def getOutput(self, place, transition):
-		results = filter(
-			lambda x: x.place == place and x.transition == transition,
-			self.outputs.values())
-		if results:
-			return results[0]
-		return None
-
-	def addDependency(self, placeId, transitionId):
-		self.addDependency(Arrow(placeId, transitionId))
-
-	def addDependency(self, dependency):
-		previous = self.getDependency(dependency.place, dependency.transition)
-		if previous:
-			if not previous.active:
-				previous.active = True
-				previous.changed.emit()
-			return previous
-
-		if dependency.id is None:
-			dependency.id = self.nextDependencyId
-			self.nextDependencyId += 1
-
-		dependency.changed.connect(self.changed.emit)
-		places[dependency.place].deleted.connect(dependency.delete)
-		places[dependency.transaction].deleted.connect(dependency.delete)
-		self.dependencies[dependency.id] = dependency
-		self.dependencyAdded.emit(dependency)
-		self.changed.emit()
-
-	def addOutput(self, placeId, transitionId):
-		self.addOutput(Arrow(placeId, transitionId))
-
-	def addOutput(self, output):
-		previous = self.getOutput(output.place, output.transition)
-		if previous:
-			if not previous.active:
-				previous.active = True
-				previous.changed.emit()
-			return previous
-
-		if output.id is None:
-			output.id = self.nextOutputId
-			self.nextOutputId += 1
-
-		output.changed.connect(self.changed.emit)
-		places[output.place].deleted.connect(output.delete)
-		places[output.transaction].deleted.connect(output.delete)
-		self.outputs[output.id] = output
-		self.outputAdded.emit(output)
-		self.changed.emit()
-
-	def removeDependency(self, placeId, transitionId):
-		dependency = self.getDependency(self, placeId, transitionId)
-		if dependency:
-			self.outputs.remove(output.id)
-
-	def removeOutput(self, placeId, transitionId):
-		output = self.getOutput(placeId, transitionId)
-		if output:
-			self.outputs.remove(output.id)
 
 
 class Project:

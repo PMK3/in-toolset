@@ -3,117 +3,35 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from ui.menu import MenuBar
+from ui.view import *
 from ui import settings
 import petri
-import json
 import math
 import sys
 import os
 
 
-GRID_SIZE = 20
-
-
-def round(value, base):
-	return math.floor(value / base + 0.5) * base
-
-
-class ShapeElement:
-	colors = {
-		"black": Qt.black,
-		"white": Qt.white
-	}
-	
-	def load(self, data):
-		self.type = data["type"]
-		if self.type == "line":
-			self.x1, self.y1 = data["x1"], data["y1"]
-			self.x2, self.y2 = data["x2"], data["y2"]
-		elif self.type == "arc":
-			self.x, self.y = data["x"], data["y"]
-			self.w, self.h = data["w"], data["h"]
-			self.start, self.span = data["start"], data["span"]
-		elif self.type == "circle":
-			self.x, self.y = data["x"], data["y"]
-			self.r = data["r"]
-		elif self.type == "rect":
-			self.x, self.y = data["x"], data["y"]
-			self.w, self.h = data["w"], data["h"]
-			
-		elif self.type == "pen":
-			self.width = data["width"]
-		elif self.type == "brush":
-			self.color = self.colors[data["color"]]
-	
-	
-class Shape:
-	def __init__(self):
-		self.rect = [-80, -80, 160, 160]
-		self.elements = []
-		
-	def load(self, data):
-		self.rect = data["rect"]
-		
-		self.elements = []
-		for element in data["elements"]:
-			ele = ShapeElement()
-			ele.load(element)
-			self.elements.append(ele)
-			
-	def adjustColor(self, color, hover):
-		color = QColor(color)
-		rgba = color.rgba()
-		if hover:
-			rgba ^= 0x555555
-		return QColor(rgba)
-			
-	def draw(self, painter, hover=False):
-		painter.save()
-		painter.setRenderHint(QPainter.Antialiasing)
-		for element in self.elements:
-			if element.type == "line":
-				painter.drawLine(element.x1, element.y1, element.x2, element.y2)
-			elif element.type == "arc":
-				painter.drawArc(element.x, element.y, element.w, element.h, element.start * 16, element.span * 16)
-			elif element.type == "circle":
-				painter.drawEllipse(QPointF(element.x, element.y), element.r, element.r)
-			elif element.type == "rect":
-				painter.drawRect(element.x, element.y, element.w, element.h)
-				
-			elif element.type == "pen":
-				pen = QPen()
-				pen.setWidth(element.width)
-				pen.setCapStyle(Qt.RoundCap)
-				painter.setPen(pen)
-			elif element.type == "brush":
-				brush = QBrush(self.adjustColor(element.color, hover))
-				painter.setBrush(brush)
-		painter.restore()
-		
-		
-class ShapeStore:
-	def __init__(self):
-		self.shapes = {}
-		
-	def __getitem__(self, item):
-		return self.shapes[item]
-		
-	def load(self, filename):
-		with open(filename) as f:
-			shapes = json.load(f)
-		
-		for name, data in shapes.items():
-			shape = Shape()
-			shape.load(data)
-			self.shapes[name] = shape
-			
-			
 class ObjectType:
 	PLACE = 0
 	TRANSITION = 1
 	ARROW = 2
-			
-			
+	
+ToolbarShapes = {
+	ObjectType.PLACE: "place",
+	ObjectType.TRANSITION: "transition",
+	ObjectType.ARROW: "arrow"
+}
+
+ItemShapes = {
+	ObjectType.PLACE: "place",
+	ObjectType.TRANSITION: "transition",
+}
+
+ToolbarButtons = [
+	ObjectType.PLACE, ObjectType.TRANSITION, ObjectType.ARROW
+]
+
+
 class ObjectButton(QToolButton):
 	def __init__(self, type, shape):
 		super().__init__()
@@ -129,22 +47,23 @@ class ObjectButton(QToolButton):
 		painter = QPainter()
 		painter.begin(self)
 		painter.translate(self.width() / 2, self.height() / 2)
-		self.shape.draw(painter)		
+		self.shape.draw(painter)
 		painter.end()
 			
-			
+
 class ObjectMenu(QToolBar):
-	def __init__(self, shapes):
+	def __init__(self, style):
 		super().__init__()
 		self.setFloatable(False)
 		
+		self.style = style
 		self.group = QButtonGroup(self)
-		self.addButton(ObjectType.PLACE, shapes["place"])
-		self.addButton(ObjectType.TRANSITION, shapes["transition"])
-		self.addButton(ObjectType.ARROW, shapes["arrow"])
+		for type in ToolbarButtons:
+			self.addButton(type)
 		
-	def addButton(self, type, shape):
-		button = ObjectButton(type, shape)
+	def addButton(self, type):
+		shape = ToolbarShapes[type]
+		button = ObjectButton(type, self.style.shapes[shape])
 		button.clicked.connect(lambda: button.setChecked(True))
 		self.group.addButton(button)
 		self.addWidget(button)
@@ -156,79 +75,40 @@ class ObjectMenu(QToolBar):
 		return -1
 		
 		
-class ObjectState:
-	PLACING = 0
-	ACTIVE = 1
+class HoverFilter:
+	def apply(self, color):
+		return QColor(color.rgba() ^ 0x555555)
+		
 
+class PlacementItem(EditorItem):
+	def __init__(self, scene, style, type):
+		super().__init__(scene, style.shapes[ItemShapes[type]])
+		self.type = type
+		
 
-class PetriNode(QGraphicsItem):
-	def __init__(self, scene, obj, shape, state):
-		super().__init__()
-		if state == ObjectState.ACTIVE:
-			self.setFlag(QGraphicsItem.ItemIsSelectable)
-			self.setAcceptHoverEvents(True)
-		self.setFlag(QGraphicsItem.ItemSendsGeometryChanges)
+class ActiveItem(EditorItem):
+	def __init__(self, scene, style, type, obj):
+		super().__init__(scene, style.shapes[ItemShapes[type]])
+		self.setFlag(QGraphicsItem.ItemIsSelectable)
+		
+		self.type = type
 		
 		self.obj = obj
-		if state == ObjectState.ACTIVE:
-			self.obj.deleted.connect(self.removeFromScene)
-			self.obj.positionChanged.connect(self.updatePos)
+		self.obj.deleted.connect(self.removeFromScene)
+		self.obj.positionChanged.connect(self.setPos)
+		self.move(QPointF(obj.x, obj.y))
 		
-		self.scene = scene
-		self.shape = shape
-		self.invalid = False
-		self.hover = False
-
-		self.updatePos()
-		self.addToScene()
+		self.hoverFilter = HoverFilter()
+		
+	def move(self, pos):
+		pos = self.alignPos(pos)
+		self.obj.move(pos.x(), pos.y())
 	
 	def delete(self):
 		self.obj.delete()
 		
-	def setInvalid(self, invalid):
-		self.invalid = invalid
-		self.update()
-		
-	def removeFromScene(self):
-		self.scene.removeItem(self)
-
-	def addToScene(self):
-		self.scene.addItem(self)
-		
-	def updatePos(self):
-		self.setPos(self.obj.x, self.obj.y)
-		
-	def checkCollisions(self):
-		items = self.scene.collidingItems(self)
-		if any(isinstance(item, PetriNode) for item in items):
-			self.setInvalid(True)
-		else:
-			self.setInvalid(False)
-		
-	def hoverEnterEvent(self, e):
-		self.hover = True
-		self.update()
-		
-	def hoverLeaveEvent(self, e):
-		self.hover = False
-		self.update()
-	
-	def itemChange(self, change, value):
-		if change == QGraphicsItem.ItemPositionChange:
-			x = round(value.x(), GRID_SIZE)
-			y = round(value.y(), GRID_SIZE)
-			return QPointF(x, y)
-		if change == QGraphicsItem.ItemPositionHasChanged:
-			self.obj.move(value.x(), value.y())
-			return value
-		return super().itemChange(change, value)
-		
-	def boundingRect(self):
-		x, y, w, h = self.shape.rect
-		return QRectF(x - 2, y - 2, w + 4, h + 4)
-		
 	def paint(self, painter, option, widget):
-		self.shape.draw(painter, self.hover)
+		super().paint(painter, option, widget)
 		
 		if self.isSelected():
 			pen = QPen(Qt.blue)
@@ -236,203 +116,194 @@ class PetriNode(QGraphicsItem):
 			painter.setPen(pen)
 			painter.drawRect(*self.shape.rect)
 			
-		if self.invalid:
-			brush = QBrush(Qt.red, Qt.BDiagPattern)
-			painter.setBrush(brush)
-			painter.setPen(Qt.NoPen)
-			painter.drawRect(*self.shape.rect)
 			
-	
-class PlaceNode(PetriNode):
-	def __init__(self, scene, obj, shapes, state):
-		super().__init__(scene, obj, shapes["place"], state)
-		self.type = ObjectType.PLACE
-		
-		
-class TransitionNode(PetriNode):
-	def __init__(self, scene, obj, shapes, state):
-		super().__init__(scene, obj, shapes["transition"], state)
-		self.type = ObjectType.TRANSITION
-
-		
-class ItemDragger:
-	def __init__(self):
-		self.reset()
-	
-	def reset(self):
-		self.items = []
-		self.itemBase = []
-		self.dragBase = None
-		self.moveBack = False
-		
-	def isDragging(self):
-		return self.items and self.dragBase
-		
-	def init(self, pos, moveBack):
-		self.dragBase = pos
-		self.moveBack = moveBack
-		
-	def update(self, pos):
-		if self.isDragging():
-			posDiff = pos - self.dragBase
-			for item, base in zip(self.items, self.itemBase):
-				item.setPos(base + posDiff)
-			for item in self.items:
-				item.checkCollisions()
-	
-	def finish(self, pos):
-		if self.moveBack:
-			if any(item.invalid for item in self.items):
-				for item, base in zip(self.items, self.itemBase):
-					item.setPos(base)
-					item.setInvalid(False)
-		
-		for item in self.items:
-			item.setZValue(0)
-		
-		self.reset()
-				
-	def setItems(self, items):
-		for item in items:
-			item.setZValue(1)
-		self.items = items
-		self.itemBase = [item.pos() for item in items]
-		
-	def removeItem(self, item):
-		if item in self.items:
-			index = self.items.index(item)
-			self.items.pop(index)
-			self.itemBase.pop(index)
-
-
-class PetriScene(QGraphicsScene):
-	def __init__(self, toolbar, shapes):
-		super().__init__(-10000, -10000, 20000, 20000)
-		
-		self.toolbar = toolbar
-		self.shapes = shapes
-		
-		self.dragger = ItemDragger()
-		self.placedItem = None
-		self.dragButton = None
-		
-	def setProject(self, project):
-		self.project = project
-		self.project.net.placeAdded.connect(self.addPlace)
-		self.project.net.transitionAdded.connect(self.addTransition)
-		self.clear()
-		
-	def addPlace(self, place):
-		PlaceNode(self, place, self.shapes, ObjectState.ACTIVE)
-		
-	def addTransition(self, transition):
-		TransitionNode(self, transition, self.shapes, ObjectState.ACTIVE)
-		
-	def selectAll(self):
-		for item in self.items():
-			if isinstance(item, PetriNode):
-				item.setSelected(True)
-				
-	def findItem(self, pos, *classes):
-		for item in self.items(pos):
-			if isinstance(item, classes):
-				return item
-				
-	def createItem(self, pos):
-		type = self.toolbar.currentItem()
-		if type == ObjectType.PLACE:			
-			obj = petri.Place(pos.x(), pos.y())
-			item = PlaceNode(self, obj, self.shapes, ObjectState.PLACING)
-			item.checkCollisions()
-			return item
-		elif type == ObjectType.TRANSITION:
-			obj = petri.Transition(pos.x(), pos.y())
-			item = TransitionNode(self, obj, self.shapes, ObjectState.PLACING)
-			item.checkCollisions()
-			return item
-	
-	def placeItem(self, type, obj):
-		if type == ObjectType.PLACE:
-			self.project.net.addPlace(obj)
-		elif type == ObjectType.TRANSITION:
-			self.project.net.addTransition(obj)
-	
-	def drawBackground(self, painter, rect):
-		pen = QPen()
-		pen.setColor(Qt.gray)
-		painter.setPen(pen)
-		
-		for x in range(int(rect.left()) // GRID_SIZE, int(rect.right()) // GRID_SIZE + 1):
-			painter.drawLine(x * GRID_SIZE, rect.top(), x * GRID_SIZE, rect.bottom())
-		for y in range(int(rect.top()) // GRID_SIZE, int(rect.bottom()) // GRID_SIZE + 1):
-			painter.drawLine(rect.left(), y * GRID_SIZE, rect.right(), y * GRID_SIZE)
+class ArrowType:
+	INPUT = 0
+	OUTPUT = 1
 			
-	def keyPressEvent(self, e):
-		if e.key() == Qt.Key_Delete:
-			for item in self.selectedItems():
-				self.dragger.removeItem(item)
-				item.delete()
-			if self.placedItem:
-				self.placedItem.checkCollisions()
-		
-	def mousePressEvent(self, e):
-		if self.dragger.isDragging():
-			e.accept()
-		else:
-			super().mousePressEvent(e)
-			if e.button() == Qt.LeftButton:
-				item = self.findItem(e.scenePos(), PetriNode)
-				if item:
-					self.dragButton = Qt.LeftButton
-					self.dragger.init(e.scenePos(), True)
-					self.dragger.setItems(self.selectedItems())
-			elif e.button() == Qt.RightButton:
-				self.dragButton = Qt.RightButton
-				
-				self.placedItem = self.createItem(e.scenePos())
-				if self.placedItem:
-					self.dragger.init(e.scenePos(), False)
-					self.dragger.setItems([self.placedItem])
-				
-				e.accept()
-				
-	def mouseMoveEvent(self, e):
-		super().mouseMoveEvent(e)
-		self.dragger.update(e.scenePos())
-		
-	def mouseReleaseEvent(self, e):
-		super().mouseReleaseEvent(e)
-		if e.button() == self.dragButton:
-			self.dragger.finish(e.scenePos())
-			if self.placedItem:
-				self.removeItem(self.placedItem)
-				if not self.placedItem.invalid:
-					self.placeItem(self.placedItem.type, self.placedItem.obj)
-				self.placedItem = None
-			self.dragButton = None
-
-
-class PetriView(QGraphicsView):
+			
+class ArrowItem(EditorObject):
 	def __init__(self, scene):
 		super().__init__(scene)
-		self.setDragMode(QGraphicsView.RubberBandDrag)
-		self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-		self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-		self.horizontalScrollBar().disconnect()
-		self.verticalScrollBar().disconnect()
+		self.setZValue(-1)
 		
-		self.zoom = 1
+	def getSource(self): raise NotImplementedError("ArrowItem.getSource")
+	def getTarget(self): raise NotImplementedError("ArrowItem.getTarget")
+	
+	def boundingRect(self):
+		source = self.getSource()
+		target = self.getTarget()		
+		x = min(source.x(), target.x()) - 10
+		y = min(source.y(), target.y()) - 10
+		w = abs(source.x() - target.x()) + 20
+		h = abs(source.y() - target.y()) + 20
+		return QRectF(x, y, w, h)
+	
+	def paint(self, painter, option, widget):
+		painter.setRenderHint(QPainter.Antialiasing)
 		
-	def wheelEvent(self, e):
-		zoom = 1.001 ** e.angleDelta().y()
-		newZoom = self.zoom * zoom
-		if newZoom > 0.1 and newZoom < 10:
-			self.zoom = newZoom
-			prevPos = self.mapToScene(e.pos())
-			self.scale(zoom, zoom)
-			newPos = self.mapToScene(e.pos())
-			delta = newPos - prevPos
-			self.translate(delta.x(), delta.y())		
+		pen = QPen()
+		pen.setCapStyle(Qt.RoundCap)
+		pen.setWidth(4)
+		painter.setPen(pen)
+		
+		source = self.getSource()
+		target = self.getTarget()
+		diff = target - source
+		
+		sx, sy = source.x(), source.y()
+		tx, ty = target.x(), target.y()
+		dx, dy = diff.x(), diff.y()
+		
+		angle = math.atan2(dy, dx)
+		
+		painter.drawLine(source, target)
+		painter.drawLine(
+			tx, ty,
+			tx + 10 * math.cos(angle + math.pi * .75),
+			ty + 10 * math.sin(angle + math.pi * .75)
+		)
+		painter.drawLine(
+			tx, ty,
+			tx + 10 * math.cos(angle - math.pi * .75),
+			ty + 10 * math.sin(angle - math.pi * .75)
+		)
+	
+			
+class PlacementArrow(ArrowItem):
+	def __init__(self, scene, source):
+		super().__init__(scene)
+		self.setZValue(-1)
+		self.source = source
+		self.target = source.pos()
+		
+	def getSource(self): return self.source.pos()
+	def getTarget(self): return self.target
+		
+	def move(self, pos):
+		self.prepareGeometryChange()
+		self.target = pos
+		self.update()
+
+		
+class ActiveArrow(ArrowItem):
+	def __init__(self, scene, obj, type):
+		super().__init__(scene)
+		
+		self.type = type
+		
+		self.obj = obj
+		self.obj.deleted.connect(self.removeFromScene)
+		
+		if type == ArrowType.INPUT:
+			self.source = self.obj.place
+			self.target = self.obj.transition
+		else:
+			self.source = self.obj.transition
+			self.target = self.obj.place
+			
+		self.source.positionChanged.connect(self.updateArrow)
+		self.target.positionChanged.connect(self.updateArrow)
+	
+	def getSource(self):
+		dx = self.target.x - self.source.x
+		dy = self.target.y - self.source.y
+		angle = math.atan2(dy, dx)
+		
+		return QPointF(
+			self.source.x + math.cos(angle) * 30,
+			self.source.y + math.sin(angle) * 30
+		)
+	
+	def getTarget(self):
+		dx = self.target.x - self.source.x
+		dy = self.target.y - self.source.y
+		angle = math.atan2(dy, dx)
+		
+		return QPointF(
+			self.target.x - math.cos(angle) * 30,
+			self.target.y - math.sin(angle) * 30
+		)
+	
+	def updateArrow(self, x, y):
+		self.prepareGeometryChange()
+		self.update()
+		
+			
+class Editor:
+	def __init__(self, style, toolbar):
+		self.toolbar = toolbar
+		self.style = style
+		
+		self.scene = EditorScene(self)
+		self.view = EditorView(self.scene)
+		
+	def widget(self):
+		return self.view
+		
+	def setProject(self, project):
+		self.scene.clear()
+		self.net = project.net
+		self.net.places.added.connect(self.addPlace)
+		self.net.transitions.added.connect(self.addTransition)
+		self.net.inputs.added.connect(self.addInput)
+		self.net.outputs.added.connect(self.addOutput)
+		
+	def addPlace(self, obj):
+		item = ActiveItem(self.scene, self.style, ObjectType.PLACE, obj)
+		self.scene.addItem(item)
+		
+	def addTransition(self, obj):
+		item = ActiveItem(self.scene, self.style, ObjectType.TRANSITION, obj)
+		self.scene.addItem(item)
+		
+	def addInput(self, obj):
+		item = ActiveArrow(self.scene, obj, ArrowType.INPUT)
+		self.scene.addItem(item)
+	
+	def addOutput(self, obj):
+		item = ActiveArrow(self.scene, obj, ArrowType.OUTPUT)
+		self.scene.addItem(item)
+		
+	def selectAll(self):
+		self.scene.selectAll()
+		
+	def startPlacement(self, pos):
+		type = self.toolbar.currentItem()
+		if type in [ObjectType.PLACE, ObjectType.TRANSITION]:
+			self.scene.setHoverEnabled(False)
+			item = PlacementItem(self.scene, self.style, type)
+			item.move(pos)
+			return item
+		elif type == ObjectType.ARROW:
+			source = self.scene.findItem(pos, ActiveItem)
+			if source:
+				return PlacementArrow(self.scene, source)
+		
+	def finishPlacement(self, pos, item):
+		x, y = pos.x(), pos.y()
+		
+		if isinstance(item, PlacementItem):
+			if not item.invalid:
+				if item.type == ObjectType.PLACE:
+					place = petri.Place(self.net, x, y)
+					self.net.places.add(place)
+				elif item.type == ObjectType.TRANSITION:
+					trans = petri.Transition(self.net, x, y)
+					self.net.transitions.add(trans)
+		
+		elif isinstance(item, PlacementArrow):
+			source = item.source
+			target = self.scene.findItem(pos, ActiveItem)
+			if target and target.type != source.type:
+				if target.type == ObjectType.TRANSITION:
+					arrow = petri.Arrow(self.net, source.obj, target.obj)
+					self.net.inputs.add(arrow)
+				else:
+					arrow = petri.Arrow(self.net, target.obj, source.obj)
+					self.net.outputs.add(arrow)
+					
+		self.scene.setHoverEnabled(True)
 		
 		
 class MainWindow(QMainWindow):
@@ -440,17 +311,16 @@ class MainWindow(QMainWindow):
 		super().__init__()
 		self.setContextMenuPolicy(Qt.PreventContextMenu)
 		
-		shapes = ShapeStore()
-		shapes.load("data/shapes.json")
-		
 		self.resize(1080, 720)
 		
-		objectMenu = ObjectMenu(shapes)
-		self.addToolBar(Qt.LeftToolBarArea, objectMenu)
+		style = Style()
+		style.load("data/style.json")
 		
-		self.scene = PetriScene(objectMenu, shapes)
-		self.view = PetriView(self.scene)
-		self.setCentralWidget(self.view)
+		toolbar = ObjectMenu(style)
+		self.addToolBar(Qt.LeftToolBarArea, toolbar)
+		
+		self.editor = Editor(style, toolbar)
+		self.setCentralWidget(self.editor.widget())
 		
 		self.createProject()
 		
@@ -460,7 +330,7 @@ class MainWindow(QMainWindow):
 		menuBar.file.save.triggered.connect(self.handleSave)
 		menuBar.file.saveAs.triggered.connect(self.handleSaveAs)
 		menuBar.file.quit.triggered.connect(self.close)
-		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
+		menuBar.edit.selectAll.triggered.connect(self.editor.selectAll)
 		self.setMenuBar(menuBar)
 		
 		self.updateWindowTitle()
@@ -481,7 +351,7 @@ class MainWindow(QMainWindow):
 		self.project = petri.Project()
 		self.project.filenameChanged.connect(self.updateWindowTitle)
 		self.project.unsavedChanged.connect(self.updateWindowTitle)
-		self.scene.setProject(self.project)
+		self.editor.setProject(self.project)
 		
 		if filename:
 			self.project.load(filename)
