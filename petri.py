@@ -110,7 +110,7 @@ class ObjectList:
 		if obj.id in self.objects:
 			return
 
-		if list(filter(lambda x: obj.similar(x), self.objects.values())):
+		if any(obj.similar(x) for x in self.objects.values()):
 			return
 
 		if obj.id is None:
