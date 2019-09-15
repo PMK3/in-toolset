@@ -200,6 +200,8 @@ class PetriNet:
 			self.nextDependencyId += 1
 
 		dependency.changed.connect(self.changed.emit)
+		places[dependency.place].deleted.connect(dependency.delete)
+		places[dependency.transaction].deleted.connect(dependency.delete)
 		self.dependencies[dependency.id] = dependency
 		self.dependencyAdded.emit(dependency)
 		self.changed.emit()
@@ -220,6 +222,8 @@ class PetriNet:
 			self.nextOutputId += 1
 
 		output.changed.connect(self.changed.emit)
+		places[output.place].deleted.connect(output.delete)
+		places[output.transaction].deleted.connect(output.delete)
 		self.outputs[output.id] = output
 		self.outputAdded.emit(output)
 		self.changed.emit()
