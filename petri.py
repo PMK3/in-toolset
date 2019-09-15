@@ -101,6 +101,9 @@ class ObjectList:
 		return self.objects[item]
 		
 	def add(self, obj):
+		if obj.id in objects:
+			return
+
 		if obj.id is None:
 			obj.id = self.nextId
 			self.nextId += 1
