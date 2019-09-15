@@ -89,6 +89,8 @@ class ObjectList:
 	def __init__(self, net, cls):
 		self.changed = Signal()
 		self.added = Signal()
+
+		self.changed.connect(net.changed.emit)
 		
 		self.net = net
 		self.cls = cls
@@ -132,11 +134,6 @@ class PetriNet:
 		self.transitions = ObjectList(self, Transition)
 		self.inputs = ObjectList(self, Arrow)
 		self.outputs = ObjectList(self, Arrow)
-		
-		self.places.changed.connect(self.changed.emit)
-		self.transitions.changed.connect(self.changed.emit)
-		self.inputs.changed.connect(self.changed.emit)
-		self.outputs.changed.connect(self.changed.emit)
 		
 	def load(self, data):
 		self.places.load(data["places"])
