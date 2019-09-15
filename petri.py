@@ -28,6 +28,9 @@ class Object:
 			"label": self.label
 		}
 
+	def similar(self, obj):
+		return false
+
 
 class Node(Object):
 	def __init__(self, net, x=0, y=0):
@@ -83,6 +86,9 @@ class Arrow(Object):
 		data["place"] = self.place.id
 		data["transition"] = self.transition.id
 		return data
+
+	def similar(self, obj):
+		return obj.place == self.place and obj.transition == self.transition
 		
 		
 class ObjectList:
@@ -101,7 +107,10 @@ class ObjectList:
 		return self.objects[item]
 		
 	def add(self, obj):
-		if obj.id in objects:
+		if obj.id in self.objects:
+			return
+
+		if list(filter(lambda x: obj.similar(x), self.objects.values())):
 			return
 
 		if obj.id is None:
