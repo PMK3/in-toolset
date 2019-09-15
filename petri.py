@@ -29,7 +29,7 @@ class Object:
 		}
 
 	def similar(self, obj):
-		return false
+		return False
 
 
 class Node(Object):
