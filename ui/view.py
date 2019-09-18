@@ -248,7 +248,7 @@ class EditorScene(QGraphicsScene):
 			
 	def drawBackground(self, painter, rect):
 		pen = QPen()
-		pen.setColor(Qt.gray)
+		pen.setColor(QColor(230, 230, 230))
 		painter.setPen(pen)
 		
 		for x in range(int(rect.left()) // GRID_SIZE, int(rect.right()) // GRID_SIZE + 1):
