@@ -72,14 +72,19 @@ class Arrow(Object):
 	def __init__(self, net, place=None, transition=None):
 		super().__init__(net)
 		self.place = place
-		self.place.deleted.connect(self.delete)
 		self.transition = transition
+		if self.place and self.transition:
+			self.connect()
+		
+	def connect(self):
+		self.place.deleted.connect(self.delete)
 		self.transition.deleted.connect(self.delete)
 
 	def load(self, data):
 		super().load(data)
 		self.place = self.net.places[data["place"]]
 		self.transition = self.net.transitions[data["transition"]]
+		self.connect()
 
 	def save(self):
 		data = super().save()
