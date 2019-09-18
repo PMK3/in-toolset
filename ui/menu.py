@@ -3,9 +3,10 @@ from PyQt5.QtWidgets import *
 
 
 class Action(QAction):
-	def __init__(self, text, shortcut):
+	def __init__(self, text, shortcut, checkable=False):
 		super().__init__(text)
 		self.setShortcut(shortcut)
+		self.setCheckable(checkable)
 
 
 class FileMenu(QMenu):
@@ -32,6 +33,16 @@ class EditMenu(QMenu):
 		self.selectAll = Action("Select all", "Ctrl+A")
 		
 		self.addAction(self.selectAll)
+		
+		
+class ViewMenu(QMenu):
+	def __init__(self):
+		super().__init__("View")
+		
+		self.showGrid = Action("Show grid", "Ctrl+1", True)
+		self.showGrid.setChecked(True)
+		
+		self.addAction(self.showGrid)
 
 
 class MenuBar(QMenuBar):
@@ -40,6 +51,8 @@ class MenuBar(QMenuBar):
 		
 		self.file = FileMenu()
 		self.edit = EditMenu()
+		self.view = ViewMenu()
 		
 		self.addMenu(self.file)
 		self.addMenu(self.edit)
+		self.addMenu(self.view)

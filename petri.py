@@ -5,9 +5,11 @@ import json
 
 class Object:
 	def __init__(self, net):
-		self.net = net
 		self.changed = Signal()
 		self.deleted = Signal()
+		self.labelChanged = Signal()
+		
+		self.net = net
 		self.active = True
 		self.id = None
 		self.label = ""
@@ -17,6 +19,10 @@ class Object:
 			self.active = False
 			self.deleted.emit()
 			self.changed.emit()
+			
+	def setLabel(self, label):
+		self.label = label
+		self.labelChanged.emit()
 
 	def load(self, data):
 		self.id = data["id"]
@@ -43,7 +49,7 @@ class Node(Object):
 	def move(self, x, y):
 		self.x = x
 		self.y = y
-		self.positionChanged.emit(x, y)
+		self.positionChanged.emit()
 		self.changed.emit()
 
 	def load(self, data):

@@ -224,6 +224,7 @@ class EditorScene(QGraphicsScene):
 		self.placedItem = None
 		
 		self.hoverEnabled = True
+		self.gridEnabled = True
 		
 	def selectAll(self):
 		for item in self.items():
@@ -245,16 +246,21 @@ class EditorScene(QGraphicsScene):
 			
 	def setHoverEnabled(self, hover):
 		self.hoverEnabled = hover
+		
+	def setGridEnabled(self, grid):
+		self.gridEnabled = grid
+		self.update()
 			
 	def drawBackground(self, painter, rect):
 		pen = QPen()
 		pen.setColor(QColor(230, 230, 230))
 		painter.setPen(pen)
 		
-		for x in range(int(rect.left()) // GRID_SIZE, int(rect.right()) // GRID_SIZE + 1):
-			painter.drawLine(x * GRID_SIZE, rect.top(), x * GRID_SIZE, rect.bottom())
-		for y in range(int(rect.top()) // GRID_SIZE, int(rect.bottom()) // GRID_SIZE + 1):
-			painter.drawLine(rect.left(), y * GRID_SIZE, rect.right(), y * GRID_SIZE)
+		if self.gridEnabled:
+			for x in range(int(rect.left()) // GRID_SIZE, int(rect.right()) // GRID_SIZE + 1):
+				painter.drawLine(x * GRID_SIZE, rect.top(), x * GRID_SIZE, rect.bottom())
+			for y in range(int(rect.top()) // GRID_SIZE, int(rect.bottom()) // GRID_SIZE + 1):
+				painter.drawLine(rect.left(), y * GRID_SIZE, rect.right(), y * GRID_SIZE)
 			
 	def keyPressEvent(self, e):
 		if e.key() == Qt.Key_Delete:

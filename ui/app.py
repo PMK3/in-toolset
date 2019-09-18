@@ -75,6 +75,81 @@ class ObjectMenu(QToolBar):
 		return -1
 		
 		
+class GeneralSettings(QWidget):
+	def __init__(self, scene):
+		super().__init__()
+		self.setStyleSheet("font-size: 16px")
+		
+		self.label = QLabel("No item selected")
+		self.label.setAlignment(Qt.AlignCenter)
+		
+		self.layout = QVBoxLayout(self)
+		self.layout.addWidget(self.label)
+		self.layout.setAlignment(Qt.AlignTop)
+		
+	def setSelection(self, items):
+		if len(items) > 0:
+			self.label.setText("%i items selected" %len(items))
+		else:
+			self.label.setText("No item selected")
+
+		
+class ItemSettings(QWidget):
+	def __init__(self, obj):
+		super().__init__()
+		self.obj = obj
+		self.obj.positionChanged.connect(self.updatePos)
+		
+		self.setStyleSheet("font-size: 16px")
+		
+		self.x = QLabel("%i" %obj.x)
+		self.x.setAlignment(Qt.AlignRight)
+		self.y = QLabel("%i" %obj.y)
+		self.y.setAlignment(Qt.AlignRight)
+		self.label = QLineEdit(obj.label)
+		self.label.textEdited.connect(self.obj.setLabel)
+		
+		self.layout = QFormLayout(self)
+		self.layout.addRow("X:", self.x)
+		self.layout.addRow("Y:", self.y)
+		self.layout.addRow("Label:", self.label)
+		
+	def updatePos(self):
+		self.x.setText("%i" %self.obj.x)
+		self.y.setText("%i" %self.obj.y)
+	
+	def updateLabel(self, label):
+		self.label.setText(label)
+		
+		
+class SettingsDock(QDockWidget):
+	def __init__(self, editor):
+		super().__init__("Settings")
+		
+		self.setFixedWidth(200)
+		
+		self.scene = editor.scene
+		
+		self.generalSettings = GeneralSettings(self.scene)
+		
+		self.setFeatures(QDockWidget.DockWidgetMovable)
+		self.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+		self.setWidget(self.generalSettings)
+		
+		self.scene.selectionChanged.connect(self.handleSelectionChanged)
+		
+	def handleSelectionChanged(self):
+		items = self.scene.selectedItems()
+		if len(items) == 1:
+			self.setWidget(self.createWidget(items[0]))
+		else:
+			self.generalSettings.setSelection(items)
+			self.setWidget(self.generalSettings)
+			
+	def createWidget(self, item):
+		return ItemSettings(item.obj)
+		
+		
 class HoverFilter:
 	def apply(self, color):
 		return QColor(color.rgba() ^ 0x555555)
@@ -95,10 +170,15 @@ class ActiveItem(EditorItem):
 		
 		self.obj = obj
 		self.obj.deleted.connect(self.removeFromScene)
-		self.obj.positionChanged.connect(self.setPos)
+		self.obj.positionChanged.connect(self.updatePos)
+		self.obj.labelChanged.connect(self.updateLabel)
 		self.move(QPointF(obj.x, obj.y))
 		
 		self.hoverFilter = HoverFilter()
+		
+		self.font = QFont()
+		self.font.setPixelSize(16)
+		self.fontMetrics = QFontMetrics(self.font)
 		
 	def move(self, pos):
 		pos = self.alignPos(pos)
@@ -107,14 +187,35 @@ class ActiveItem(EditorItem):
 	def delete(self):
 		self.obj.delete()
 		
+	def updatePos(self):
+		self.setPos(self.obj.x, self.obj.y)
+		
+	def updateLabel(self):
+		self.prepareGeometryChange()
+		self.update()
+		
+	def labelRect(self):
+		rect = self.fontMetrics.boundingRect(self.obj.label)
+		rect.moveCenter(QPoint(0, self.shape.rect[1] + self.shape.rect[3] + 12))
+		return QRectF(rect.adjusted(-1, -1, 1, 1))
+		
+	def boundingRect(self):
+		rect = super().boundingRect()
+		return rect.united(self.labelRect())
+		
 	def paint(self, painter, option, widget):
 		super().paint(painter, option, widget)
 		
 		if self.isSelected():
+			painter.save()
 			pen = QPen(Qt.blue)
 			pen.setWidth(2)
 			painter.setPen(pen)
 			painter.drawRect(*self.shape.rect)
+			painter.restore()
+		
+		painter.setFont(self.font)
+		painter.drawText(self.labelRect(), Qt.AlignCenter, self.obj.label)
 			
 			
 class ArrowType:
@@ -225,7 +326,7 @@ class ActiveArrow(ArrowItem):
 			self.target.y - math.sin(angle) * 30
 		)
 	
-	def updateArrow(self, x, y):
+	def updateArrow(self):
 		self.prepareGeometryChange()
 		self.update()
 		
@@ -235,11 +336,8 @@ class Editor:
 		self.toolbar = toolbar
 		self.style = style
 		
-		self.scene = EditorScene(self)
-		self.view = EditorView(self.scene)
-		
-	def widget(self):
-		return self.view
+	def setScene(self, scene):
+		self.scene = scene
 		
 	def setProject(self, project):
 		self.scene.clear()
@@ -264,9 +362,6 @@ class Editor:
 	def addOutput(self, obj):
 		item = ActiveArrow(self.scene, obj, ArrowType.OUTPUT)
 		self.scene.addItem(item)
-		
-	def selectAll(self):
-		self.scene.selectAll()
 		
 	def startPlacement(self, pos):
 		type = self.toolbar.currentItem()
@@ -320,7 +415,13 @@ class MainWindow(QMainWindow):
 		self.addToolBar(Qt.LeftToolBarArea, toolbar)
 		
 		self.editor = Editor(style, toolbar)
-		self.setCentralWidget(self.editor.widget())
+		self.scene = EditorScene(self.editor)
+		self.view = EditorView(self.scene)
+		self.editor.setScene(self.scene)
+		self.setCentralWidget(self.view)
+		
+		settingsDock = SettingsDock(self.editor)
+		self.addDockWidget(Qt.RightDockWidgetArea, settingsDock)
 		
 		self.createProject()
 		
@@ -330,7 +431,8 @@ class MainWindow(QMainWindow):
 		menuBar.file.save.triggered.connect(self.handleSave)
 		menuBar.file.saveAs.triggered.connect(self.handleSaveAs)
 		menuBar.file.quit.triggered.connect(self.close)
-		menuBar.edit.selectAll.triggered.connect(self.editor.selectAll)
+		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
+		menuBar.view.showGrid.toggled.connect(self.scene.setGridEnabled)
 		self.setMenuBar(menuBar)
 		
 		self.updateWindowTitle()
