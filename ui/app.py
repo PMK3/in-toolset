@@ -27,29 +27,47 @@ ItemShapes = {
 	ObjectType.TRANSITION: "transition",
 }
 
+ToolbarText = {
+	ObjectType.PLACE: "Place",
+	ObjectType.TRANSITION: "Transition",
+	ObjectType.ARROW: "Arrow"
+}
+
 ToolbarButtons = [
 	ObjectType.PLACE, ObjectType.TRANSITION, ObjectType.ARROW
 ]
 
 
 class ObjectButton(QToolButton):
-	def __init__(self, type, shape):
+	def __init__(self, type, text, shape):
 		super().__init__()
-		self.setFixedWidth(shape.rect[2] + 12)
-		self.setFixedHeight(shape.rect[3] + 12)
+		
+		self.setFixedWidth(80)
+		self.setFixedHeight(80)
 		self.setCheckable(True)
 		self.shape = shape
+		self.text = text
 		self.type = type
+		
+		self.font = QFont()
+		self.font.setPixelSize(16)
+		self.textRect = QRectF(0, 55, 80, 15)
 	
 	def paintEvent(self, e):
 		super().paintEvent(e)
 		
 		painter = QPainter()
 		painter.begin(self)
-		painter.translate(self.width() / 2, self.height() / 2)
+		
+		painter.translate(40, 30)
 		self.shape.draw(painter)
+		painter.resetTransform()
+		
+		painter.setFont(self.font)
+		painter.drawText(self.textRect, Qt.AlignCenter, self.text)
+		
 		painter.end()
-			
+
 
 class ObjectMenu(QToolBar):
 	def __init__(self, style):
@@ -63,7 +81,8 @@ class ObjectMenu(QToolBar):
 		
 	def addButton(self, type):
 		shape = ToolbarShapes[type]
-		button = ObjectButton(type, self.style.shapes[shape])
+		text = ToolbarText[type]
+		button = ObjectButton(type, text, self.style.shapes[shape])
 		button.clicked.connect(lambda: button.setChecked(True))
 		self.group.addButton(button)
 		self.addWidget(button)
