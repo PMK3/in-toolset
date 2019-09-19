@@ -133,12 +133,14 @@ class EditorItem(EditorObject):
 		return QPointF(x, y)
 	
 	def setInvalid(self, invalid):
-		self.invalid = invalid
-		self.update()
+		if self.invalid != invalid:
+			self.invalid = invalid
+			self.update()
 	
 	def setHover(self, hover):
-		self.hover = hover
-		self.update()
+		if self.hover != hover:
+			self.hover = hover
+			self.update()
 		
 	def checkHover(self, pos):
 		pos = self.mapFromScene(pos)
