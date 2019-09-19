@@ -33,14 +33,27 @@ ToolbarText = {
 	ObjectType.ARROW: "Arrow"
 }
 
+ToolbarTooltips = {
+	ObjectType.PLACE: "Place (Q)",
+	ObjectType.TRANSITION: "Transition (W)",
+	ObjectType.ARROW: "Arrow (E)"
+}
+
+ToolbarShortcuts = {
+	Qt.Key_Q: ObjectType.PLACE,
+	Qt.Key_W: ObjectType.TRANSITION,
+	Qt.Key_E: ObjectType.ARROW
+}
+
 ToolbarButtons = [
 	ObjectType.PLACE, ObjectType.TRANSITION, ObjectType.ARROW
 ]
 
 
 class ObjectButton(QToolButton):
-	def __init__(self, type, text, shape):
+	def __init__(self, type, text, tooltip, shape):
 		super().__init__()
+		self.setToolTip(tooltip)
 		
 		self.setFixedWidth(80)
 		self.setFixedHeight(80)
@@ -51,7 +64,7 @@ class ObjectButton(QToolButton):
 		
 		self.font = QFont()
 		self.font.setPixelSize(16)
-		self.textRect = QRectF(0, 55, 80, 15)
+		self.textRect = QRectF(0, 55, 80, 20)
 	
 	def paintEvent(self, e):
 		super().paintEvent(e)
@@ -75,6 +88,8 @@ class ObjectMenu(QToolBar):
 		self.setFloatable(False)
 		
 		self.style = style
+		self.buttons = {}
+		
 		self.group = QButtonGroup(self)
 		for type in ToolbarButtons:
 			self.addButton(type)
@@ -82,10 +97,17 @@ class ObjectMenu(QToolBar):
 	def addButton(self, type):
 		shape = ToolbarShapes[type]
 		text = ToolbarText[type]
-		button = ObjectButton(type, text, self.style.shapes[shape])
+		tooltip = ToolbarTooltips[type]
+		
+		button = ObjectButton(type, text, tooltip, self.style.shapes[shape])
 		button.clicked.connect(lambda: button.setChecked(True))
+		self.buttons[type] = button
+		
 		self.group.addButton(button)
 		self.addWidget(button)
+		
+	def selectButton(self, type):
+		self.buttons[type].setChecked(True)
 		
 	def currentItem(self):
 		button = self.group.checkedButton()
@@ -430,10 +452,10 @@ class MainWindow(QMainWindow):
 		style = Style()
 		style.load("data/style.json")
 		
-		toolbar = ObjectMenu(style)
-		self.addToolBar(Qt.LeftToolBarArea, toolbar)
+		self.toolbar = ObjectMenu(style)
+		self.addToolBar(Qt.LeftToolBarArea, self.toolbar)
 		
-		self.editor = Editor(style, toolbar)
+		self.editor = Editor(style, self.toolbar)
 		self.scene = EditorScene(self.editor)
 		self.view = EditorView(self.scene)
 		self.editor.setScene(self.scene)
@@ -461,6 +483,11 @@ class MainWindow(QMainWindow):
 			e.accept()
 		else:
 			e.ignore()
+			
+	def keyPressEvent(self, e):
+		key = e.key()
+		if key in ToolbarShortcuts:
+			self.toolbar.selectButton(ToolbarShortcuts[key])
 			
 	def updateWindowTitle(self):
 		name = self.project.filename

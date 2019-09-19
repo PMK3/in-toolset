@@ -265,6 +265,7 @@ class EditorScene(QGraphicsScene):
 				painter.drawLine(rect.left(), y * GRID_SIZE, rect.right(), y * GRID_SIZE)
 			
 	def keyPressEvent(self, e):
+		super().keyPressEvent(e)
 		if e.key() == Qt.Key_Delete:
 			for item in self.selectedItems():
 				self.dragger.removeItem(item)
