@@ -164,10 +164,12 @@ class EditorItem(EditorObject):
 		self.shape.draw(painter, filter)
 		
 		if self.invalid:
+			painter.save()
 			brush = QBrush(Qt.red, Qt.BDiagPattern)
 			painter.setBrush(brush)
 			painter.setPen(Qt.NoPen)
 			painter.drawRect(*self.shape.rect)
+			painter.restore()
 	
 	
 class ObjectDragger:
@@ -322,6 +324,19 @@ class EditorView(QGraphicsView):
 		self.verticalScrollBar().disconnect()
 		
 		self.zoom = 1
+		
+	def keyPressEvent(self, e):
+		super().keyPressEvent(e)
+		
+		key = e.key()
+		if key == Qt.Key_Left:
+			self.translate(10, 0)
+		elif key == Qt.Key_Right:
+			self.translate(-10, 0)
+		elif key == Qt.Key_Up:
+			self.translate(0, 10)
+		elif key == Qt.Key_Down:
+			self.translate(0, -10)
 		
 	def wheelEvent(self, e):
 		zoom = 1.001 ** e.angleDelta().y()
