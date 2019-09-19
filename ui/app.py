@@ -238,7 +238,7 @@ class ActiveItem(EditorItem):
 		
 	def labelRect(self):
 		rect = self.fontMetrics.boundingRect(self.obj.label)
-		rect.moveCenter(QPoint(0, self.shape.rect[1] + self.shape.rect[3] + 12))
+		rect.moveCenter(QPoint(0, self.shapeDef.rect.bottom() + 12))
 		return QRectF(rect.adjusted(-1, -1, 1, 1))
 		
 	def boundingRect(self):
@@ -253,7 +253,7 @@ class ActiveItem(EditorItem):
 			pen = QPen(Qt.blue)
 			pen.setWidth(2)
 			painter.setPen(pen)
-			painter.drawRect(*self.shape.rect)
+			painter.drawRect(self.shapeDef.rect)
 			painter.restore()
 		
 		painter.setFont(self.font)

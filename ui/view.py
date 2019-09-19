@@ -43,11 +43,11 @@ class ShapeElement:
 	
 class Shape:
 	def __init__(self):
-		self.rect = [-80, -80, 160, 160]
+		self.rect = QRectF(-80, -80, 160, 160)
 		self.elements = []
 		
 	def load(self, data):
-		self.rect = data["rect"]
+		self.rect = QRectF(*data["rect"])
 		
 		self.elements = []
 		for element in data["elements"]:
@@ -80,6 +80,16 @@ class Shape:
 				brush = QBrush(color)
 				painter.setBrush(brush)
 		painter.restore()
+		
+	def path(self):
+		path = QPainterPath()
+		for element in self.elements:
+			if element.type == "circle":
+				path.addEllipse(QPointF(element.x, element.y), element.r, element.r)
+			elif element.type == "rect":
+				path.addRect(element.x, element.y, element.w, element.h)
+		return path
+				
 		
 		
 class Style:
@@ -119,7 +129,7 @@ class EditorObject(QGraphicsItem):
 class EditorItem(EditorObject):
 	def __init__(self, scene, shape):
 		super().__init__(scene)
-		self.shape = shape
+		self.shapeDef = shape
 		self.invalid = False
 		self.hover = False
 		self.hoverFilter = None
@@ -153,22 +163,24 @@ class EditorItem(EditorObject):
 		else:
 			self.setInvalid(False)
 			
+	def shape(self):
+		return self.shapeDef.path()
+			
 	def boundingRect(self):
-		x, y, w, h = self.shape.rect
-		return QRectF(x - 2, y - 2, w + 4, h + 4)
+		return self.shapeDef.rect.adjusted(-2, -2, 2, 2)
 		
 	def paint(self, painter, option, widget):
 		filter = None
 		if self.hover:
 			filter = self.hoverFilter
-		self.shape.draw(painter, filter)
+		self.shapeDef.draw(painter, filter)
 		
 		if self.invalid:
 			painter.save()
 			brush = QBrush(Qt.red, Qt.BDiagPattern)
 			painter.setBrush(brush)
 			painter.setPen(Qt.NoPen)
-			painter.drawRect(*self.shape.rect)
+			painter.drawRect(self.shapeDef.rect)
 			painter.restore()
 	
 	
