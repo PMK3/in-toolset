@@ -148,6 +148,7 @@ class ItemSettings(QWidget):
 		self.y = QLabel("%i" %obj.y)
 		self.y.setAlignment(Qt.AlignRight)
 		self.label = QLineEdit(obj.label)
+		self.label.setMaxLength(20)
 		self.label.textEdited.connect(self.obj.setLabel)
 		
 		self.layout = QFormLayout(self)
