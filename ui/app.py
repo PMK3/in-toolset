@@ -193,17 +193,19 @@ class SettingsDock(QDockWidget):
 		
 		
 class HoverFilter:
-	def apply(self, color):
-		return QColor(color.rgba() ^ 0x555555)
+	def apply(self, brush):
+		color = brush.color()
+		color = QColor(color.rgba() ^ 0x555555)
+		brush.setColor(color)
 		
 
-class PlacementItem(EditorItem):
+class PlacementNode(EditorNode):
 	def __init__(self, scene, style, type):
 		super().__init__(scene, style.shapes[ItemShapes[type]])
 		self.type = type
 		
 
-class ActiveItem(EditorItem):
+class ActiveNode(EditorNode):
 	def __init__(self, scene, style, type, obj):
 		super().__init__(scene, style.shapes[ItemShapes[type]])
 		self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -238,7 +240,7 @@ class ActiveItem(EditorItem):
 		
 	def labelRect(self):
 		rect = self.fontMetrics.boundingRect(self.obj.label)
-		rect.moveCenter(QPoint(0, self.shapeDef.rect.bottom() + 12))
+		rect.moveCenter(QPoint(0, self.shp.rect.bottom() + 12))
 		return QRectF(rect.adjusted(-1, -1, 1, 1))
 		
 	def boundingRect(self):
@@ -253,7 +255,7 @@ class ActiveItem(EditorItem):
 			pen = QPen(Qt.blue)
 			pen.setWidth(2)
 			painter.setPen(pen)
-			painter.drawRect(self.shapeDef.rect)
+			painter.drawRect(self.shp.rect)
 			painter.restore()
 		
 		painter.setFont(self.font)
@@ -264,18 +266,15 @@ class ArrowType:
 	INPUT = 0
 	OUTPUT = 1
 			
-			
+
 class ArrowItem(EditorObject):
-	def __init__(self, scene):
+	def __init__(self, scene):#
 		super().__init__(scene)
 		self.setZValue(-1)
 		
-	def getSource(self): raise NotImplementedError("ArrowItem.getSource")
-	def getTarget(self): raise NotImplementedError("ArrowItem.getTarget")
-	
 	def boundingRect(self):
 		source = self.getSource()
-		target = self.getTarget()		
+		target = self.getTarget()
 		x = min(source.x(), target.x()) - 10
 		y = min(source.y(), target.y()) - 10
 		w = abs(source.x() - target.x()) + 20
@@ -390,11 +389,11 @@ class Editor:
 		self.net.outputs.added.connect(self.addOutput)
 		
 	def addPlace(self, obj):
-		item = ActiveItem(self.scene, self.style, ObjectType.PLACE, obj)
+		item = ActiveNode(self.scene, self.style, ObjectType.PLACE, obj)
 		self.scene.addItem(item)
 		
 	def addTransition(self, obj):
-		item = ActiveItem(self.scene, self.style, ObjectType.TRANSITION, obj)
+		item = ActiveNode(self.scene, self.style, ObjectType.TRANSITION, obj)
 		self.scene.addItem(item)
 		
 	def addInput(self, obj):
@@ -409,18 +408,18 @@ class Editor:
 		type = self.toolbar.currentItem()
 		if type in [ObjectType.PLACE, ObjectType.TRANSITION]:
 			self.scene.setHoverEnabled(False)
-			item = PlacementItem(self.scene, self.style, type)
+			item = PlacementNode(self.scene, self.style, type)
 			item.move(pos)
 			return item
 		elif type == ObjectType.ARROW:
-			source = self.scene.findItem(pos, ActiveItem)
+			source = self.scene.findItem(pos, ActiveNode)
 			if source:
 				return PlacementArrow(self.scene, source)
 		
 	def finishPlacement(self, pos, item):
 		x, y = pos.x(), pos.y()
 		
-		if isinstance(item, PlacementItem):
+		if isinstance(item, PlacementNode):
 			if not item.invalid:
 				if item.type == ObjectType.PLACE:
 					place = petri.Place(self.net, x, y)
@@ -431,7 +430,7 @@ class Editor:
 		
 		elif isinstance(item, PlacementArrow):
 			source = item.source
-			target = self.scene.findItem(pos, ActiveItem)
+			target = self.scene.findItem(pos, ActiveNode)
 			if target and target.type != source.type:
 				if target.type == ObjectType.TRANSITION:
 					arrow = petri.Arrow(self.net, source.obj, target.obj)

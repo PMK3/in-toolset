@@ -1,25 +1,25 @@
 
 {
 	"shapes": {
-		"place": {
+		"place": [{
+			"brush": {"color": "white"},
 			"elements": [
-				{"type": "brush", "color": "white"},
 				{"type": "circle", "x": 0, "y": 0, "r": 20}
 			]
-		},
-		"transition": {
+		}],
+		"transition": [{
+			"brush": {"color": "white"},
 			"elements": [
-				{"type": "brush", "color": "white"},
 				{"type": "rect", "x": -20, "y": -20, "w": 40, "h": 40}
 			]
-		},
-		"arrow": {
+		}],
+		"arrow": [{
+			"pen": {"width": 5},
 			"elements": [
-				{"type": "pen", "width": 5},
 				{"type": "line", "x1": -16, "y1": 0, "x2": 16, "y2": 0},
 				{"type": "line", "x1": 16, "y1": 0, "x2": 0, "y2": 14},
 				{"type": "line", "x1": 16, "y1": 0, "x2": 0, "y2": -14}
 			]
-		}
+		}]
 	}
 }

@@ -13,14 +13,14 @@ def round(value, base):
 	return math.floor(value / base + 0.5) * base
 
 
+ShapeColors = {
+	"black": Qt.black,
+	"white": Qt.white
+}
+
 class ShapeElement:
-	colors = {
-		"black": Qt.black,
-		"white": Qt.white
-	}
-	
-	def load(self, data):
-		self.type = data["type"]
+	def __init__(self, type, **data):
+		self.type = type
 		if self.type == "line":
 			self.x1, self.y1 = data["x1"], data["y1"]
 			self.x2, self.y2 = data["x2"], data["y2"]
@@ -35,67 +35,84 @@ class ShapeElement:
 			self.x, self.y = data["x"], data["y"]
 			self.w, self.h = data["w"], data["h"]
 			
-		elif self.type == "pen":
-			self.width = data["width"]
-		elif self.type == "brush":
-			self.color = self.colors[data["color"]]
+			
+class ShapePart:
+	def __init__(self):
+		self.pen = None
+		self.brush = None
+		self.path = QPainterPath()
+		self.elements = []
+		
+	def load(self, data):
+		pen = data.get("pen")
+		if pen:
+			self.pen = QPen()
+			self.pen.setWidth(pen["width"])
+			self.pen.setCapStyle(Qt.RoundCap)
+		
+		brush = data.get("brush")
+		if brush:
+			self.brush = QBrush(ShapeColors[brush["color"]])
+		
+		self.elements = []
+		for element in data["elements"]:
+			self.elements.append(ShapeElement(**element))
+			
+		self.updatePath()
+		
+	def updatePath(self):
+		self.path = QPainterPath()
+		for element in self.elements:
+			if element.type == "line":
+				self.path.moveTo(element.x1, element.y1)
+				self.path.lineTo(element.x2, element.y2)
+			elif element.type == "arc":
+				self.path.arcMoveTo(element.x, element.y, element.w, element.h, element.start)
+				self.path.arcTo(element.x, element.y, element.w, element.h, element.start, element.span)
+			if element.type == "circle":
+				self.path.addEllipse(QPointF(element.x, element.y), element.r, element.r)
+			elif element.type == "rect":
+				self.path.addRect(element.x, element.y, element.w, element.h)
 	
 	
 class Shape:
 	def __init__(self):
+		self.parts = []
+		self.path = QPainterPath()
 		self.rect = QRectF()
-		self.elements = []
 		
 	def load(self, data):
-		self.elements = []
-		for element in data["elements"]:
-			ele = ShapeElement()
-			ele.load(element)
-			self.elements.append(ele)
+		self.parts = []
+		for part in data:
+			shapePart = ShapePart()
+			shapePart.load(part)
+			self.parts.append(shapePart)
 			
-		self.rect = self.path().boundingRect()
+		self.updatePath()
 			
 	def draw(self, painter, filter=None):
-		painter.save()
 		painter.setRenderHint(QPainter.Antialiasing)
-		for element in self.elements:
-			if element.type == "line":
-				painter.drawLine(element.x1, element.y1, element.x2, element.y2)
-			elif element.type == "arc":
-				painter.drawArc(element.x, element.y, element.w, element.h, element.start * 16, element.span * 16)
-			elif element.type == "circle":
-				painter.drawEllipse(QPointF(element.x, element.y), element.r, element.r)
-			elif element.type == "rect":
-				painter.drawRect(element.x, element.y, element.w, element.h)
-				
-			elif element.type == "pen":
-				pen = QPen()
-				pen.setWidth(element.width)
-				pen.setCapStyle(Qt.RoundCap)
-				painter.setPen(pen)
-			elif element.type == "brush":
-				color = QColor(element.color)
-				if filter:
-					color = filter.apply(color)
-				brush = QBrush(color)
-				painter.setBrush(brush)
-		painter.restore()
 		
-	def path(self):
-		path = QPainterPath()
-		for element in self.elements:
-			if element.type == "line":
-				path.moveTo(element.x1, element.y1)
-				path.lineTo(element.x2, element.y2)
-			elif element.type == "arc":
-				path.arcMoveTo(element.x, element.y, element.w, element.h, element.start)
-				path.arcTo(element.x, element.y, element.w, element.h, element.start, element.span)
-			if element.type == "circle":
-				path.addEllipse(QPointF(element.x, element.y), element.r, element.r)
-			elif element.type == "rect":
-				path.addRect(element.x, element.y, element.w, element.h)
-		return path
+		for part in self.parts:
+			painter.save()
+			
+			if part.pen:
+				painter.setPen(part.pen)
 				
+			if part.brush:
+				brush = QBrush(part.brush)
+				if filter:
+					filter.apply(brush)
+				painter.setBrush(brush)
+			
+			painter.drawPath(part.path)
+			painter.restore()
+		
+	def updatePath(self):
+		self.path = QPainterPath()
+		for part in self.parts:
+			self.path.addPath(part.path)
+		self.rect = self.path.boundingRect()
 		
 		
 class Style:
@@ -130,15 +147,49 @@ class EditorObject(QGraphicsItem):
 		self.scene.addItem(self)
 		
 	def checkCollisions(self): pass
-			
-			
-class EditorItem(EditorObject):
-	def __init__(self, scene, shape):
+	
+	
+class EditorShape(EditorObject):
+	def __init__(self, scene, shape=None):
 		super().__init__(scene)
-		self.shapeDef = shape
-		self.invalid = False
 		self.hover = False
 		self.hoverFilter = None
+		
+		self.shp = shape
+		if self.shp is None:
+			self.shp = Shape()
+			
+	def setShape(self, shape):
+		self.shp = shape
+		self.prepareGeometryChange()
+		self.update()
+		
+	def setHover(self, hover):
+		if self.hover != hover:
+			self.hover = hover
+			self.update()
+		
+	def checkHover(self, pos):
+		pos = self.mapFromScene(pos)
+		self.setHover(self.contains(pos))
+		
+	def shape(self):
+		return self.shp.path
+		
+	def boundingRect(self):
+		return self.shp.rect.adjusted(-2, -2, 2, 2)
+		
+	def paint(self, painter, option, widget):
+		filter = None
+		if self.hover:
+			filter = self.hoverFilter
+		self.shp.draw(painter, filter)
+			
+			
+class EditorNode(EditorShape):
+	def __init__(self, scene, shape=None):
+		super().__init__(scene, shape)
+		self.invalid = False
 		
 	def move(self, pos):
 		self.setPos(self.alignPos(pos))
@@ -152,41 +203,23 @@ class EditorItem(EditorObject):
 		if self.invalid != invalid:
 			self.invalid = invalid
 			self.update()
-	
-	def setHover(self, hover):
-		if self.hover != hover:
-			self.hover = hover
-			self.update()
-		
-	def checkHover(self, pos):
-		pos = self.mapFromScene(pos)
-		self.setHover(self.contains(pos))
 		
 	def checkCollisions(self):
 		items = self.scene.collidingItems(self)
-		if any(isinstance(item, EditorItem) for item in items):
+		if any(isinstance(item, EditorNode) for item in items):
 			self.setInvalid(True)
 		else:
 			self.setInvalid(False)
-			
-	def shape(self):
-		return self.shapeDef.path()
-			
-	def boundingRect(self):
-		return self.shapeDef.rect.adjusted(-2, -2, 2, 2)
 		
 	def paint(self, painter, option, widget):
-		filter = None
-		if self.hover:
-			filter = self.hoverFilter
-		self.shapeDef.draw(painter, filter)
+		super().paint(painter, option, widget)
 		
 		if self.invalid:
 			painter.save()
 			brush = QBrush(Qt.red, Qt.BDiagPattern)
 			painter.setBrush(brush)
 			painter.setPen(Qt.NoPen)
-			painter.drawRect(self.shapeDef.rect)
+			painter.drawRect(self.shp.rect)
 			painter.restore()
 	
 	
@@ -260,7 +293,7 @@ class EditorScene(QGraphicsScene):
 	def updateHover(self, pos):
 		enabled = self.hoverEnabled and not self.dragger.isDragging()
 		for item in self.items():
-			if isinstance(item, EditorItem):
+			if isinstance(item, EditorShape):
 				if enabled:
 					item.checkHover(pos)
 				else:
@@ -300,7 +333,7 @@ class EditorScene(QGraphicsScene):
 		else:
 			super().mousePressEvent(e)
 			if e.button() == Qt.LeftButton:
-				item = self.findItem(pos, EditorItem)
+				item = self.findItem(pos, EditorNode)
 				if item:
 					self.dragger.init(pos, self.selectedItems())
 			elif e.button() == Qt.RightButton:
