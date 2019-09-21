@@ -43,17 +43,17 @@ class ShapeElement:
 	
 class Shape:
 	def __init__(self):
-		self.rect = QRectF(-80, -80, 160, 160)
+		self.rect = QRectF()
 		self.elements = []
 		
 	def load(self, data):
-		self.rect = QRectF(*data["rect"])
-		
 		self.elements = []
 		for element in data["elements"]:
 			ele = ShapeElement()
 			ele.load(element)
 			self.elements.append(ele)
+			
+		self.rect = self.path().boundingRect()
 			
 	def draw(self, painter, filter=None):
 		painter.save()
@@ -84,6 +84,12 @@ class Shape:
 	def path(self):
 		path = QPainterPath()
 		for element in self.elements:
+			if element.type == "line":
+				path.moveTo(element.x1, element.y1)
+				path.lineTo(element.x2, element.y2)
+			elif element.type == "arc":
+				path.arcMoveTo(element.x, element.y, element.w, element.h, element.start)
+				path.arcTo(element.x, element.y, element.w, element.h, element.start, element.span)
 			if element.type == "circle":
 				path.addEllipse(QPointF(element.x, element.y), element.r, element.r)
 			elif element.type == "rect":
