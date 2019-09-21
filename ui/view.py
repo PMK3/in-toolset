@@ -34,6 +34,12 @@ class ShapeElement:
 		elif self.type == "rect":
 			self.x, self.y = data["x"], data["y"]
 			self.w, self.h = data["w"], data["h"]
+		elif self.type == "arrow":
+			self.x1, self.y1 = data["x1"], data["y1"]
+			self.x2, self.y2 = data["x2"], data["y2"]
+			self.stretch = data["stretch"]
+		else:
+			raise ValueError("Unknown shape element type: %s" %self.type)
 			
 			
 class ShapePart:
@@ -42,6 +48,11 @@ class ShapePart:
 		self.brush = None
 		self.path = QPainterPath()
 		self.elements = []
+		
+	def setPen(self, pen): self.pen = pen
+	
+	def addElement(self, element):
+		self.elements.append(element)
 		
 	def load(self, data):
 		pen = data.get("pen")
@@ -57,22 +68,42 @@ class ShapePart:
 		self.elements = []
 		for element in data["elements"]:
 			self.elements.append(ShapeElement(**element))
-			
-		self.updatePath()
 		
-	def updatePath(self):
+	def update(self):
 		self.path = QPainterPath()
+		
 		for element in self.elements:
+		
 			if element.type == "line":
 				self.path.moveTo(element.x1, element.y1)
 				self.path.lineTo(element.x2, element.y2)
+			
 			elif element.type == "arc":
 				self.path.arcMoveTo(element.x, element.y, element.w, element.h, element.start)
 				self.path.arcTo(element.x, element.y, element.w, element.h, element.start, element.span)
-			if element.type == "circle":
+			
+			elif element.type == "circle":
 				self.path.addEllipse(QPointF(element.x, element.y), element.r, element.r)
+			
 			elif element.type == "rect":
 				self.path.addRect(element.x, element.y, element.w, element.h)
+			
+			elif element.type == "arrow":
+				dx = element.x2 - element.x1
+				dy = element.y2 - element.y1
+				angle = math.atan2(dy, dx)
+				
+				self.path.moveTo(element.x1, element.y1)
+				self.path.lineTo(element.x2, element.y2)
+				self.path.lineTo(
+					element.x2 + element.stretch * math.cos(angle + math.pi * .75),
+					element.y2 + element.stretch * math.sin(angle + math.pi * .75)
+				)
+				self.path.moveTo(element.x2, element.y2)
+				self.path.lineTo(
+					element.x2 + element.stretch * math.cos(angle - math.pi * .75),
+					element.y2 + element.stretch * math.sin(angle - math.pi * .75)
+				)
 	
 	
 class Shape:
@@ -81,6 +112,10 @@ class Shape:
 		self.path = QPainterPath()
 		self.rect = QRectF()
 		
+	def addPart(self, part):
+		self.parts.append(part)
+		self.update()
+		
 	def load(self, data):
 		self.parts = []
 		for part in data:
@@ -88,7 +123,7 @@ class Shape:
 			shapePart.load(part)
 			self.parts.append(shapePart)
 			
-		self.updatePath()
+		self.update()
 			
 	def draw(self, painter, filter=None):
 		painter.setRenderHint(QPainter.Antialiasing)
@@ -97,20 +132,24 @@ class Shape:
 			painter.save()
 			
 			if part.pen:
-				painter.setPen(part.pen)
+				pen = QPen(part.pen)
+				if filter:
+					filter.applyToPen(pen)
+				painter.setPen(pen)
 				
 			if part.brush:
 				brush = QBrush(part.brush)
 				if filter:
-					filter.apply(brush)
+					filter.applyToBrush(brush)
 				painter.setBrush(brush)
 			
 			painter.drawPath(part.path)
 			painter.restore()
 		
-	def updatePath(self):
+	def update(self):
 		self.path = QPainterPath()
 		for part in self.parts:
+			part.update()
 			self.path.addPath(part.path)
 		self.rect = self.path.boundingRect()
 		
@@ -161,6 +200,10 @@ class EditorShape(EditorObject):
 			
 	def setShape(self, shape):
 		self.shp = shape
+		self.updateShape()
+		
+	def updateShape(self):
+		self.shp.update()
 		self.prepareGeometryChange()
 		self.update()
 		

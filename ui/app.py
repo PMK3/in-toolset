@@ -193,7 +193,12 @@ class SettingsDock(QDockWidget):
 		
 		
 class HoverFilter:
-	def apply(self, brush):
+	def applyToPen(self, pen):
+		color = pen.color()
+		color = QColor(color.rgba() ^ 0x555555)
+		pen.setColor(color)
+		
+	def applyToBrush(self, brush):
 		color = brush.color()
 		color = QColor(color.rgba() ^ 0x555555)
 		brush.setColor(color)
@@ -267,70 +272,52 @@ class ArrowType:
 	OUTPUT = 1
 			
 
-class ArrowItem(EditorObject):
-	def __init__(self, scene):#
+class ArrowItem(EditorShape):
+	def __init__(self, scene):
 		super().__init__(scene)
 		self.setZValue(-1)
 		
-	def boundingRect(self):
-		source = self.getSource()
-		target = self.getTarget()
-		x = min(source.x(), target.x()) - 10
-		y = min(source.y(), target.y()) - 10
-		w = abs(source.x() - target.x()) + 20
-		h = abs(source.y() - target.y()) + 20
-		return QRectF(x, y, w, h)
-	
-	def paint(self, painter, option, widget):
-		painter.setRenderHint(QPainter.Antialiasing)
+		self.arrow = ShapeElement(
+			"arrow", x1=0, y1=0, x2=0, y2=0, stretch=10
+		)
 		
 		pen = QPen()
 		pen.setCapStyle(Qt.RoundCap)
 		pen.setWidth(4)
-		painter.setPen(pen)
 		
-		source = self.getSource()
-		target = self.getTarget()
-		diff = target - source
+		part = ShapePart()
+		part.setPen(pen)
+		part.addElement(self.arrow)
 		
-		sx, sy = source.x(), source.y()
-		tx, ty = target.x(), target.y()
-		dx, dy = diff.x(), diff.y()
+		shape = Shape()
+		shape.addPart(part)
 		
-		angle = math.atan2(dy, dx)
+		self.setShape(shape)
 		
-		painter.drawLine(source, target)
-		painter.drawLine(
-			tx, ty,
-			tx + 10 * math.cos(angle + math.pi * .75),
-			ty + 10 * math.sin(angle + math.pi * .75)
-		)
-		painter.drawLine(
-			tx, ty,
-			tx + 10 * math.cos(angle - math.pi * .75),
-			ty + 10 * math.sin(angle - math.pi * .75)
-		)
+	def setPoints(self, x1, y1, x2, y2):
+		self.arrow.x1 = x1
+		self.arrow.y1 = y1
+		self.arrow.x2 = x2
+		self.arrow.y2 = y2
+		self.updateShape()
 	
 			
 class PlacementArrow(ArrowItem):
 	def __init__(self, scene, source):
 		super().__init__(scene)
-		self.setZValue(-1)
-		self.source = source
-		self.target = source.pos()
 		
-	def getSource(self): return self.source.pos()
-	def getTarget(self): return self.target
+		self.source = source
+		self.setPoints(source.x(), source.y(), source.x(), source.y())
 		
 	def move(self, pos):
-		self.prepareGeometryChange()
-		self.target = pos
-		self.update()
+		self.setPoints(self.source.x(), self.source.y(), pos.x(), pos.y())
 
 		
 class ActiveArrow(ArrowItem):
 	def __init__(self, scene, obj, type):
 		super().__init__(scene)
+		
+		self.hoverFilter = HoverFilter()
 		
 		self.type = type
 		
@@ -346,30 +333,20 @@ class ActiveArrow(ArrowItem):
 			
 		self.source.positionChanged.connect(self.updateArrow)
 		self.target.positionChanged.connect(self.updateArrow)
-	
-	def getSource(self):
+		
+		self.updateArrow()
+		
+	def updateArrow(self):
 		dx = self.target.x - self.source.x
 		dy = self.target.y - self.source.y
 		angle = math.atan2(dy, dx)
 		
-		return QPointF(
+		self.setPoints(
 			self.source.x + math.cos(angle) * 30,
-			self.source.y + math.sin(angle) * 30
-		)
-	
-	def getTarget(self):
-		dx = self.target.x - self.source.x
-		dy = self.target.y - self.source.y
-		angle = math.atan2(dy, dx)
-		
-		return QPointF(
+			self.source.y + math.sin(angle) * 30,
 			self.target.x - math.cos(angle) * 30,
 			self.target.y - math.sin(angle) * 30
 		)
-	
-	def updateArrow(self):
-		self.prepareGeometryChange()
-		self.update()
 		
 			
 class Editor:
