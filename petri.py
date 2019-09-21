@@ -99,7 +99,7 @@ class Arrow(Object):
 		return data
 
 	def similar(self, obj):
-		return obj.place == self.place and obj.transition == self.transition
+		return obj.active and obj.place == self.place and obj.transition == self.transition
 		
 		
 class ObjectList:

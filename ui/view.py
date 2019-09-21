@@ -95,21 +95,34 @@ class ShapePart:
 				
 				self.path.moveTo(element.x1, element.y1)
 				self.path.lineTo(element.x2, element.y2)
+				
+				self.path.moveTo(element.x2, element.y2)
 				self.path.lineTo(
 					element.x2 + element.stretch * math.cos(angle + math.pi * .75),
 					element.y2 + element.stretch * math.sin(angle + math.pi * .75)
 				)
+				
 				self.path.moveTo(element.x2, element.y2)
 				self.path.lineTo(
 					element.x2 + element.stretch * math.cos(angle - math.pi * .75),
 					element.y2 + element.stretch * math.sin(angle - math.pi * .75)
 				)
+		
+		if self.pen:
+			stroker = QPainterPathStroker(self.pen)
+		else:
+			stroker = QPainterPathStroker()
+		shapePath = stroker.createStroke(self.path)
+		
+		self.shapePath = QPainterPath(self.path)
+		self.shapePath.addPath(shapePath)
 	
 	
 class Shape:
 	def __init__(self):
 		self.parts = []
 		self.path = QPainterPath()
+		self.shapePath = QPainterPath()
 		self.rect = QRectF()
 		
 	def addPart(self, part):
@@ -148,10 +161,12 @@ class Shape:
 		
 	def update(self):
 		self.path = QPainterPath()
+		self.shapePath = QPainterPath()
 		for part in self.parts:
 			part.update()
 			self.path.addPath(part.path)
-		self.rect = self.path.boundingRect()
+			self.shapePath.addPath(part.shapePath)
+		self.rect = self.shapePath.boundingRect()
 		
 		
 class Style:
@@ -192,7 +207,7 @@ class EditorShape(EditorObject):
 	def __init__(self, scene, shape=None):
 		super().__init__(scene)
 		self.hover = False
-		self.hoverFilter = None
+		self.filter = None
 		
 		self.shp = shape
 		if self.shp is None:
@@ -217,16 +232,13 @@ class EditorShape(EditorObject):
 		self.setHover(self.contains(pos))
 		
 	def shape(self):
-		return self.shp.path
+		return self.shp.shapePath
 		
 	def boundingRect(self):
 		return self.shp.rect.adjusted(-2, -2, 2, 2)
 		
 	def paint(self, painter, option, widget):
-		filter = None
-		if self.hover:
-			filter = self.hoverFilter
-		self.shp.draw(painter, filter)
+		self.shp.draw(painter, self.filter)
 			
 			
 class EditorNode(EditorShape):
@@ -378,7 +390,8 @@ class EditorScene(QGraphicsScene):
 			if e.button() == Qt.LeftButton:
 				item = self.findItem(pos, EditorNode)
 				if item:
-					self.dragger.init(pos, self.selectedItems())
+					items = [i for i in self.selectedItems() if isinstance(i, EditorNode)]
+					self.dragger.init(pos, items)
 			elif e.button() == Qt.RightButton:
 				self.placedItem = self.controller.startPlacement(pos)
 				if self.placedItem:

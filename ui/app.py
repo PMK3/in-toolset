@@ -135,7 +135,7 @@ class GeneralSettings(QWidget):
 			self.label.setText("No item selected")
 
 		
-class ItemSettings(QWidget):
+class NodeSettings(QWidget):
 	def __init__(self, obj):
 		super().__init__()
 		self.obj = obj
@@ -182,26 +182,38 @@ class SettingsDock(QDockWidget):
 		
 	def handleSelectionChanged(self):
 		items = self.scene.selectedItems()
-		if len(items) == 1:
+		if len(items) == 1 and isinstance(items[0], ActiveNode):
 			self.setWidget(self.createWidget(items[0]))
 		else:
 			self.generalSettings.setSelection(items)
 			self.setWidget(self.generalSettings)
 			
 	def createWidget(self, item):
-		return ItemSettings(item.obj)
+		return NodeSettings(item.obj)
 		
 		
 class HoverFilter:
+	def __init__(self, item):
+		self.item = item
+	
 	def applyToPen(self, pen):
-		color = pen.color()
-		color = QColor(color.rgba() ^ 0x555555)
-		pen.setColor(color)
+		if self.item.hover:
+			color = pen.color()
+			color = QColor(color.rgba() ^ 0x555555)
+			pen.setColor(color)
 		
 	def applyToBrush(self, brush):
-		color = brush.color()
-		color = QColor(color.rgba() ^ 0x555555)
-		brush.setColor(color)
+		if self.item.hover:
+			color = brush.color()
+			color = QColor(color.rgba() ^ 0x555555)
+			brush.setColor(color)
+		
+		
+class ArrowFilter(HoverFilter):
+	def applyToPen(self, pen):
+		super().applyToPen(pen)
+		if self.item.isSelected():
+			pen.setColor(Qt.blue)
 		
 
 class PlacementNode(EditorNode):
@@ -223,7 +235,7 @@ class ActiveNode(EditorNode):
 		self.obj.labelChanged.connect(self.updateLabel)
 		self.move(QPointF(obj.x, obj.y))
 		
-		self.hoverFilter = HoverFilter()
+		self.filter = HoverFilter(self)
 		
 		self.font = QFont()
 		self.font.setPixelSize(16)
@@ -275,6 +287,8 @@ class ArrowType:
 class ArrowItem(EditorShape):
 	def __init__(self, scene):
 		super().__init__(scene)
+		self.setFlag(QGraphicsItem.ItemIsSelectable)
+		
 		self.setZValue(-1)
 		
 		self.arrow = ShapeElement(
@@ -317,7 +331,7 @@ class ActiveArrow(ArrowItem):
 	def __init__(self, scene, obj, type):
 		super().__init__(scene)
 		
-		self.hoverFilter = HoverFilter()
+		self.filter = ArrowFilter(self)
 		
 		self.type = type
 		
@@ -335,6 +349,9 @@ class ActiveArrow(ArrowItem):
 		self.target.positionChanged.connect(self.updateArrow)
 		
 		self.updateArrow()
+		
+	def delete(self):
+		self.obj.delete()
 		
 	def updateArrow(self):
 		dx = self.target.x - self.source.x
