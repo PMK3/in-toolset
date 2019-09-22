@@ -484,6 +484,14 @@ class MainWindow(QMainWindow):
 		if key in ToolbarShortcuts:
 			self.toolbar.selectButton(ToolbarShortcuts[key])
 			
+		elif key == Qt.Key_Control:
+			self.view.setHandDrag(True)
+			
+	def keyReleaseEvent(self, e):
+		key = e.key()
+		if key == Qt.Key_Control:
+			self.view.setHandDrag(False)
+			
 	def updateWindowTitle(self):
 		name = self.project.filename
 		if name is None:

@@ -430,7 +430,45 @@ class EditorView(QGraphicsView):
 		self.horizontalScrollBar().disconnect()
 		self.verticalScrollBar().disconnect()
 		
+		self.prevPos = None
+		self.prevDelta = None
+		self.handDrag = False
+		
 		self.zoom = 1
+		
+	def updateDragMode(self):
+		if self.handDrag:
+			self.setDragMode(QGraphicsView.ScrollHandDrag)
+		else:
+			self.setDragMode(QGraphicsView.RubberBandDrag)
+		
+	def setHandDrag(self, enabled):
+		self.handDrag = enabled
+		if self.prevPos is None:
+			self.updateDragMode()
+		
+	def mousePressEvent(self, e):
+		super().mousePressEvent(e)
+		if e.button() == Qt.LeftButton:
+			self.prevPos = self.mapToScene(e.pos())
+			self.prevDelta = QPointF()
+		
+	def mouseMoveEvent(self, e):
+		super().mouseMoveEvent(e)
+		if self.dragMode() == QGraphicsView.ScrollHandDrag:
+			if self.prevPos is not None:
+				pos = self.mapToScene(e.pos())
+				delta = pos - self.prevPos + self.prevDelta
+				self.translate(delta.x(), delta.y())
+				self.prevPos = pos
+				self.prevDelta = delta
+		
+	def mouseReleaseEvent(self, e):
+		super().mouseReleaseEvent(e)
+		if e.button() == Qt.LeftButton:
+			self.updateDragMode()
+			self.prevPos = None
+			self.prevDelta = None
 		
 	def keyPressEvent(self, e):
 		super().keyPressEvent(e)
