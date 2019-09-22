@@ -41,8 +41,11 @@ class ViewMenu(QMenu):
 		
 		self.showGrid = Action("Show grid", "Ctrl+1", True)
 		self.showGrid.setChecked(True)
+		self.resetCamera = Action("Reset camera", "Ctrl+R")
 		
 		self.addAction(self.showGrid)
+		self.addSeparator()
+		self.addAction(self.resetCamera)
 
 
 class MenuBar(QMenuBar):

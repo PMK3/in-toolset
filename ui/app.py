@@ -468,6 +468,7 @@ class MainWindow(QMainWindow):
 		menuBar.file.quit.triggered.connect(self.close)
 		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
 		menuBar.view.showGrid.toggled.connect(self.scene.setGridEnabled)
+		menuBar.view.resetCamera.triggered.connect(self.view.resetTransform)
 		self.setMenuBar(menuBar)
 		
 		self.updateWindowTitle()
