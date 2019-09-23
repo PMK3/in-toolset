@@ -242,13 +242,13 @@ class LabelItem(EditorObject):
 		self.updateLabel()
 
 	def drag(self, pos):
-		center = alignToGrid(QPointF(self.obj.x, self.obj.y))
-		diff = pos - center
-
-		dist = math.sqrt(diff.x() ** 2 + diff.y() ** 2)
+		dx = pos.x() - self.obj.x
+		dy = pos.y() - self.obj.y
+		
+		dist = math.sqrt(dx * dx + dy * dy)
 		dist = min(max(dist, 20), 60)
-
-		self.obj.setLabelAngle(math.atan2(diff.y(), diff.x()))
+		
+		self.obj.setLabelAngle(math.atan2(dy, dx))
 		self.obj.setLabelDistance(dist)
 
 	def updateLabel(self):
@@ -282,8 +282,8 @@ class ActiveNode(EditorNode):
 		self.obj = obj
 		self.obj.deleted.connect(self.removeFromScene)
 		self.obj.positionChanged.connect(self.updatePos)
-		self.setPos(alignToGrid(QPointF(obj.x, obj.y)))
-
+		self.setPos(obj.x, obj.y)
+		
 		self.filter = HoverFilter(self)
 
 	def drag(self, pos):
@@ -442,6 +442,7 @@ class Editor:
 				return PlacementArrow(self.scene, source)
 
 	def finishPlacement(self, pos, item):
+		pos = alignToGrid(pos)
 		x, y = pos.x(), pos.y()
 
 		if isinstance(item, PlacementNode):
