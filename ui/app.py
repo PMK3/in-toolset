@@ -237,9 +237,12 @@ class ActiveNode(EditorNode):
 		
 		self.filter = HoverFilter(self)
 		
-		self.font = QFont()
-		self.font.setPixelSize(16)
-		self.fontMetrics = QFontMetrics(self.font)
+		font = QFont()
+		font.setPixelSize(16)
+		
+		self.label = QGraphicsSimpleTextItem(self)
+		self.label.setFont(font)
+		self.updateLabel()
 		
 	def move(self, pos):
 		pos = self.alignPos(pos)
@@ -252,17 +255,10 @@ class ActiveNode(EditorNode):
 		self.setPos(self.obj.x, self.obj.y)
 		
 	def updateLabel(self):
-		self.prepareGeometryChange()
-		self.update()
+		self.label.setText(self.obj.label)
 		
-	def labelRect(self):
-		rect = self.fontMetrics.boundingRect(self.obj.label)
-		rect.moveCenter(QPoint(0, self.shp.rect.bottom() + 12))
-		return QRectF(rect.adjusted(-1, -1, 1, 1))
-		
-	def boundingRect(self):
-		rect = super().boundingRect()
-		return rect.united(self.labelRect())
+		rect = self.label.boundingRect()
+		self.label.setPos(-rect.width() / 2, self.shp.rect.bottom() + 12 - rect.height() / 2)
 		
 	def paint(self, painter, option, widget):
 		super().paint(painter, option, widget)
@@ -274,9 +270,6 @@ class ActiveNode(EditorNode):
 			painter.setPen(pen)
 			painter.drawRect(self.shp.rect)
 			painter.restore()
-		
-		painter.setFont(self.font)
-		painter.drawText(self.labelRect(), Qt.AlignCenter, self.obj.label)
 			
 			
 class ArrowType:
