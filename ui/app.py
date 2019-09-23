@@ -129,10 +129,12 @@ class GeneralSettings(QWidget):
 		self.layout.setAlignment(Qt.AlignTop)
 		
 	def setSelection(self, items):
-		if len(items) > 0:
-			self.label.setText("%i items selected" %len(items))
-		else:
+		if len(items) == 0:
 			self.label.setText("No item selected")
+		elif len(items) == 1:
+			self.label.setText("1 item selected")
+		else:
+			self.label.setText("%i items selected" %len(items))
 
 		
 class NodeSettings(QWidget):
@@ -221,31 +223,71 @@ class PlacementNode(EditorNode):
 		super().__init__(scene, style.shapes[ItemShapes[type]])
 		self.type = type
 		
+		
+class LabelItem(EditorObject):
+	def __init__(self, scene, obj):
+		super().__init__(scene)
+		
+		self.dragMode = DragMode.SPECIAL
+		
+		self.obj = obj
+		self.obj.positionChanged.connect(self.updateLabel)
+		self.obj.labelChanged.connect(self.updateLabel)
+		self.obj.deleted.connect(self.removeFromScene)
+		
+		self.font = QFont()
+		self.font.setPixelSize(16)
+		self.fontMetrics = QFontMetrics(self.font)
+		
+		self.updateLabel()
+		
+	def drag(self, pos):
+		center = alignToGrid(QPointF(self.obj.x, self.obj.y))
+		diff = pos - center
+		
+		dist = math.sqrt(diff.x() ** 2 + diff.y() ** 2)
+		dist = min(max(dist, 20), 60)
+		
+		self.obj.setLabelAngle(math.atan2(diff.y(), diff.x()))
+		self.obj.setLabelDistance(dist)
+		
+	def updateLabel(self):
+		xoffs = math.cos(self.obj.labelAngle) * self.obj.labelDistance
+		yoffs = math.sin(self.obj.labelAngle) * self.obj.labelDistance
+		self.setPos(self.obj.x + xoffs, self.obj.y + yoffs)
+		
+		self.prepareGeometryChange()
+		self.update()
+	
+	def boundingRect(self):
+		rect = self.fontMetrics.boundingRect(self.obj.label)
+		rect.moveCenter(QPoint(0, 0))
+		return QRectF(rect.adjusted(-1, -1, 1, 1))
+	
+	def paint(self, painter, option, widget):
+		if self.isSelected():
+			pen = QPen(Qt.blue)
+			painter.setPen(pen)
+			
+		painter.setFont(self.font)
+		painter.drawText(self.boundingRect(), Qt.AlignCenter, self.obj.label)
+		
+		
 
 class ActiveNode(EditorNode):
 	def __init__(self, scene, style, type, obj):
 		super().__init__(scene, style.shapes[ItemShapes[type]])
-		self.setFlag(QGraphicsItem.ItemIsSelectable)
-		
 		self.type = type
 		
 		self.obj = obj
 		self.obj.deleted.connect(self.removeFromScene)
 		self.obj.positionChanged.connect(self.updatePos)
-		self.obj.labelChanged.connect(self.updateLabel)
-		self.move(QPointF(obj.x, obj.y))
+		self.setPos(alignToGrid(QPointF(obj.x, obj.y)))
 		
 		self.filter = HoverFilter(self)
 		
-		font = QFont()
-		font.setPixelSize(16)
-		
-		self.label = QGraphicsSimpleTextItem(self)
-		self.label.setFont(font)
-		self.updateLabel()
-		
-	def move(self, pos):
-		pos = self.alignPos(pos)
+	def drag(self, pos):
+		pos = alignToGrid(pos)
 		self.obj.move(pos.x(), pos.y())
 	
 	def delete(self):
@@ -253,12 +295,6 @@ class ActiveNode(EditorNode):
 		
 	def updatePos(self):
 		self.setPos(self.obj.x, self.obj.y)
-		
-	def updateLabel(self):
-		self.label.setText(self.obj.label)
-		
-		rect = self.label.boundingRect()
-		self.label.setPos(-rect.width() / 2, self.shp.rect.bottom() + 12 - rect.height() / 2)
 		
 	def paint(self, painter, option, widget):
 		super().paint(painter, option, widget)
@@ -280,8 +316,6 @@ class ArrowType:
 class ArrowItem(EditorShape):
 	def __init__(self, scene):
 		super().__init__(scene)
-		self.setFlag(QGraphicsItem.ItemIsSelectable)
-		
 		self.setZValue(-1)
 		
 		self.arrow = ShapeElement(
@@ -316,7 +350,7 @@ class PlacementArrow(ArrowItem):
 		self.source = source
 		self.setPoints(source.x(), source.y(), source.x(), source.y())
 		
-	def move(self, pos):
+	def drag(self, pos):
 		self.setPoints(self.source.x(), self.source.y(), pos.x(), pos.y())
 
 		
@@ -377,11 +411,15 @@ class Editor:
 		
 	def addPlace(self, obj):
 		item = ActiveNode(self.scene, self.style, ObjectType.PLACE, obj)
+		label = LabelItem(self.scene, obj)
 		self.scene.addItem(item)
+		self.scene.addItem(label)
 		
 	def addTransition(self, obj):
 		item = ActiveNode(self.scene, self.style, ObjectType.TRANSITION, obj)
+		label = LabelItem(self.scene, obj)
 		self.scene.addItem(item)
+		self.scene.addItem(label)
 		
 	def addInput(self, obj):
 		item = ActiveArrow(self.scene, obj, ArrowType.INPUT)
@@ -396,7 +434,7 @@ class Editor:
 		if type in [ObjectType.PLACE, ObjectType.TRANSITION]:
 			self.scene.setHoverEnabled(False)
 			item = PlacementNode(self.scene, self.style, type)
-			item.move(pos)
+			item.drag(pos)
 			return item
 		elif type == ObjectType.ARROW:
 			source = self.scene.findItem(pos, ActiveNode)

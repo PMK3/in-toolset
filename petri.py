@@ -1,5 +1,6 @@
 
 from signal import Signal
+import math
 import json
 
 
@@ -19,19 +20,13 @@ class Object:
 			self.active = False
 			self.deleted.emit()
 			self.changed.emit()
-			
-	def setLabel(self, label):
-		self.label = label
-		self.labelChanged.emit()
 
 	def load(self, data):
 		self.id = data["id"]
-		self.label = data["label"]
 
 	def save(self):
 		return {
-			"id": self.id,
-			"label": self.label
+			"id": self.id
 		}
 
 	def similar(self, obj):
@@ -42,25 +37,51 @@ class Node(Object):
 	def __init__(self, net, x=0, y=0):
 		super().__init__(net)
 		self.positionChanged = Signal()
+		self.labelChanged = Signal()
 
 		self.x = x
 		self.y = y
+		
+		self.label = ""
+		self.labelAngle = math.pi / 2
+		self.labelDistance = 35
 
 	def move(self, x, y):
 		self.x = x
 		self.y = y
 		self.positionChanged.emit()
 		self.changed.emit()
-
+		
+	def setLabel(self, label):
+		self.label = label
+		self.labelChanged.emit()
+		self.changed.emit()
+		
+	def setLabelAngle(self, angle):
+		self.labelAngle = angle
+		self.labelChanged.emit()
+		self.changed.emit()
+		
+	def setLabelDistance(self, dist):
+		self.labelDistance = dist
+		self.labelChanged.emit()
+		self.changed.emit()
+		
 	def load(self, data):
 		super().load(data)
 		self.x = data["x"]
 		self.y = data["y"]
+		self.label = data["label"]
+		self.labelAngle = data["labelAngle"]
+		self.labelDistance = data["labelDistance"]
 
 	def save(self):
 		data = super().save()
 		data["x"] = self.x
 		data["y"] = self.y
+		data["label"] = self.label
+		data["labelAngle"] = self.labelAngle
+		data["labelDistance"] = self.labelDistance
 		return data
 	
 

@@ -11,6 +11,11 @@ GRID_SIZE = 20
 
 def round(value, base):
 	return math.floor(value / base + 0.5) * base
+	
+def alignToGrid(pos):
+	x = round(pos.x(), GRID_SIZE)
+	y = round(pos.y(), GRID_SIZE)
+	return QPointF(x, y)
 
 
 ShapeColors = {
@@ -182,14 +187,28 @@ class Style:
 			shape.load(data)
 			self.shapes[name] = shape
 
+			
+class DragMode:
+	NONE = 0
+	NORMAL = 1
+	SPECIAL = 2
+	
 
 class EditorObject(QGraphicsItem):
 	def __init__(self, scene):
 		super().__init__()
-		self.scene = scene
+		self.setFlag(QGraphicsItem.ItemIsSelectable)
 		
-	def move(self, pos):
-		self.setPos(pos)
+		self.scene = scene
+		self.dragMode = DragMode.NONE
+		self.invalid = False
+		
+	def setInvalid(self, invalid):
+		if self.invalid != invalid:
+			self.invalid = invalid
+			self.update()
+		
+	def drag(self, pos): pass
 		
 	def delete(self):
 		self.removeFromScene()
@@ -244,20 +263,10 @@ class EditorShape(EditorObject):
 class EditorNode(EditorShape):
 	def __init__(self, scene, shape=None):
 		super().__init__(scene, shape)
-		self.invalid = False
+		self.dragMode = DragMode.NORMAL
 		
-	def move(self, pos):
-		self.setPos(self.alignPos(pos))
-		
-	def alignPos(self, pos):
-		x = round(pos.x(), GRID_SIZE)
-		y = round(pos.y(), GRID_SIZE)
-		return QPointF(x, y)
-	
-	def setInvalid(self, invalid):
-		if self.invalid != invalid:
-			self.invalid = invalid
-			self.update()
+	def drag(self, pos):
+		self.setPos(alignToGrid(pos))
 		
 	def checkCollisions(self):
 		items = self.scene.collidingItems(self)
@@ -302,14 +311,14 @@ class ObjectDragger:
 		if self.isDragging():
 			posDiff = pos - self.dragBase
 			for item, base in zip(self.items, self.itemBase):
-				item.move(base + posDiff)
+				item.drag(base + posDiff)
 			for item in self.items:
 				item.checkCollisions()
 	
 	def finish(self, pos):
 		if any(item.invalid for item in self.items):
 			for item, base in zip(self.items, self.itemBase):
-				item.move(base)
+				item.drag(base)
 				item.setInvalid(False)
 		
 		for item in self.items:
@@ -388,10 +397,13 @@ class EditorScene(QGraphicsScene):
 		else:
 			super().mousePressEvent(e)
 			if e.button() == Qt.LeftButton:
-				item = self.findItem(pos, EditorNode)
+				item = self.findItem(pos, EditorObject)
 				if item:
-					items = [i for i in self.selectedItems() if isinstance(i, EditorNode)]
-					self.dragger.init(pos, items)
+					if item.dragMode == DragMode.NORMAL:
+						items = [i for i in self.selectedItems() if i.dragMode == DragMode.NORMAL]
+						self.dragger.init(pos, items)
+					elif item.dragMode == DragMode.SPECIAL:
+						self.dragger.init(pos, [item])
 			elif e.button() == Qt.RightButton:
 				self.placedItem = self.controller.startPlacement(pos)
 				if self.placedItem:
@@ -406,7 +418,7 @@ class EditorScene(QGraphicsScene):
 		
 		self.dragger.update(e.scenePos())
 		if self.placedItem:
-			self.placedItem.move(e.scenePos())
+			self.placedItem.drag(e.scenePos())
 			self.placedItem.checkCollisions()
 			
 	def mouseReleaseEvent(self, e):
