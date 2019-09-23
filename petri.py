@@ -1,4 +1,5 @@
 
+from enum import Enum, auto
 from signal import Signal
 import math
 import json
@@ -9,7 +10,7 @@ class Object:
 		self.changed = Signal()
 		self.deleted = Signal()
 		self.labelChanged = Signal()
-		
+
 		self.net = net
 		self.active = True
 		self.id = None
@@ -41,7 +42,7 @@ class Node(Object):
 
 		self.x = x
 		self.y = y
-		
+
 		self.label = ""
 		self.labelAngle = math.pi / 2
 		self.labelDistance = 35
@@ -51,22 +52,22 @@ class Node(Object):
 		self.y = y
 		self.positionChanged.emit()
 		self.changed.emit()
-		
+
 	def setLabel(self, label):
 		self.label = label
 		self.labelChanged.emit()
 		self.changed.emit()
-		
+
 	def setLabelAngle(self, angle):
 		self.labelAngle = angle
 		self.labelChanged.emit()
 		self.changed.emit()
-		
+
 	def setLabelDistance(self, dist):
 		self.labelDistance = dist
 		self.labelChanged.emit()
 		self.changed.emit()
-		
+
 	def load(self, data):
 		super().load(data)
 		self.x = data["x"]
@@ -83,17 +84,22 @@ class Node(Object):
 		data["labelAngle"] = self.labelAngle
 		data["labelDistance"] = self.labelDistance
 		return data
-	
+
 
 class Place(Node):
-	def __init__(self, net, x=0, y=0):
+	def __init__(self, net, x=0, y=0, tokens=0):
 		super().__init__(net, x, y)
-		self.tokens = 0
+		self.tokens = tokens
 
+class TransitionType(Enum):
+	INTERNAL = auto()
+	INPUT = auto()
+	OUTPUT = auto()
 
 class Transition(Node):
-	pass
-
+	def __init__(self, net, x=0, y=0, type=TransitionType.INTERNAL):
+		super().__init__(net, x, y)
+		self.type = type
 
 class Arrow(Object):
 	def __init__(self, net, place=None, transition=None):
@@ -102,7 +108,7 @@ class Arrow(Object):
 		self.transition = transition
 		if self.place and self.transition:
 			self.connect()
-		
+
 	def connect(self):
 		self.place.deleted.connect(self.delete)
 		self.transition.deleted.connect(self.delete)
@@ -121,23 +127,23 @@ class Arrow(Object):
 
 	def similar(self, obj):
 		return obj.active and obj.place == self.place and obj.transition == self.transition
-		
-		
+
+
 class ObjectList:
 	def __init__(self, net, cls):
 		self.changed = Signal()
 		self.added = Signal()
 
 		self.changed.connect(net.changed.emit)
-		
+
 		self.net = net
 		self.cls = cls
 		self.objects = {}
 		self.nextId = 0
-		
+
 	def __getitem__(self, item):
 		return self.objects[item]
-		
+
 	def add(self, obj):
 		if obj.id in self.objects:
 			return
@@ -148,20 +154,20 @@ class ObjectList:
 		if obj.id is None:
 			obj.id = self.nextId
 			self.nextId += 1
-		
+
 		obj.changed.connect(self.changed.emit)
-		
+
 		self.objects[obj.id] = obj
 		self.added.emit(obj)
 		self.changed.emit()
-		
+
 	def load(self, infos):
 		for info in infos:
 			obj = self.cls(self.net)
 			obj.load(info)
 			self.add(obj)
 		self.nextId = max(self.objects, default=0) + 1
-			
+
 	def save(self):
 		list = []
 		for obj in self.objects.values():
@@ -178,7 +184,7 @@ class PetriNet:
 		self.transitions = ObjectList(self, Transition)
 		self.inputs = ObjectList(self, Arrow)
 		self.outputs = ObjectList(self, Arrow)
-		
+
 	def load(self, data):
 		self.places.load(data["places"])
 		self.transitions.load(data["transitions"])
