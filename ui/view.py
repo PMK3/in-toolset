@@ -19,8 +19,14 @@ def alignToGrid(pos):
 
 
 ShapeColors = {
-	"black": Qt.black,
-	"white": Qt.white
+	"black": QColor(0, 0, 0),
+	"white": QColor(255, 255, 255),
+	
+	"red": QColor(255, 0, 0),
+	"green": QColor(0, 255, 0),
+	"blue": QColor(0, 0, 255),
+	
+	"lightblue": QColor(128, 128, 255)
 }
 
 class ShapeElement:
@@ -43,6 +49,8 @@ class ShapeElement:
 			self.x1, self.y1 = data["x1"], data["y1"]
 			self.x2, self.y2 = data["x2"], data["y2"]
 			self.stretch = data["stretch"]
+		elif self.type == "polygon":
+			self.points = data["points"]
 		else:
 			raise ValueError("Unknown shape element type: %s" %self.type)
 			
@@ -62,7 +70,7 @@ class ShapePart:
 	def load(self, data):
 		pen = data.get("pen")
 		if pen:
-			self.pen = QPen()
+			self.pen = QPen(ShapeColors[pen["color"]])
 			self.pen.setWidth(pen["width"])
 			self.pen.setCapStyle(Qt.RoundCap)
 		
@@ -92,6 +100,12 @@ class ShapePart:
 			
 			elif element.type == "rect":
 				self.path.addRect(element.x, element.y, element.w, element.h)
+				
+			elif element.type == "polygon":
+				points = []
+				for point in element.points:
+					points.append(QPointF(point[0], point[1]))
+				self.path.addPolygon(QPolygonF(points))
 			
 			elif element.type == "arrow":
 				dx = element.x2 - element.x1

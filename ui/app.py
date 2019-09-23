@@ -5,66 +5,101 @@ from PyQt5.QtCore import *
 from ui.menu import MenuBar
 from ui.view import *
 from ui import settings
+from signal import Signal
 import petri
 import math
 import sys
 import os
 
 
-class ObjectType:
+class ToolType:
 	PLACE = 0
 	TRANSITION = 1
 	ARROW = 2
+	
+	SELECTION = 10
+	DRAGGER = 11
+	
+class ToolSet:
+	OBJECTS = 0
+	DRAGGING = 1
 
 ToolbarShapes = {
-	ObjectType.PLACE: "place",
-	ObjectType.TRANSITION: "transition",
-	ObjectType.ARROW: "arrow"
-}
-
-ItemShapes = {
-	ObjectType.PLACE: "place",
-	ObjectType.TRANSITION: "transition",
+	ToolType.PLACE: "place",
+	ToolType.TRANSITION: "transition",
+	ToolType.ARROW: "arrow",
+	
+	ToolType.SELECTION: "selection",
+	ToolType.DRAGGER: "hand"
 }
 
 ToolbarText = {
-	ObjectType.PLACE: "Place",
-	ObjectType.TRANSITION: "Transition",
-	ObjectType.ARROW: "Arrow"
+	ToolType.PLACE: "Place",
+	ToolType.TRANSITION: "Transition",
+	ToolType.ARROW: "Arrow",
+	
+	ToolType.SELECTION: "Select",
+	ToolType.DRAGGER: "Move"
 }
 
 ToolbarTooltips = {
-	ObjectType.PLACE: "Place (Q)",
-	ObjectType.TRANSITION: "Transition (W)",
-	ObjectType.ARROW: "Arrow (E)"
+	ToolType.PLACE: "Place (Q)",
+	ToolType.TRANSITION: "Transition (W)",
+	ToolType.ARROW: "Arrow (E)",
+	
+	ToolType.SELECTION: "Selection tool (A)",
+	ToolType.DRAGGER: "Hand drag tool (S)"
 }
 
 ToolbarShortcuts = {
-	Qt.Key_Q: ObjectType.PLACE,
-	Qt.Key_W: ObjectType.TRANSITION,
-	Qt.Key_E: ObjectType.ARROW
+	Qt.Key_Q: ToolType.PLACE,
+	Qt.Key_W: ToolType.TRANSITION,
+	Qt.Key_E: ToolType.ARROW,
+	
+	Qt.Key_A: ToolType.SELECTION,
+	Qt.Key_S: ToolType.DRAGGER
 }
 
-ToolbarButtons = [
-	ObjectType.PLACE, ObjectType.TRANSITION, ObjectType.ARROW
-]
+ToolbarButtons = {
+	ToolSet.OBJECTS: [ToolType.PLACE, ToolType.TRANSITION, ToolType.ARROW],
+	ToolSet.DRAGGING: [ToolType.SELECTION, ToolType.DRAGGER]
+}
+
+ToolbarGroups = [ToolSet.OBJECTS, ToolSet.DRAGGING]
 
 
-class ObjectButton(QToolButton):
-	def __init__(self, type, text, tooltip, shape):
+class NodeType:
+	PLACE = 0
+	TRANSITION = 1
+
+NodeShapes = {
+	NodeType.PLACE: "place",
+	NodeType.TRANSITION: "transition",
+}
+
+NodeTools = {
+	ToolType.PLACE: NodeType.PLACE,
+	ToolType.TRANSITION: NodeType.TRANSITION
+}
+
+
+class ToolButton(QToolButton):
+	def __init__(self, style, type):
 		super().__init__()
-		self.setToolTip(tooltip)
+		self.setToolTip(ToolbarTooltips[type])
 
 		self.setFixedWidth(80)
 		self.setFixedHeight(80)
 		self.setCheckable(True)
-		self.shape = shape
-		self.text = text
+		self.shape = style.shapes[ToolbarShapes[type]]
+		self.text = ToolbarText[type]
 		self.type = type
 
 		self.font = QFont()
 		self.font.setPixelSize(16)
 		self.textRect = QRectF(0, 55, 80, 20)
+		
+		self.clicked.connect(lambda: self.setChecked(True))
 
 	def paintEvent(self, e):
 		super().paintEvent(e)
@@ -82,35 +117,38 @@ class ObjectButton(QToolButton):
 		painter.end()
 
 
-class ObjectMenu(QToolBar):
+class ToolBar(QToolBar):
 	def __init__(self, style):
 		super().__init__()
+		self.selectionChanged = Signal()
+		
 		self.setFloatable(False)
 
-		self.style = style
+		self.groups = {}
 		self.buttons = {}
+		
+		for i, groupType in enumerate(ToolbarGroups):
+			if i != 0:
+				self.addSeparator()
+			
+			group = QButtonGroup(self)
+			group.buttonToggled.connect(self.handleToggled)
+			for toolType in ToolbarButtons[groupType]:
+				button = ToolButton(style, toolType)
+				group.addButton(button)
+				self.addWidget(button)
+				self.buttons[toolType] = button
+			self.groups[groupType] = group
+			
+	def handleToggled(self, button, state):
+		if state:
+			self.selectionChanged.emit(button.type)
 
-		self.group = QButtonGroup(self)
-		for type in ToolbarButtons:
-			self.addButton(type)
-
-	def addButton(self, type):
-		shape = ToolbarShapes[type]
-		text = ToolbarText[type]
-		tooltip = ToolbarTooltips[type]
-
-		button = ObjectButton(type, text, tooltip, self.style.shapes[shape])
-		button.clicked.connect(lambda: button.setChecked(True))
-		self.buttons[type] = button
-
-		self.group.addButton(button)
-		self.addWidget(button)
-
-	def selectButton(self, type):
+	def selectTool(self, type):
 		self.buttons[type].setChecked(True)
 
-	def currentItem(self):
-		button = self.group.checkedButton()
+	def currentTool(self, group):
+		button = self.groups[group].checkedButton()
 		if button:
 			return button.type
 		return -1
@@ -220,7 +258,7 @@ class ArrowFilter(HoverFilter):
 
 class PlacementNode(EditorNode):
 	def __init__(self, scene, style, type):
-		super().__init__(scene, style.shapes[ItemShapes[type]])
+		super().__init__(scene, style.shapes[NodeShapes[type]])
 		self.type = type
 
 
@@ -276,7 +314,7 @@ class LabelItem(EditorObject):
 
 class ActiveNode(EditorNode):
 	def __init__(self, scene, style, type, obj):
-		super().__init__(scene, style.shapes[ItemShapes[type]])
+		super().__init__(scene, style.shapes[NodeShapes[type]])
 		self.type = type
 
 		self.obj = obj
@@ -410,13 +448,13 @@ class Editor:
 		self.net.outputs.added.connect(self.addOutput)
 
 	def addPlace(self, obj):
-		item = ActiveNode(self.scene, self.style, ObjectType.PLACE, obj)
+		item = ActiveNode(self.scene, self.style, NodeType.PLACE, obj)
 		label = LabelItem(self.scene, obj)
 		self.scene.addItem(item)
 		self.scene.addItem(label)
 
 	def addTransition(self, obj):
-		item = ActiveNode(self.scene, self.style, ObjectType.TRANSITION, obj)
+		item = ActiveNode(self.scene, self.style, NodeType.TRANSITION, obj)
 		label = LabelItem(self.scene, obj)
 		self.scene.addItem(item)
 		self.scene.addItem(label)
@@ -430,13 +468,13 @@ class Editor:
 		self.scene.addItem(item)
 
 	def startPlacement(self, pos):
-		type = self.toolbar.currentItem()
-		if type in [ObjectType.PLACE, ObjectType.TRANSITION]:
+		type = self.toolbar.currentTool(ToolSet.OBJECTS)
+		if type in NodeTools:
 			self.scene.setHoverEnabled(False)
-			item = PlacementNode(self.scene, self.style, type)
+			item = PlacementNode(self.scene, self.style, NodeTools[type])
 			item.drag(pos)
 			return item
-		elif type == ObjectType.ARROW:
+		elif type == ToolType.ARROW:
 			source = self.scene.findItem(pos, ActiveNode)
 			if source:
 				return PlacementArrow(self.scene, source)
@@ -447,10 +485,10 @@ class Editor:
 
 		if isinstance(item, PlacementNode):
 			if not item.invalid:
-				if item.type == ObjectType.PLACE:
+				if item.type == NodeType.PLACE:
 					place = petri.Place(self.net, x, y)
 					self.net.places.add(place)
-				elif item.type == ObjectType.TRANSITION:
+				elif item.type == NodeType.TRANSITION:
 					trans = petri.Transition(self.net, x, y)
 					self.net.transitions.add(trans)
 
@@ -458,7 +496,7 @@ class Editor:
 			source = item.source
 			target = self.scene.findItem(pos, ActiveNode)
 			if target and target.type != source.type:
-				if target.type == ObjectType.TRANSITION:
+				if target.type == NodeType.TRANSITION:
 					arrow = petri.Arrow(self.net, source.obj, target.obj)
 					self.net.inputs.add(arrow)
 				else:
@@ -478,7 +516,9 @@ class MainWindow(QMainWindow):
 		style = Style()
 		style.load("data/style.json")
 
-		self.toolbar = ObjectMenu(style)
+		self.toolbar = ToolBar(style)
+		self.toolbar.selectTool(ToolType.SELECTION)
+		self.toolbar.selectionChanged.connect(self.updateTool)
 		self.addToolBar(Qt.LeftToolBarArea, self.toolbar)
 
 		self.editor = Editor(style, self.toolbar)
@@ -511,19 +551,17 @@ class MainWindow(QMainWindow):
 			e.accept()
 		else:
 			e.ignore()
+			
+	def updateTool(self, tool):
+		if tool == ToolType.SELECTION:
+			self.view.setHandDrag(False)
+		elif tool == ToolType.DRAGGER:
+			self.view.setHandDrag(True)
 
 	def keyPressEvent(self, e):
 		key = e.key()
 		if key in ToolbarShortcuts:
-			self.toolbar.selectButton(ToolbarShortcuts[key])
-
-		elif key == Qt.Key_Control:
-			self.view.setHandDrag(True)
-
-	def keyReleaseEvent(self, e):
-		key = e.key()
-		if key == Qt.Key_Control:
-			self.view.setHandDrag(False)
+			self.toolbar.selectTool(ToolbarShortcuts[key])
 
 	def updateWindowTitle(self):
 		name = self.project.filename

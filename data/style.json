@@ -1,24 +1,65 @@
 
 {
 	"shapes": {
+	
 		"place": [{
 			"brush": {"color": "white"},
 			"elements": [
 				{"type": "circle", "x": 0, "y": 0, "r": 20}
 			]
 		}],
+		
 		"transition": [{
 			"brush": {"color": "white"},
 			"elements": [
 				{"type": "rect", "x": -20, "y": -20, "w": 40, "h": 40}
 			]
 		}],
+		
 		"arrow": [{
-			"pen": {"width": 5},
+			"pen": {"color": "black", "width": 5},
 			"elements": [
 				{"type": "line", "x1": -16, "y1": 0, "x2": 16, "y2": 0},
 				{"type": "line", "x1": 16, "y1": 0, "x2": 0, "y2": 14},
 				{"type": "line", "x1": 16, "y1": 0, "x2": 0, "y2": -14}
+			]
+		}],
+		
+		"selection": [
+			{
+				"brush": {"color": "lightblue"},
+				"pen": {"color": "blue", "width": 2},
+				"elements": [
+					{"type": "rect", "x": -16, "y": -20, "w": 30, "h": 30}
+				]
+			},
+			{
+				"brush": {"color": "black"},
+				"elements": [
+					{
+						"type": "polygon",
+						"points": [
+							[4, 0], [4, 16], [8, 14], [11, 20], [14, 19], [11, 13], [15, 11]
+						]
+					}
+				]
+			}
+		],
+		
+		"hand": [{
+			"brush": {"color": "white"},
+			"pen": {"color": "black", "width": 2},
+			"elements": [
+				{
+					"type": "polygon",
+					"points": [
+						[-4, -4], [-4, -12], [-8, -12], [0, -20], [8, -12], [4, -12],
+						[4, -4], [12, -4], [12, -8], [20, 0], [12, 8], [12, 4],
+						[4, 4], [4, 12], [8, 12], [0, 20], [-8, 12], [-4, 12],
+						[-4, 4], [-12, 4], [-12, 8], [-20, 0], [-12, -8], [-12, -4],
+						[-4, -4]
+					]
+				}
 			]
 		}]
 	}
