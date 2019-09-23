@@ -144,6 +144,9 @@ class ObjectList:
 	def __getitem__(self, item):
 		return self.objects[item]
 
+	def __iter__(self):
+		return self.objects.__iter__()
+
 	def add(self, obj):
 		if obj.id in self.objects:
 			return
@@ -184,6 +187,21 @@ class PetriNet:
 		self.transitions = ObjectList(self, Transition)
 		self.inputs = ObjectList(self, Arrow)
 		self.outputs = ObjectList(self, Arrow)
+
+	def setInitialMarking(self):
+		for place in self.places.objects.values():
+			source = True
+			for arrow in self.outputs.objects.values():
+				if arrow.place == place:
+					source = False
+					place.tokens = 0
+					break
+			if source:
+				place.tokens = 1
+				print("Source")
+			else:
+				place.tokens = 0
+				print("No Source")
 
 	def load(self, data):
 		self.places.load(data["places"])

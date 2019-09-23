@@ -12,37 +12,38 @@ class Action(QAction):
 class FileMenu(QMenu):
 	def __init__(self):
 		super().__init__("File")
-		
+
 		self.new = Action("New", "Ctrl+N")
 		self.open = Action("Open", "Ctrl+O")
 		self.save = Action("Save", "Ctrl+S")
 		self.saveAs = Action("Save as", "Ctrl+Shift+S")
 		self.quit = Action("Quit", "Ctrl+Q")
-		
+
 		self.addAction(self.new)
 		self.addAction(self.open)
 		self.addAction(self.save)
 		self.addAction(self.saveAs)
 		self.addAction(self.quit)
-		
-		
+
+
 class EditMenu(QMenu):
 	def __init__(self):
 		super().__init__("Edit")
-		
+
 		self.selectAll = Action("Select all", "Ctrl+A")
-		
+		self.setInitialMarking = Action("Set Initial Marking", "Ctrl+I")
+
 		self.addAction(self.selectAll)
-		
-		
+		self.addAction(self.setInitialMarking)
+
 class ViewMenu(QMenu):
 	def __init__(self):
 		super().__init__("View")
-		
+
 		self.showGrid = Action("Show grid", "Ctrl+1", True)
 		self.showGrid.setChecked(True)
 		self.resetCamera = Action("Reset camera", "Ctrl+R")
-		
+
 		self.addAction(self.showGrid)
 		self.addSeparator()
 		self.addAction(self.resetCamera)
@@ -51,11 +52,11 @@ class ViewMenu(QMenu):
 class MenuBar(QMenuBar):
 	def __init__(self):
 		super().__init__()
-		
+
 		self.file = FileMenu()
 		self.edit = EditMenu()
 		self.view = ViewMenu()
-		
+
 		self.addMenu(self.file)
 		self.addMenu(self.edit)
 		self.addMenu(self.view)
