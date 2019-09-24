@@ -89,7 +89,18 @@ class Node(Object):
 class Place(Node):
 	def __init__(self, net, x=0, y=0, tokens=0):
 		super().__init__(net, x, y)
-		self.tokens = tokens
+		self.setTokens(tokens)
+		self.tokensChanged = Signal()
+
+	def setTokens(self, amount):
+		if amount != self.getTokens():
+			self._tokens = amount
+			self.tokensChanged.emit()
+
+	def getTokens(self):
+		return self._tokens
+
+	tokens = property(getTokens, setTokens)
 
 
 class TransitionType(Enum):
