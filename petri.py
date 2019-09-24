@@ -123,7 +123,7 @@ class Transition(Node):
 
 	def trigger(self):
 		if not self.canTrigger():
-			throw ValueError("No tokens available")
+			raise ValueError("No tokens available")
 
 		for input in self.net.inputs:
 			if input.transition == self:
@@ -242,6 +242,13 @@ class PetriNet:
 			"outputs": self.outputs.save()
 		}
 		return data
+
+	def triggerRandomTransition(self):
+		triggerable = [transition for transition in self.transitions if transition.canTrigger()]
+		if not triggerable.empty():
+			random.choice(triggerables).trigger()
+		else:
+			raise ValueError("No Triggerable Transition Available")
 
 
 class Project:
