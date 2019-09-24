@@ -89,8 +89,9 @@ class Node(Object):
 class Place(Node):
 	def __init__(self, net, x=0, y=0, tokens=0):
 		super().__init__(net, x, y)
-		self.setTokens(tokens)
 		self.tokensChanged = Signal()
+		self._tokens = tokens
+		self.setTokens(tokens)
 
 	def setTokens(self, amount):
 		if amount != self.getTokens():
@@ -142,7 +143,6 @@ class Arrow(Object):
 	def similar(self, obj):
 		return obj.active and obj.place == self.place and obj.transition == self.transition
 
-
 class ObjectList:
 	def __init__(self, net, cls):
 		self.changed = Signal()
@@ -159,13 +159,13 @@ class ObjectList:
 		return self.objects[item]
 
 	def __iter__(self):
-		return self.objects.__iter__()
+		return self.objects.values().__iter__()
 
 	def add(self, obj):
 		if obj.id in self.objects:
 			return
 
-		if any(obj.similar(x) for x in self.objects.values()):
+		if any(obj.similar(x) for x in self):
 			return
 
 		if obj.id is None:
@@ -204,9 +204,9 @@ class PetriNet:
 
 	def setInitialMarking(self):
 		placeIsSource = {}
-		for place in self.places.objects.values():
+		for place in self.places:
 			place.tokens = 1
-		for output in self.outputs.objects.values():
+		for output in self.outputs:
 			output.place.tokens = 0
 
 	def load(self, data):
