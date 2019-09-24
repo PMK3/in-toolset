@@ -177,7 +177,7 @@ class ObjectList:
 		return self.objects[item]
 
 	def __iter__(self):
-		return self.objects.values().__iter__()
+		return [obj for obj in self.objects.values() if obj.active].__iter__()
 
 	def add(self, obj):
 		if obj.id in self.objects:
