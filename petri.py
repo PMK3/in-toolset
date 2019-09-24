@@ -189,25 +189,18 @@ class PetriNet:
 		self.outputs = ObjectList(self, Arrow)
 
 	def setInitialMarking(self):
+		placeIsSource = {}
 		for place in self.places.objects.values():
-			source = True
-			for arrow in self.outputs.objects.values():
-				if arrow.place == place:
-					source = False
-					place.tokens = 0
-					break
-			if source:
-				place.tokens = 1
-				print("Source")
-			else:
-				place.tokens = 0
-				print("No Source")
+			place.tokens = 1
+		for output in self.outputs.objects.values():
+			output.place.tokens = 0
 
 	def load(self, data):
 		self.places.load(data["places"])
 		self.transitions.load(data["transitions"])
 		self.inputs.load(data["inputs"])
 		self.outputs.load(data["outputs"])
+		self.setInitialMarking()
 
 	def save(self):
 		return {
