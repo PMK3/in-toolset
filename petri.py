@@ -91,15 +91,18 @@ class Place(Node):
 		super().__init__(net, x, y)
 		self.tokens = tokens
 
+
 class TransitionType(Enum):
 	INTERNAL = auto()
 	INPUT = auto()
 	OUTPUT = auto()
 
+
 class Transition(Node):
 	def __init__(self, net, x=0, y=0, type=TransitionType.INTERNAL):
 		super().__init__(net, x, y)
 		self.type = type
+
 
 class Arrow(Object):
 	def __init__(self, net, place=None, transition=None):
