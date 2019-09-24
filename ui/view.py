@@ -223,9 +223,7 @@ class EditorObject(QGraphicsItem):
 			self.update()
 		
 	def drag(self, pos): pass
-		
-	def delete(self):
-		self.removeFromScene()
+	def delete(self): pass
 	
 	def removeFromScene(self):
 		self.scene.removeItem(self)
