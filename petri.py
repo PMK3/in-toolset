@@ -115,6 +115,24 @@ class Transition(Node):
 		super().__init__(net, x, y)
 		self.type = type
 
+	def canTrigger(self):
+		for input in self.net.inputs:
+			if input.transition == self and input.place.tokens < 1:
+				return False
+		return True
+
+	def trigger(self):
+		if not self.canTrigger():
+			throw ValueError("No tokens available")
+
+		for input in self.net.inputs:
+			if input.transition == self:
+				input.place.tokens -= 1
+
+		for output in self.net.outputs:
+			if output.transition == self:
+				output.place.tokens += 1
+
 
 class Arrow(Object):
 	def __init__(self, net, place=None, transition=None):
