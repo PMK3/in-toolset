@@ -12,7 +12,7 @@
 			"pen": {"color": "black", "width": 2},
 			"brush": {"color": "white"},
 			"elements": [
-				{"type": "rect", "x": -18, "y": -18, "w": 37, "h": 37}
+				{"type": "rect", "x": -18, "y": -18, "w": 36, "h": 36}
 			]
 		}],
 

@@ -183,9 +183,9 @@ class NodeSettings(QWidget):
 
 		self.setStyleSheet("font-size: 16px")
 
-		self.x = QLabel("%i" %obj.x)
+		self.x = QLabel("%i" %(obj.x / 20))
 		self.x.setAlignment(Qt.AlignRight)
-		self.y = QLabel("%i" %obj.y)
+		self.y = QLabel("%i" %(obj.y / 20))
 		self.y.setAlignment(Qt.AlignRight)
 		self.label = QLineEdit(obj.label)
 		self.label.setMaxLength(20)
@@ -197,8 +197,8 @@ class NodeSettings(QWidget):
 		self.layout.addRow("Label:", self.label)
 
 	def updatePos(self):
-		self.x.setText("%i" %self.obj.x)
-		self.y.setText("%i" %self.obj.y)
+		self.x.setText("%i" %(self.obj.x / 20))
+		self.y.setText("%i" %(self.obj.y / 20))
 
 	def updateLabel(self, label):
 		self.label.setText(label)
