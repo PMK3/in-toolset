@@ -43,21 +43,21 @@ ToolbarText = {
 }
 
 ToolbarTooltips = {
-	ToolType.PLACE: "Place (Q)",
-	ToolType.TRANSITION: "Transition (W)",
-	ToolType.ARROW: "Arrow (E)",
+	ToolType.PLACE: "Place (P)",
+	ToolType.TRANSITION: "Transition (T)",
+	ToolType.ARROW: "Arrow (A)",
 	
-	ToolType.SELECTION: "Selection tool (A)",
-	ToolType.DRAGGER: "Hand drag tool (S)"
+	ToolType.SELECTION: "Selection tool (S)",
+	ToolType.DRAGGER: "Hand drag tool (M)"
 }
 
 ToolbarShortcuts = {
-	Qt.Key_Q: ToolType.PLACE,
-	Qt.Key_W: ToolType.TRANSITION,
-	Qt.Key_E: ToolType.ARROW,
+	Qt.Key_P: ToolType.PLACE,
+	Qt.Key_T: ToolType.TRANSITION,
+	Qt.Key_A: ToolType.ARROW,
 	
-	Qt.Key_A: ToolType.SELECTION,
-	Qt.Key_S: ToolType.DRAGGER
+	Qt.Key_S: ToolType.SELECTION,
+	Qt.Key_M: ToolType.DRAGGER
 }
 
 ToolbarButtons = {
@@ -65,7 +65,7 @@ ToolbarButtons = {
 	ToolSet.DRAGGING: [ToolType.SELECTION, ToolType.DRAGGER]
 }
 
-ToolbarGroups = [ToolSet.OBJECTS, ToolSet.DRAGGING]
+ToolbarGroups = [ToolSet.DRAGGING, ToolSet.OBJECTS]
 
 
 class NodeType:
