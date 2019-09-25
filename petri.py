@@ -9,12 +9,10 @@ class Object:
 	def __init__(self, net):
 		self.changed = Signal()
 		self.deleted = Signal()
-		self.labelChanged = Signal()
 
 		self.net = net
 		self.active = True
 		self.id = None
-		self.label = ""
 
 	def delete(self):
 		if self.active:

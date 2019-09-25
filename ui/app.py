@@ -278,6 +278,11 @@ class LabelItem(EditorObject):
 		self.fontMetrics = QFontMetrics(self.font)
 
 		self.updateLabel()
+		
+	def delete(self):
+		self.obj.setLabel("")
+		self.obj.setLabelAngle(math.pi / 2)
+		self.obj.setLabelDistance(35)
 
 	def drag(self, pos):
 		dx = pos.x() - self.obj.x
