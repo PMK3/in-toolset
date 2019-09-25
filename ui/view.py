@@ -474,8 +474,9 @@ class EditorView(QGraphicsView):
 	def mousePressEvent(self, e):
 		super().mousePressEvent(e)
 		if e.button() == Qt.LeftButton:
-			self.prevPos = self.mapToScene(e.pos())
-			self.prevDelta = QPointF()
+			if not self.itemAt(e.pos()):
+				self.prevPos = self.mapToScene(e.pos())
+				self.prevDelta = QPointF()
 		
 	def mouseMoveEvent(self, e):
 		super().mouseMoveEvent(e)
