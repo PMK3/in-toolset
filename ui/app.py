@@ -16,10 +16,10 @@ class ToolType:
 	PLACE = 0
 	TRANSITION = 1
 	ARROW = 2
-	
+
 	SELECTION = 10
 	DRAGGER = 11
-	
+
 class ToolSet:
 	OBJECTS = 0
 	DRAGGING = 1
@@ -28,7 +28,7 @@ ToolbarShapes = {
 	ToolType.PLACE: "place",
 	ToolType.TRANSITION: "transition",
 	ToolType.ARROW: "arrow",
-	
+
 	ToolType.SELECTION: "selection",
 	ToolType.DRAGGER: "hand"
 }
@@ -37,7 +37,7 @@ ToolbarText = {
 	ToolType.PLACE: "Place",
 	ToolType.TRANSITION: "Transition",
 	ToolType.ARROW: "Arrow",
-	
+
 	ToolType.SELECTION: "Select",
 	ToolType.DRAGGER: "Move"
 }
@@ -46,7 +46,7 @@ ToolbarTooltips = {
 	ToolType.PLACE: "Place (P)",
 	ToolType.TRANSITION: "Transition (T)",
 	ToolType.ARROW: "Arrow (A)",
-	
+
 	ToolType.SELECTION: "Selection tool (S)",
 	ToolType.DRAGGER: "Hand drag tool (M)"
 }
@@ -55,7 +55,7 @@ ToolbarShortcuts = {
 	Qt.Key_P: ToolType.PLACE,
 	Qt.Key_T: ToolType.TRANSITION,
 	Qt.Key_A: ToolType.ARROW,
-	
+
 	Qt.Key_S: ToolType.SELECTION,
 	Qt.Key_M: ToolType.DRAGGER
 }
@@ -98,7 +98,7 @@ class ToolButton(QToolButton):
 		self.font = QFont()
 		self.font.setPixelSize(16)
 		self.textRect = QRectF(0, 55, 80, 20)
-		
+
 		self.clicked.connect(lambda: self.setChecked(True))
 
 	def paintEvent(self, e):
@@ -121,16 +121,16 @@ class ToolBar(QToolBar):
 	def __init__(self, style):
 		super().__init__()
 		self.selectionChanged = Signal()
-		
+
 		self.setFloatable(False)
 
 		self.groups = {}
 		self.buttons = {}
-		
+
 		for i, groupType in enumerate(ToolbarGroups):
 			if i != 0:
 				self.addSeparator()
-			
+
 			group = QButtonGroup(self)
 			group.buttonToggled.connect(self.handleToggled)
 			for toolType in ToolbarButtons[groupType]:
@@ -139,7 +139,7 @@ class ToolBar(QToolBar):
 				self.addWidget(button)
 				self.buttons[toolType] = button
 			self.groups[groupType] = group
-			
+
 	def handleToggled(self, button, state):
 		if state:
 			self.selectionChanged.emit(button.type)
@@ -282,10 +282,10 @@ class LabelItem(EditorObject):
 	def drag(self, pos):
 		dx = pos.x() - self.obj.x
 		dy = pos.y() - self.obj.y
-		
+
 		dist = math.sqrt(dx * dx + dy * dy)
 		dist = min(max(dist, 20), 60)
-		
+
 		self.obj.setLabelAngle(math.atan2(dy, dx))
 		self.obj.setLabelDistance(dist)
 
@@ -321,7 +321,7 @@ class ActiveNode(EditorNode):
 		self.obj.deleted.connect(self.removeFromScene)
 		self.obj.positionChanged.connect(self.updatePos)
 		self.setPos(obj.x, obj.y)
-		
+
 		self.filter = HoverFilter(self)
 
 	def drag(self, pos):
@@ -362,7 +362,7 @@ class ArrowItem(EditorShape):
 
 		pen = QPen()
 		pen.setCapStyle(Qt.RoundCap)
-		pen.setWidth(4)
+		pen.setWidth(2)
 
 		part = ShapePart()
 		part.setPen(pen)
@@ -551,7 +551,7 @@ class MainWindow(QMainWindow):
 			e.accept()
 		else:
 			e.ignore()
-			
+
 	def updateTool(self, tool):
 		if tool == ToolType.SELECTION:
 			self.view.setHandDrag(False)
