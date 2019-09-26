@@ -530,10 +530,10 @@ class Editor:
 				return PlacementArrow(self.scene, source)
 
 	def finishPlacement(self, pos, item):
-		pos = alignToGrid(pos)
-		x, y = pos.x(), pos.y()
-
 		if isinstance(item, PlacementNode):
+			pos = alignToGrid(pos)
+			x, y = pos.x(), pos.y()
+			
 			if not item.invalid:
 				if item.type == NodeType.PLACE:
 					place = petri.Place(self.net, x, y)
