@@ -65,6 +65,11 @@ ToolbarButtons = {
 	ToolSet.DRAGGING: [ToolType.SELECTION, ToolType.DRAGGER]
 }
 
+ToolbarHeaders = {
+	ToolSet.OBJECTS: "mouseright",
+	ToolSet.DRAGGING: "mouseleft"
+}
+
 ToolbarGroups = [ToolSet.DRAGGING, ToolSet.OBJECTS]
 
 
@@ -103,10 +108,10 @@ class ToolButton(QToolButton):
 
 	def paintEvent(self, e):
 		super().paintEvent(e)
-
+		
 		painter = QPainter()
 		painter.begin(self)
-
+		
 		painter.translate(40, 30)
 		self.shape.draw(painter)
 		painter.resetTransform()
@@ -114,6 +119,45 @@ class ToolButton(QToolButton):
 		painter.setFont(self.font)
 		painter.drawText(self.textRect, Qt.AlignCenter, self.text)
 
+		painter.end()
+		
+		
+class ToolBarHeader(QWidget):
+	def __init__(self, style, type):
+		super().__init__()
+		self.setMinimumWidth(40)
+		self.setMinimumHeight(40)
+		self.shape = style.shapes[ToolbarHeaders[type]]
+		self.orientation = Qt.Vertical
+		
+	def setOrientation(self, orientation):
+		self.orientation = orientation
+		self.update()
+		
+	def paintEvent(self, e):
+		super().paintEvent(e)
+		
+		painter = QPainter()
+		painter.begin(self)
+		
+		painter.save()
+		
+		if self.orientation == Qt.Horizontal:
+			gradient = QLinearGradient(0, 0, self.width(), 0)
+		else:
+			gradient = QLinearGradient(0, 0, 0, self.height())
+		gradient.setColorAt(0, QColor(160, 160, 160))
+		gradient.setColorAt(1, QPalette().color(QPalette.Window))
+		
+		painter.setPen(Qt.NoPen)
+		painter.setBrush(gradient)
+		painter.drawRect(self.rect())
+		
+		painter.restore()
+		
+		painter.translate(self.rect().center())
+		self.shape.draw(painter)
+		
 		painter.end()
 
 
@@ -127,9 +171,10 @@ class ToolBar(QToolBar):
 		self.groups = {}
 		self.buttons = {}
 
-		for i, groupType in enumerate(ToolbarGroups):
-			if i != 0:
-				self.addSeparator()
+		for groupType in ToolbarGroups:
+			header = ToolBarHeader(style, groupType)
+			self.orientationChanged.connect(header.setOrientation)
+			self.addWidget(header)
 
 			group = QButtonGroup(self)
 			group.buttonToggled.connect(self.handleToggled)
