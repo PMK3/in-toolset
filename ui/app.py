@@ -219,12 +219,52 @@ class GeneralSettings(QWidget):
 		else:
 			self.label.setText("%i items selected" %len(items))
 
-
-class NodeSettings(QWidget):
+			
+class PlaceSettings(QWidget):
 	def __init__(self, obj):
 		super().__init__()
 		self.obj = obj
 		self.obj.positionChanged.connect(self.updatePos)
+		self.obj.labelChanged.connect(self.updateLabel)
+		self.obj.tokensChanged.connect(self.updateTokens)
+
+		self.setStyleSheet("font-size: 16px")
+
+		self.x = QLabel("%i" %(obj.x / GRID_SIZE))
+		self.x.setAlignment(Qt.AlignRight)
+		self.y = QLabel("%i" %(obj.y / GRID_SIZE))
+		self.y.setAlignment(Qt.AlignRight)
+		self.label = QLineEdit(obj.label)
+		self.label.setMaxLength(20)
+		self.label.textEdited.connect(self.obj.setLabel)
+		self.tokens = QSpinBox()
+		self.tokens.setRange(0, 999)
+		self.tokens.setValue(obj.tokens)
+		self.tokens.valueChanged.connect(self.obj.setTokens)
+
+		self.layout = QFormLayout(self)
+		self.layout.addRow("X:", self.x)
+		self.layout.addRow("Y:", self.y)
+		self.layout.addRow("Label:", self.label)
+		self.layout.addRow("Tokens:", self.tokens)
+
+	def updatePos(self):
+		self.x.setText("%i" %(self.obj.x / GRID_SIZE))
+		self.y.setText("%i" %(self.obj.y / GRID_SIZE))
+
+	def updateLabel(self):
+		self.label.setText(self.obj.label)
+		
+	def updateTokens(self):
+		self.tokens.setValue(self.obj.tokens)
+		
+		
+class TransitionSettings(QWidget):
+	def __init__(self, obj):
+		super().__init__()
+		self.obj = obj
+		self.obj.positionChanged.connect(self.updatePos)
+		self.obj.labelChanged.connect(self.updateLabel)
 
 		self.setStyleSheet("font-size: 16px")
 
@@ -245,8 +285,8 @@ class NodeSettings(QWidget):
 		self.x.setText("%i" %(self.obj.x / 20))
 		self.y.setText("%i" %(self.obj.y / 20))
 
-	def updateLabel(self, label):
-		self.label.setText(label)
+	def updateLabel(self):
+		self.label.setText(self.obj.label)
 
 
 class SettingsDock(QDockWidget):
@@ -274,7 +314,9 @@ class SettingsDock(QDockWidget):
 			self.setWidget(self.generalSettings)
 
 	def createWidget(self, item):
-		return NodeSettings(item.obj)
+		if item.type == NodeType.PLACE:
+			return PlaceSettings(item.obj)
+		return TransitionSettings(item.obj)
 
 
 class HoverFilter:
@@ -301,7 +343,7 @@ class ArrowFilter(HoverFilter):
 			pen.setColor(Qt.blue)
 
 
-class PlacementNode(EditorNode):
+class TemporaryNode(EditorNode):
 	def __init__(self, scene, style, type):
 		super().__init__(scene, style.shapes[NodeShapes[type]])
 		self.type = type
@@ -363,7 +405,7 @@ class LabelItem(EditorObject):
 
 
 class ActiveNode(EditorNode):
-	def __init__(self, scene, style, type, obj):
+	def __init__(self, scene, style, obj, type):
 		super().__init__(scene, style.shapes[NodeShapes[type]])
 		self.type = type
 
@@ -371,7 +413,7 @@ class ActiveNode(EditorNode):
 		self.obj.deleted.connect(self.removeFromScene)
 		self.obj.positionChanged.connect(self.updatePos)
 		self.setPos(obj.x, obj.y)
-
+		
 		self.filter = HoverFilter(self)
 
 	def drag(self, pos):
@@ -386,7 +428,7 @@ class ActiveNode(EditorNode):
 
 	def paint(self, painter, option, widget):
 		super().paint(painter, option, widget)
-
+		
 		if self.isSelected():
 			painter.save()
 			pen = QPen(Qt.blue)
@@ -394,6 +436,29 @@ class ActiveNode(EditorNode):
 			painter.setPen(pen)
 			painter.drawRect(self.shp.rect)
 			painter.restore()
+			
+			
+class PlaceNode(ActiveNode):
+	def __init__(self, scene, style, obj):
+		super().__init__(scene, style, obj, NodeType.PLACE)
+		self.obj.tokensChanged.connect(self.update)
+		
+		self.font = QFont()
+		self.font.setPixelSize(16)
+	
+	def paint(self, painter, option, widget):
+		super().paint(painter, option, widget)
+		
+		if self.obj.tokens != 0:
+			text = str(self.obj.tokens)
+			painter.setFont(self.font)
+			painter.drawText(self.shp.rect, Qt.AlignCenter, text)
+
+			
+class TransitionNode(ActiveNode):
+	def __init__(self, scene, style, obj):
+		super().__init__(scene, style, obj, NodeType.TRANSITION)
+			
 
 
 class ArrowType:
@@ -431,7 +496,7 @@ class ArrowItem(EditorShape):
 		self.updateShape()
 
 
-class PlacementArrow(ArrowItem):
+class TemporaryArrow(ArrowItem):
 	def __init__(self, scene, source):
 		super().__init__(scene)
 
@@ -498,13 +563,13 @@ class Editor:
 		self.net.outputs.added.connect(self.addOutput)
 
 	def addPlace(self, obj):
-		item = ActiveNode(self.scene, self.style, NodeType.PLACE, obj)
+		item = PlaceNode(self.scene, self.style, obj)
 		label = LabelItem(self.scene, obj)
 		self.scene.addItem(item)
 		self.scene.addItem(label)
 
 	def addTransition(self, obj):
-		item = ActiveNode(self.scene, self.style, NodeType.TRANSITION, obj)
+		item = TransitionNode(self.scene, self.style, obj)
 		label = LabelItem(self.scene, obj)
 		self.scene.addItem(item)
 		self.scene.addItem(label)
@@ -521,16 +586,16 @@ class Editor:
 		type = self.toolbar.currentTool(ToolSet.OBJECTS)
 		if type in NodeTools:
 			self.scene.setHoverEnabled(False)
-			item = PlacementNode(self.scene, self.style, NodeTools[type])
+			item = TemporaryNode(self.scene, self.style, NodeTools[type])
 			item.drag(pos)
 			return item
 		elif type == ToolType.ARROW:
 			source = self.scene.findItem(pos, ActiveNode)
 			if source:
-				return PlacementArrow(self.scene, source)
+				return TemporaryArrow(self.scene, source)
 
 	def finishPlacement(self, pos, item):
-		if isinstance(item, PlacementNode):
+		if isinstance(item, TemporaryNode):
 			pos = alignToGrid(pos)
 			x, y = pos.x(), pos.y()
 			
@@ -542,7 +607,7 @@ class Editor:
 					trans = petri.Transition(self.net, x, y)
 					self.net.transitions.add(trans)
 
-		elif isinstance(item, PlacementArrow):
+		elif isinstance(item, TemporaryArrow):
 			source = item.source
 			target = self.scene.findItem(pos, ActiveNode)
 			if target and target.type != source.type:
