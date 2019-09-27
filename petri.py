@@ -97,6 +97,17 @@ class PetriNet(Object):
 		for output in self.outputs:
 			output.place.tokens = 0
 
+	def mergeIntoSelf(self, otherPetriNet, offsetX, offsetY):
+		for place in self.places:
+			place.move(place.x+offsetX, place.y+offsetY)
+		for transition in self.transitions:
+			transition.move(transition.x+offsetX, transition.y+offsetY)
+
+		self.places.mergeIntoSelf(otherPetriNet.places)
+		self.transitions.mergeIntoSelf(otherPetriNet.transitions)
+		self.inputs.mergeIntoSelf(otherPetriNet.inputs)
+		self.outputs.mergeIntoSelf(otherPetriNet.outputs)
+
 	def load(self, data):
 		super().load(data)
 		self.places.load(data["places"])

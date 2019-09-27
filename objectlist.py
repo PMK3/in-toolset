@@ -130,6 +130,11 @@ class ObjectList:
 		self.added.emit(obj)
 		self.changed.emit()
 
+	def mergeIntoSelf(self, objectList):
+		for obj in objectList:
+			obj.id = None
+			self.add(obj)
+
 	def load(self, infos):
 		for info in infos:
 			obj = self.cls(self.net)
