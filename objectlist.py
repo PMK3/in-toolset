@@ -9,6 +9,11 @@ class Object:
 	def __init__(self, net):
 		self.changed = Signal()
 		self.deleted = Signal()
+		self.undeleted= Signal()
+		self.statusChanged = Signal()
+
+		self.deleted.connect(self.statusChanged.emit)
+		self.undeleted.connect(self.statusChanged.emit)
 
 		self.net = net
 		self.active = True
@@ -18,6 +23,12 @@ class Object:
 		if self.active:
 			self.active = False
 			self.deleted.emit()
+			self.changed.emit()
+
+	def undelete(self):
+		if not self.active:
+			self.active = True
+			self.undeleted.emit()
 			self.changed.emit()
 
 	def load(self, data):
