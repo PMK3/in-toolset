@@ -81,9 +81,9 @@ class Arrow(Object):
 	def similar(self, obj):
 		return obj.active and obj.place == self.place and obj.transition == self.transition
 
-class PetriNet:
-	def __init__(self):
-		self.changed = Signal()
+class PetriNet(Object):
+	def __init__(self, parent=None):
+		super().__init__(parent)
 
 		self.places = ObjectList(self, Place)
 		self.transitions = ObjectList(self, Transition)
@@ -98,6 +98,7 @@ class PetriNet:
 			output.place.tokens = 0
 
 	def load(self, data):
+		super().load(data)
 		self.places.load(data["places"])
 		self.transitions.load(data["transitions"])
 		self.inputs.load(data["inputs"])
@@ -105,12 +106,11 @@ class PetriNet:
 		self.setInitialMarking()
 
 	def save(self):
-		return {
-			"places": self.places.save(),
-			"transitions": self.transitions.save(),
-			"inputs": self.inputs.save(),
-			"outputs": self.outputs.save()
-		}
+		data = super().save()
+		data["places"] = self.places.save()
+		data["transitions"] = self.transitions.save()
+		data["inputs"] = self.inputs.save()
+		data["outputs"] = self.outputs.save()
 		return data
 
 	def triggerRandomTransition(self):
