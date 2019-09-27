@@ -24,17 +24,7 @@ class Place(Node):
 	tokens = property(getTokens, setTokens)
 
 
-class TransitionType(Enum):
-	INTERNAL = auto()
-	INPUT = auto()
-	OUTPUT = auto()
-
-
 class Transition(Node):
-	def __init__(self, net, x=0, y=0, type=TransitionType.INTERNAL):
-		super().__init__(net, x, y)
-		self.type = type
-
 	def canTrigger(self):
 		for input in self.net.inputs:
 			if input.transition == self and input.place.tokens < 1:
