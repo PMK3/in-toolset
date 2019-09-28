@@ -2,11 +2,11 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from petri.project import *
 from ui.menu import MenuBar
 from ui.view import *
 from ui import settings
-from signal import Signal
-import petri
+from common import Signal
 import math
 import sys
 import os
@@ -268,9 +268,9 @@ class TransitionSettings(QWidget):
 
 		self.setStyleSheet("font-size: 16px")
 
-		self.x = QLabel("%i" %(obj.x / 20))
+		self.x = QLabel("%i" %(obj.x / GRID_SIZE))
 		self.x.setAlignment(Qt.AlignRight)
-		self.y = QLabel("%i" %(obj.y / 20))
+		self.y = QLabel("%i" %(obj.y / GRID_SIZE))
 		self.y.setAlignment(Qt.AlignRight)
 		self.label = QLineEdit(obj.label)
 		self.label.setMaxLength(20)
@@ -282,8 +282,8 @@ class TransitionSettings(QWidget):
 		self.layout.addRow("Label:", self.label)
 
 	def updatePos(self):
-		self.x.setText("%i" %(self.obj.x / 20))
-		self.y.setText("%i" %(self.obj.y / 20))
+		self.x.setText("%i" %(self.obj.x / GRID_SIZE))
+		self.y.setText("%i" %(self.obj.y / GRID_SIZE))
 
 	def updateLabel(self):
 		self.label.setText(self.obj.label)
@@ -601,10 +601,10 @@ class Editor:
 			
 			if not item.invalid:
 				if item.type == NodeType.PLACE:
-					place = petri.Place(self.net, x, y)
+					place = Place(x, y)
 					self.net.places.add(place)
 				elif item.type == NodeType.TRANSITION:
-					trans = petri.Transition(self.net, x, y)
+					trans = Transition(x, y)
 					self.net.transitions.add(trans)
 
 		elif isinstance(item, TemporaryArrow):
@@ -612,10 +612,10 @@ class Editor:
 			target = self.scene.findItem(pos, ActiveNode)
 			if target and target.type != source.type:
 				if target.type == NodeType.TRANSITION:
-					arrow = petri.Arrow(self.net, source.obj, target.obj)
+					arrow = Arrow(ArrowType.INPUT, source.obj, target.obj)
 					self.net.inputs.add(arrow)
 				else:
-					arrow = petri.Arrow(self.net, target.obj, source.obj)
+					arrow = Arrow(ArrowType.OUTPUT, target.obj, source.obj)
 					self.net.outputs.add(arrow)
 
 		self.scene.setHoverEnabled(True)
@@ -654,7 +654,6 @@ class MainWindow(QMainWindow):
 		menuBar.file.saveAs.triggered.connect(self.handleSaveAs)
 		menuBar.file.quit.triggered.connect(self.close)
 		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
-		menuBar.edit.setInitialMarking.triggered.connect(self.editor.net.setInitialMarking)
 		menuBar.view.showGrid.toggled.connect(self.scene.setGridEnabled)
 		menuBar.view.resetCamera.triggered.connect(self.view.resetTransform)
 		self.setMenuBar(menuBar)
@@ -685,7 +684,7 @@ class MainWindow(QMainWindow):
 		self.setWindowTitle("Petri - %s%s" %(name, "*" * self.project.unsaved))
 
 	def createProject(self, filename=None):
-		self.project = petri.Project()
+		self.project = Project()
 		self.project.filenameChanged.connect(self.updateWindowTitle)
 		self.project.unsavedChanged.connect(self.updateWindowTitle)
 		self.editor.setProject(self.project)
