@@ -690,7 +690,14 @@ class MainWindow(QMainWindow):
 		self.editor.setProject(self.project)
 
 		if filename:
-			self.project.load(filename)
+			try:
+				self.project.load(filename)
+			except:
+				import traceback
+				traceback.print_exc()
+				
+				text = "An error occurred while loading this file (it may be corrupted)."
+				QMessageBox.warning(self, "Error", text)
 
 		self.updateWindowTitle()
 
