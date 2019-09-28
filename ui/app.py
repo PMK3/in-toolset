@@ -265,6 +265,7 @@ class TransitionSettings(QWidget):
 		self.obj = obj
 		self.obj.positionChanged.connect(self.updatePos)
 		self.obj.labelChanged.connect(self.updateLabel)
+		self.obj.enabledChanged.connect(self.updateEnabled)
 
 		self.setStyleSheet("font-size: 16px")
 
@@ -275,11 +276,15 @@ class TransitionSettings(QWidget):
 		self.label = QLineEdit(obj.label)
 		self.label.setMaxLength(20)
 		self.label.textEdited.connect(self.obj.setLabel)
+		self.trigger = QPushButton("Trigger")
+		self.trigger.setEnabled(self.obj.enabled)
+		self.trigger.clicked.connect(self.obj.trigger)
 
 		self.layout = QFormLayout(self)
 		self.layout.addRow("X:", self.x)
 		self.layout.addRow("Y:", self.y)
 		self.layout.addRow("Label:", self.label)
+		self.layout.addRow(self.trigger)
 
 	def updatePos(self):
 		self.x.setText("%i" %(self.obj.x / GRID_SIZE))
@@ -287,6 +292,9 @@ class TransitionSettings(QWidget):
 
 	def updateLabel(self):
 		self.label.setText(self.obj.label)
+		
+	def updateEnabled(self):
+		self.trigger.setEnabled(self.obj.enabled)
 
 
 class SettingsDock(QDockWidget):
