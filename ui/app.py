@@ -12,6 +12,19 @@ import sys
 import os
 
 
+def mergeColors(*colors):
+	r = g = b = 0
+	for color in colors:
+		r += color.red()
+		g += color.green()
+		b += color.blue()
+	
+	r //= len(colors)
+	g //= len(colors)
+	b //= len(colors)
+	return QColor(r, g, b)
+
+
 class ToolType:
 	PLACE = 0
 	TRANSITION = 1
@@ -348,16 +361,22 @@ class HoverFilter:
 
 	def applyToPen(self, pen):
 		if self.item.hover:
-			color = pen.color()
-			color = QColor(color.rgba() ^ 0x555555)
+			color = mergeColors(pen.color(), QColor(Qt.gray))
 			pen.setColor(color)
 
 	def applyToBrush(self, brush):
 		if self.item.hover:
-			color = brush.color()
-			color = QColor(color.rgba() ^ 0x555555)
+			color = mergeColors(brush.color(), QColor(Qt.gray))
 			brush.setColor(color)
 
+			
+class TransitionFilter(HoverFilter):
+	def applyToBrush(self, brush):
+		super().applyToBrush(brush)
+		if self.item.obj.enabled:
+			color = mergeColors(brush.color(), QColor(Qt.green))
+			brush.setColor(color)
+			
 
 class ArrowFilter(HoverFilter):
 	def applyToPen(self, pen):
@@ -448,13 +467,19 @@ class ActiveNode(EditorNode):
 
 	def updatePos(self):
 		self.setPos(self.obj.x, self.obj.y)
+		
+	def borderColor(self):
+		if self.isSelected():
+			return Qt.blue
+		return None
 
 	def paint(self, painter, option, widget):
 		super().paint(painter, option, widget)
 		
-		if self.isSelected():
+		color = self.borderColor()
+		if color is not None:
 			painter.save()
-			pen = QPen(Qt.blue)
+			pen = QPen(color)
 			pen.setWidth(2)
 			painter.setPen(pen)
 			painter.drawRect(self.shp.rect)
@@ -481,6 +506,8 @@ class PlaceNode(ActiveNode):
 class TransitionNode(ActiveNode):
 	def __init__(self, scene, style, obj):
 		super().__init__(scene, style, obj, NodeType.TRANSITION)
+		self.obj.enabledChanged.connect(self.update)
+		self.filter = TransitionFilter(self)
 			
 
 

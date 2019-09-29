@@ -19,7 +19,7 @@ class Place(Node):
 
 
 class Transition(Node):
-	enabled = Property("enabledChanged", False)
+	enabled = Property("enabledChanged", True)
 	
 	def __init__(self, x, y):
 		super().__init__(x, y)
@@ -31,23 +31,29 @@ class Transition(Node):
 	def checkEnabled(self):
 		for input in self.inputs:
 			if input.tokens == 0:
-				self.enabled = False
-				break
-		else:
-			self.enabled = True
+				return False
+		return True
+		
+	def updateEnabled(self):
+		self.enabled = self.checkEnabled()
 		
 	def addInput(self, input):
 		self.inputs.append(input)
-		self.checkEnabled()
-		input.tokensChanged.connect(self.checkEnabled)
+		self.updateEnabled()
+		input.tokensChanged.connect(self.updateEnabled)
 		
 	def removeInput(self, input):
-		input.tokensChanged.disconnect(self.checkEnabled)
+		input.tokensChanged.disconnect(self.updateEnabled)
 		self.inputs.remove(input)
-		self.checkEnabled()
+		self.updateEnabled()
 		
-	def addOutput(self, output): self.outputs.append(output)
-	def removeOutput(self, output): self.outputs.remove(output)
+	def addOutput(self, output):
+		self.outputs.append(output)
+		self.updateEnabled()
+	
+	def removeOutput(self, output):
+		self.outputs.remove(output)
+		self.updateEnabled()
 		
 	def trigger(self):
 		for input in self.inputs:

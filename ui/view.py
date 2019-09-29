@@ -57,8 +57,8 @@ class ShapeElement:
 			
 class ShapePart:
 	def __init__(self):
-		self.pen = None
-		self.brush = None
+		self.pen = QPen()
+		self.brush = QBrush()
 		self.path = QPainterPath()
 		self.elements = []
 		
@@ -127,10 +127,7 @@ class ShapePart:
 					element.y2 + element.stretch * math.sin(angle - math.pi * .75)
 				)
 		
-		if self.pen:
-			stroker = QPainterPathStroker(self.pen)
-		else:
-			stroker = QPainterPathStroker()
+		stroker = QPainterPathStroker(self.pen)
 		shapePath = stroker.createStroke(self.path)
 		
 		self.shapePath = QPainterPath(self.path)
@@ -163,17 +160,15 @@ class Shape:
 		for part in self.parts:
 			painter.save()
 			
-			if part.pen:
-				pen = QPen(part.pen)
-				if filter:
-					filter.applyToPen(pen)
-				painter.setPen(pen)
+			pen = QPen(part.pen)
+			if filter:
+				filter.applyToPen(pen)
+			painter.setPen(pen)
 				
-			if part.brush:
-				brush = QBrush(part.brush)
-				if filter:
-					filter.applyToBrush(brush)
-				painter.setBrush(brush)
+			brush = QBrush(part.brush)
+			if filter:
+				filter.applyToBrush(brush)
+			painter.setBrush(brush)
 			
 			painter.drawPath(part.path)
 			painter.restore()
