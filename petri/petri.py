@@ -38,11 +38,13 @@ class Transition(Node):
 		
 	def addInput(self, input):
 		self.inputs.append(input)
+		self.checkEnabled()
 		input.tokensChanged.connect(self.checkEnabled)
 		
 	def removeInput(self, input):
 		input.tokensChanged.disconnect(self.checkEnabled)
 		self.inputs.remove(input)
+		self.checkEnabled()
 		
 	def addOutput(self, output): self.outputs.append(output)
 	def removeOutput(self, output): self.outputs.remove(output)
@@ -81,14 +83,17 @@ class Arrow(Object):
 			
 	def unregister(self):
 		if self.type == ArrowType.INPUT:
-			self.transition.addInput(self.place)
+			self.transition.removeInput(self.place)
 		else:
-			self.transition.addOutput(self.place)
+			self.transition.removeOutput(self.place)
 
 
 class PetriNet:
+	deadlock = Property("deadlockChanged", True)
+	
 	def __init__(self):
 		self.changed = Signal()
+		self.deadlockChanged = Signal()
 
 		self.places = ObjectList()
 		self.transitions = ObjectList()
@@ -99,6 +104,16 @@ class PetriNet:
 		self.transitions.changed.connect(self.changed)
 		self.inputs.changed.connect(self.changed)
 		self.outputs.changed.connect(self.changed)
+		
+		self.transitions.added.connect(self.registerTransition)
+		
+	def checkDeadlock(self):
+		self.deadlock = not any(t.enabled for t in self.transitions)
+		
+	def registerTransition(self, transition):
+		transition.enabledChanged.connect(self.checkDeadlock)
+		transition.statusChanged.connect(self.checkDeadlock)
+		self.checkDeadlock()
 		
 	def merge(self, net):
 		self.places.merge(net.places)

@@ -203,13 +203,22 @@ class GeneralSettings(QWidget):
 	def __init__(self, scene):
 		super().__init__()
 		self.setStyleSheet("font-size: 16px")
-
+		
 		self.label = QLabel("No item selected")
 		self.label.setAlignment(Qt.AlignCenter)
+		self.triggerRandom = QPushButton("Trigger random")
+		self.triggerRandom.setEnabled(False)
+		self.triggerRandom.clicked.connect(lambda: self.net.triggerRandom())
 
 		self.layout = QVBoxLayout(self)
 		self.layout.addWidget(self.label)
+		self.layout.addWidget(self.triggerRandom)
 		self.layout.setAlignment(Qt.AlignTop)
+		
+	def setProject(self, project):
+		self.net = project.net
+		self.net.deadlockChanged.connect(self.updateDeadlock)
+		self.updateDeadlock()
 
 	def setSelection(self, items):
 		if len(items) == 0:
@@ -218,6 +227,9 @@ class GeneralSettings(QWidget):
 			self.label.setText("1 item selected")
 		else:
 			self.label.setText("%i items selected" %len(items))
+			
+	def updateDeadlock(self):
+		self.triggerRandom.setEnabled(not self.net.deadlock)
 
 			
 class PlaceSettings(QWidget):
@@ -257,7 +269,7 @@ class PlaceSettings(QWidget):
 		
 	def updateTokens(self):
 		self.tokens.setValue(self.obj.tokens)
-		
+
 		
 class TransitionSettings(QWidget):
 	def __init__(self, obj):
@@ -312,6 +324,9 @@ class SettingsDock(QDockWidget):
 		self.setWidget(self.generalSettings)
 
 		self.scene.selectionChanged.connect(self.handleSelectionChanged)
+		
+	def setProject(self, project):
+		self.generalSettings.setProject(project)
 
 	def handleSelectionChanged(self):
 		items = self.scene.selectedItems()
@@ -650,8 +665,8 @@ class MainWindow(QMainWindow):
 		self.editor.setScene(self.scene)
 		self.setCentralWidget(self.view)
 
-		settingsDock = SettingsDock(self.editor)
-		self.addDockWidget(Qt.RightDockWidgetArea, settingsDock)
+		self.settingsDock = SettingsDock(self.editor)
+		self.addDockWidget(Qt.RightDockWidgetArea, self.settingsDock)
 
 		self.createProject()
 
@@ -695,6 +710,7 @@ class MainWindow(QMainWindow):
 		self.project = Project()
 		self.project.filenameChanged.connect(self.updateWindowTitle)
 		self.project.unsavedChanged.connect(self.updateWindowTitle)
+		self.settingsDock.setProject(self.project)
 		self.editor.setProject(self.project)
 
 		if filename:
