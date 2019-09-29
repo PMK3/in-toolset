@@ -509,7 +509,7 @@ class EditorView(QGraphicsView):
 			self.translate(0, -10)
 		
 	def wheelEvent(self, e):
-		zoom = 1.001 ** e.angleDelta().y()
+		zoom = 1.0008 ** e.angleDelta().y()
 		newZoom = self.zoom * zoom
 		if newZoom > 0.1 and newZoom < 10:
 			self.zoom = newZoom
