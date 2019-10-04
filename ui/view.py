@@ -202,8 +202,8 @@ class DragMode:
 	NORMAL = 1
 	SPECIAL = 2
 	
-
-class EditorObject(QGraphicsItem):
+	
+class EditorItem(QGraphicsItem):
 	def __init__(self, scene):
 		super().__init__()
 		self.setFlag(QGraphicsItem.ItemIsSelectable)
@@ -211,12 +211,14 @@ class EditorObject(QGraphicsItem):
 		self.scene = scene
 		self.dragMode = DragMode.NONE
 		self.invalid = False
-		
+	
+	def disconnect(self): pass
+	
 	def setInvalid(self, invalid):
 		if self.invalid != invalid:
 			self.invalid = invalid
 			self.update()
-		
+			
 	def drag(self, pos): pass
 	def delete(self): pass
 	
@@ -229,7 +231,7 @@ class EditorObject(QGraphicsItem):
 	def checkCollisions(self): pass
 	
 	
-class EditorShape(EditorObject):
+class EditorShape(EditorItem):
 	def __init__(self, scene, shape=None):
 		super().__init__(scene)
 		self.hover = False
@@ -238,7 +240,7 @@ class EditorShape(EditorObject):
 		self.shp = shape
 		if self.shp is None:
 			self.shp = Shape()
-			
+	
 	def setShape(self, shape):
 		self.shp = shape
 		self.updateShape()
@@ -265,33 +267,6 @@ class EditorShape(EditorObject):
 		
 	def paint(self, painter, option, widget):
 		self.shp.draw(painter, self.filter)
-			
-			
-class EditorNode(EditorShape):
-	def __init__(self, scene, shape=None):
-		super().__init__(scene, shape)
-		self.dragMode = DragMode.NORMAL
-		
-	def drag(self, pos):
-		self.setPos(alignToGrid(pos))
-		
-	def checkCollisions(self):
-		items = self.scene.collidingItems(self)
-		if any(isinstance(item, EditorNode) for item in items):
-			self.setInvalid(True)
-		else:
-			self.setInvalid(False)
-		
-	def paint(self, painter, option, widget):
-		super().paint(painter, option, widget)
-		
-		if self.invalid:
-			painter.save()
-			brush = QBrush(Qt.red, Qt.BDiagPattern)
-			painter.setBrush(brush)
-			painter.setPen(Qt.NoPen)
-			painter.drawRect(self.shp.rect)
-			painter.restore()
 	
 	
 class ObjectDragger:
@@ -341,16 +316,23 @@ class ObjectDragger:
 
 
 class EditorScene(QGraphicsScene):
-	def __init__(self, controller):
+	def __init__(self):
 		super().__init__(-10000, -10000, 20000, 20000)
-		
-		self.controller = controller
 		
 		self.dragger = ObjectDragger()
 		self.placedItem = None
 		
 		self.hoverEnabled = True
 		self.gridEnabled = True
+		
+		self.controller = None
+		
+	def cleanup(self):
+		for item in self.items():
+			item.disconnect()
+		
+	def setController(self, controller):
+		self.controller = controller
 		
 	def selectAll(self):
 		for item in self.items():
@@ -404,7 +386,7 @@ class EditorScene(QGraphicsScene):
 		else:
 			super().mousePressEvent(e)
 			if e.button() == Qt.LeftButton:
-				item = self.findItem(pos, EditorObject)
+				item = self.findItem(pos, EditorItem)
 				if item:
 					if item.dragMode == DragMode.NORMAL:
 						items = [i for i in self.selectedItems() if i.dragMode == DragMode.NORMAL]

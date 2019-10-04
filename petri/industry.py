@@ -1,6 +1,7 @@
 
-from base import Object, ObjectList, Node
-from petri import PetriNet, Transition, Place
+from petri.base import Object, ObjectList, Node
+from petri.petri import PetriNet, Transition, Place
+from common import Signal
 
 
 class NetInput(Transition):
@@ -28,28 +29,31 @@ class Message(Object):
 		output.message = self
 
 
-class EnterpriseNet(Node):
-	def __init__(self, industryNet):
-		super().__init__(net=industryNet)
-		self.industryNet = industryNet
+class EnterpriseNode(Node):
+	def __init__(self, x, y):
+		super().__init__(x, y)
 
-		self.netInputs = ObjectList(self, NetInput)
-		self.netOutputs = ObjectList(self, NetOutput)
+		self.inputs = ObjectList()
+		self.outputs = ObjectList()
 
-		self.petriNet = PetriNet()
+		self.net = PetriNet()
+		self.net.changed.connect(self.changed)
 
-	def addInput(self, netInput):
-		self.petriNet.transitions.add(netInput)
-		self.netInputs.add(netInput)
+	def addInput(self, input):
+		self.net.transitions.add(input)
+		self.inputs.add(input)
 
-	def addOutput(self, netOutput):
-		self.petriNet.transitions.add(netOutput)
-		self.netOutputs.add(netOutput)
+	def addOutput(self, output):
+		self.net.transitions.add(output)
+		self.outputs.add(output)
 
 
-class IndustryNet():
+class IndustryNet:
 	def __init__(self):
 		self.changed = Signal()
 
-		self.enterprises = ObjectList(self, EnterpriseNet)
-		self.messages = ObjectList(self, Message)
+		self.enterprises = ObjectList()
+		self.messages = ObjectList()
+		
+		self.enterprises.changed.connect(self.changed)
+		self.messages.changed.connect(self.changed)

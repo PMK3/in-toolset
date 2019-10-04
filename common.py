@@ -20,7 +20,6 @@ class Property:
 	def __init__(self, signame, default=None):
 		self.signame = signame
 		self.default = default
-		self.name = None
 		
 	def read(self, inst): return inst.__dict__.get(self.name, self.default)
 	def write(self, inst, value):

@@ -43,7 +43,7 @@ class Transition(Node):
 		input.tokensChanged.connect(self.updateEnabled)
 		
 	def removeInput(self, input):
-		input.tokensChanged.disconnect(self.updateEnabled)
+		input.tokensChanged.remove(self.updateEnabled)
 		self.inputs.remove(input)
 		self.updateEnabled()
 		

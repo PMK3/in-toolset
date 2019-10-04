@@ -1,0 +1,67 @@
+
+{
+	"groups": [
+		{
+			"name": "common",
+			"shape": "mouseleft",
+			"tools": ["selection", "hand"]
+		},
+		{
+			"name": "enterprise",
+			"shape": "mouseright",
+			"tools": ["place", "transition", "arrow"]
+		},
+		{
+			"name": "industry",
+			"shape": "mouseright",
+			"tools": ["enterprise"]
+		}
+	],
+	
+	"tools": [
+		{
+			"name": "selection",
+			"shape": "selection",
+			"text": "Select",
+			"tooltip": "Selection tool (S)",
+			"shortcut": "S"
+		},
+		{
+			"name": "hand",
+			"shape": "hand",
+			"text": "Move",
+			"tooltip": "Hand drag tool (M)",
+			"shortcut": "M"
+		},
+		
+		{
+			"name": "place",
+			"shape": "place",
+			"text": "Place",
+			"tooltip": "Place (P)",
+			"shortcut": "P"
+		},
+		{
+			"name": "transition",
+			"shape": "transition",
+			"text": "Transition",
+			"tooltip": "Transition (T)",
+			"shortcut": "T"
+		},
+		{
+			"name": "arrow",
+			"shape": "arrow",
+			"text": "Arrow",
+			"tooltip": "Arrow (A)",
+			"shortcut": "A"
+		},
+		
+		{
+			"name": "enterprise",
+			"shape": "place",
+			"text": "Enterprise",
+			"tooltip": "Enterprise (E)",
+			"shortcut": "E"
+		}
+	]
+}
