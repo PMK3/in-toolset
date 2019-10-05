@@ -1,5 +1,18 @@
 {
 	"shapes": {
+		"enterprise": [{
+			"pen": {"color": "black", "width": 2},
+			"brush": {"color": "white"},
+			"elements": [
+				{
+					"type": "polygon",
+					"points": [
+						[-18, 0], [0, -18], [18, 0], [0, 18], [-18, 0]
+					]
+				}
+			]
+		}],
+
 		"place": [{
 			"pen": {"color": "black", "width": 2},
 			"brush": {"color": "white"},

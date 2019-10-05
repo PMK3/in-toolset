@@ -17,7 +17,7 @@
 			"tools": ["enterprise"]
 		}
 	],
-	
+
 	"tools": [
 		{
 			"name": "selection",
@@ -33,7 +33,7 @@
 			"tooltip": "Hand drag tool (M)",
 			"shortcut": "M"
 		},
-		
+
 		{
 			"name": "place",
 			"shape": "place",
@@ -55,10 +55,10 @@
 			"tooltip": "Arrow (A)",
 			"shortcut": "A"
 		},
-		
+
 		{
 			"name": "enterprise",
-			"shape": "place",
+			"shape": "enterprise",
 			"text": "Enterprise",
 			"tooltip": "Enterprise (E)",
 			"shortcut": "E"
