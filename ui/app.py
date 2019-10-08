@@ -56,12 +56,12 @@ class Application:
 			self.industry.load(self.industryNet)
 			self.currentScene = self.industry
 		else:
-			self.enterprise.load(self.industryNet.enterprises[index].net)
+			self.enterprise.load(self.industryNet.enterprises[index])
 			self.currentScene = self.enterprise
 
 	def switchToEnterprise(self, enterprise):
 		if self.currentScene:
 			self.currentScene.cleanup()
 
-		self.enterprise.load(enterprise.net)
+		self.enterprise.load(enterprise)
 		self.currentScene = self.enterprise

@@ -388,19 +388,19 @@ class EnterpriseScene:
 	def __init__(self, style, application):
 		self.style = style
 		self.application = application
-		self.window = window = application.window
+		self.window = application.window
 		
-		self.controller = EnterpriseController(style, window)
+		self.controller = EnterpriseController(style, self.window)
 		
-		self.toolbar = window.toolbar
-		self.scene = window.scene
-		self.view = window.view
-		self.settings = window.settings
+		self.toolbar = self.window.toolbar
+		self.scene = self.window.scene
+		self.view = self.window.view
+		self.settings = self.window.settings
 		
-	def load(self, net):
+	def load(self, enet):
 		self.scene.clear()
 		
-		self.net = net
+		self.net = enet.net
 		self.net.places.added.connect(self.addPlace)
 		self.net.transitions.added.connect(self.addTransition)
 		self.net.inputs.added.connect(self.addInput)
@@ -415,7 +415,7 @@ class EnterpriseScene:
 		for output in self.net.outputs:
 			self.addOutput(output)
 
-		self.controller.load(net)
+		self.controller.load(enet.net)
 		
 		self.scene.setController(self.controller)
 		self.scene.selectionChanged.connect(self.updateSelection)
