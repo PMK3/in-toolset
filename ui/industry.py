@@ -66,10 +66,10 @@ class GeneralSettings(QWidget):
 
 
 class EnterpriseSettings(QWidget):
-	def __init__(self, obj, industryscene):
+	def __init__(self, obj, industryScene):
 		super().__init__()
 		self.obj = obj
-		self.industryscene = industryscene
+		self.industryScene = industryScene
 		self.obj.positionChanged.connect(self.updatePos)
 		self.obj.labelChanged.connect(self.updateLabel)
 
@@ -85,7 +85,7 @@ class EnterpriseSettings(QWidget):
 		self.label.textEdited.connect(self.obj.setLabel)
 
 		self.edit = QPushButton("Edit")
-		self.edit.clicked.connect(lambda : self.industryscene.application.switchToEnterprise(obj))
+		self.edit.clicked.connect(lambda : self.industryScene.application.switchToEnterprise(obj))
 
 		self.layout = QFormLayout(self)
 		self.layout.addRow("X:", self.x)
