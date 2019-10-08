@@ -14,7 +14,7 @@
 		{
 			"name": "industry",
 			"shape": "mouseright",
-			"tools": ["enterprise"]
+			"tools": ["enterprise", "message"]
 		}
 	],
 
@@ -62,6 +62,13 @@
 			"text": "Enterprise",
 			"tooltip": "Enterprise (E)",
 			"shortcut": "E"
+		},
+		{
+			"name": "message",
+			"shape": "message",
+			"text": "Message",
+			"tooltip": "Message (M)",
+			"shortcut": "M"
 		}
 	]
 }
