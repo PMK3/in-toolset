@@ -4,14 +4,17 @@ from petri.petri import PetriNet, Transition, Place
 from common import Signal
 
 
-class NetInput(Transition):
+class NetIO(Transition):
 	def __init__(self, net=None, x=0, y=0, messageType=None):
 		super().__init__(net=net, x=x, y=y)
 		self.messageType = messageType
 		self.message = None
 
 
-class NetOutput(NetInput):
+class NetOutput(NetIO):
+	pass
+
+class NetInput(NetIO):
 	pass
 
 class Message(Object):
