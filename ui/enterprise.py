@@ -385,9 +385,10 @@ class TransitionSettings(QWidget):
 		
 		
 class EnterpriseScene:
-	def __init__(self, style, window):
+	def __init__(self, style, application):
 		self.style = style
-		self.window = window
+		self.application = application
+		self.window = window = application.window
 		
 		self.controller = EnterpriseController(style, window)
 		

@@ -21,8 +21,8 @@ class Application:
 		self.window.selectEnterprise.connect(self.switchToScene)
 		self.window.show()
 		
-		self.industry = IndustryScene(style, self.window)
-		self.enterprise = EnterpriseScene(style, self.window)
+		self.industry = IndustryScene(style, self)
+		self.enterprise = EnterpriseScene(style, self)
 		
 		self.currentScene = None
 		
@@ -58,3 +58,10 @@ class Application:
 		else:
 			self.enterprise.load(self.industryNet.enterprises[index].net)
 			self.currentScene = self.enterprise
+
+	def switchToEnterprise(self, enterprise):
+		if self.currentScene:
+			self.currentScene.cleanup()
+
+		self.enterprise.load(enterprise.net)
+		self.currentScene = self.enterprise

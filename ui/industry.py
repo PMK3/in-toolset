@@ -66,9 +66,10 @@ class GeneralSettings(QWidget):
 
 
 class EnterpriseSettings(QWidget):
-	def __init__(self, obj):
+	def __init__(self, obj, industryscene):
 		super().__init__()
 		self.obj = obj
+		self.industryscene = industryscene
 		self.obj.positionChanged.connect(self.updatePos)
 		self.obj.labelChanged.connect(self.updateLabel)
 
@@ -78,14 +79,19 @@ class EnterpriseSettings(QWidget):
 		self.x.setAlignment(Qt.AlignRight)
 		self.y = QLabel("%i" %(obj.y / GRID_SIZE))
 		self.y.setAlignment(Qt.AlignRight)
+
 		self.label = QLineEdit(obj.label)
 		self.label.setMaxLength(20)
 		self.label.textEdited.connect(self.obj.setLabel)
+
+		self.edit = QPushButton("Edit")
+		self.edit.clicked.connect(lambda : self.industryscene.application.switchToEnterprise(obj))
 
 		self.layout = QFormLayout(self)
 		self.layout.addRow("X:", self.x)
 		self.layout.addRow("Y:", self.y)
 		self.layout.addRow("Label:", self.label)
+		self.layout.addRow(self.edit)
 
 	def cleanup(self):
 		self.obj.positionChanged.disconnect(self.updatePos)
@@ -100,10 +106,11 @@ class EnterpriseSettings(QWidget):
 
 
 class IndustryScene:
-	def __init__(self, style, window):
+	def __init__(self, style, application):
 		self.style = style
 
-		self.window = window
+		self.application = application
+		self.window = window = application.window
 
 		self.controller = IndustryController(style, window)
 
@@ -162,7 +169,7 @@ class IndustryScene:
 
 	def createSettingsWidget(self, items):
 		if len(items) == 1 and isinstance(items[0], EnterpriseItem):
-			return EnterpriseSettings(items[0].obj)
+			return EnterpriseSettings(items[0].obj, self)
 
 		self.generalSettings.setSelection(items)
 		return self.generalSettings
