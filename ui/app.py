@@ -65,3 +65,10 @@ class Application:
 
 		self.enterprise.load(enterprise)
 		self.currentScene = self.enterprise
+
+	def switchToIndustry(self):
+		if self.currentScene:
+			self.currentScene.cleanup()
+
+		self.industry.load(self.industryNet)
+		self.currentScene = self.enterprise

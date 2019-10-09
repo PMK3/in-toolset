@@ -264,22 +264,29 @@ class EnterpriseController:
 		
 		
 class GeneralSettings(QWidget):
-	def __init__(self, net):
+	def __init__(self, net, application):
 		super().__init__()
 		self.setStyleSheet("font-size: 16px")
 		
 		self.net = net
 		self.net.deadlockChanged.connect(self.updateDeadlock)
+
+		self.application = application
 		
 		self.label = QLabel("No item selected")
 		self.label.setAlignment(Qt.AlignCenter)
+
 		self.triggerRandom = QPushButton("Trigger random")
 		self.triggerRandom.setEnabled(not self.net.deadlock)
 		self.triggerRandom.clicked.connect(self.net.triggerRandom)
 
+		self.editIndustry = QPushButton("Edit Industry Level")
+		self.editIndustry.clicked.connect(self.application.switchToIndustry)
+
 		self.layout = QVBoxLayout(self)
 		self.layout.addWidget(self.label)
 		self.layout.addWidget(self.triggerRandom)
+		self.layout.addWidget(self.editIndustry)
 		self.layout.setAlignment(Qt.AlignTop)
 		
 	def cleanup(self):
@@ -428,7 +435,7 @@ class EnterpriseScene:
 		self.toolbar.selectTool("selection")
 		self.toolbar.selectionChanged.connect(self.updateTool)
 		
-		self.generalSettings = GeneralSettings(self.net)
+		self.generalSettings = GeneralSettings(self.net, self.application)
 		self.settings.setWidget(self.generalSettings)
 		
 	def cleanup(self):
