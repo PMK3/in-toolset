@@ -157,6 +157,7 @@ class IndustryScene:
 
 	def addEnterprise(self, obj):
 		item = EnterpriseItem(self.scene, self.style.shapes["enterprise"], obj)
+		item.doubleClicked.connect(lambda:self.window.selectEnterprise(obj.id))
 		self.scene.addItem(item)
 
 	def updateSelection(self):

@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import json
 import math
+from common import *
 
 
 GRID_SIZE = 20
@@ -211,6 +212,7 @@ class EditorItem(QGraphicsItem):
 		self.scene = scene
 		self.dragMode = DragMode.NONE
 		self.invalid = False
+		self.doubleClicked = Signal()
 	
 	def disconnect(self): pass
 	
@@ -420,6 +422,12 @@ class EditorScene(QGraphicsScene):
 				self.controller.finishPlacement(e.scenePos(), self.placedItem)
 				self.placedItem = None
 
+	def mouseDoubleClickEvent(self, e):
+		pos = e.scenePos()
+		if e.button() == Qt.LeftButton:
+			item = self.findItem(pos, EditorItem)
+			item.doubleClicked.emit()
+		
 
 class EditorView(QGraphicsView):
 	def __init__(self, scene):
