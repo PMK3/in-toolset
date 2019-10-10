@@ -85,7 +85,7 @@ class EnterpriseSettings(QWidget):
 		self.label.textEdited.connect(self.obj.setLabel)
 
 		self.edit = QPushButton("Edit")
-		self.edit.clicked.connect(lambda : self.industryScene.application.switchToEnterprise(obj))
+		self.edit.clicked.connect(lambda : self.industryScene.selectEnterprise(obj.id))
 
 		self.layout = QFormLayout(self)
 		self.layout.addRow("X:", self.x)
@@ -106,11 +106,10 @@ class EnterpriseSettings(QWidget):
 
 
 class IndustryScene:
-	def __init__(self, style, application):
+	def __init__(self, style, window):
 		self.style = style
 
-		self.application = application
-		self.window = window = application.window
+		self.window = window
 
 		self.controller = IndustryController(style, window)
 
@@ -118,6 +117,8 @@ class IndustryScene:
 		self.scene = window.scene
 		self.view = window.view
 		self.settings = window.settings
+
+		self.selectEnterprise = Signal()
 
 	def load(self, net):
 		self.scene.clear()

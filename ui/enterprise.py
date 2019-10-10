@@ -205,15 +205,13 @@ class EnterpriseController:
 		
 		
 class GeneralSettings(QWidget):
-	def __init__(self, net, application):
+	def __init__(self, net):
 		super().__init__()
 		self.setStyleSheet("font-size: 16px")
 		
 		self.net = net
 		self.net.deadlockChanged.connect(self.updateDeadlock)
 
-		self.application = application
-		
 		self.label = QLabel("No item selected")
 		self.label.setAlignment(Qt.AlignCenter)
 
@@ -222,7 +220,6 @@ class GeneralSettings(QWidget):
 		self.triggerRandom.clicked.connect(self.net.triggerRandom)
 
 		self.editIndustry = QPushButton("Edit Industry Level")
-		self.editIndustry.clicked.connect(self.application.switchToIndustry)
 
 		self.layout = QVBoxLayout(self)
 		self.layout.addWidget(self.label)
@@ -333,10 +330,11 @@ class TransitionSettings(QWidget):
 		
 		
 class EnterpriseScene:
-	def __init__(self, style, application):
+	def __init__(self, style, window):
 		self.style = style
-		self.application = application
-		self.window = application.window
+		self.window = window
+
+		self.selectEnterprise = Signal()
 		
 		self.controller = EnterpriseController(style, self.window)
 		
@@ -376,7 +374,8 @@ class EnterpriseScene:
 		self.toolbar.selectTool("selection")
 		self.toolbar.selectionChanged.connect(self.updateTool)
 		
-		self.generalSettings = GeneralSettings(self.net, self.application)
+		self.generalSettings = GeneralSettings(self.net)
+		self.generalSettings.editIndustry.clicked.connect(lambda: self.selectEnterprise(-1))
 		self.settings.setWidget(self.generalSettings)
 		
 	def cleanup(self):
