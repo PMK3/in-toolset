@@ -2,6 +2,7 @@
 from petri.base import Object, ObjectList, Node
 from petri.petri import PetriNet, Transition, Place
 from common import Signal
+import random
 
 
 class NetIO(Transition):
@@ -38,6 +39,36 @@ class EnterpriseNode(Node):
 
 		self.inputs = ObjectList()
 		self.outputs = ObjectList()
+		names = [
+			"Petrochem",
+			"SovOil",
+			"Militech",
+			"Arasaka",
+			"Biotechnica",
+			"Orbital Air",
+			"TK Heavy",
+			"YoYoDyne Systems",
+			"ECorp",
+			"Hanka Precision Instruments",
+			"Seburo",
+			"Genesis Andross",
+			"Kuromatsu Electrics",
+			"Rossini Air Line",
+			"Kenbishi Heavy Industries",
+			"Toyoda Chemicals",
+			"Armali Council",
+			"Blackstone Enterprises",
+			"Chronoarcheology Ltd.",
+			"Cyberdyne systems",
+			"Darkside Services",
+			"Empathix",
+			"Eschataological Enterprises",
+			"Gaia, Inc,",
+			"Soylent Corporation",
+			"Multi-National United",
+			"Meditech Corp"]
+
+		self.label = random.choice(names)
 
 		self.net = PetriNet()
 		self.net.changed.connect(self.changed)
