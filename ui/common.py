@@ -128,6 +128,10 @@ class ActiveNode(EditorNode):
 		self.setPos(obj.x, obj.y)
 		
 		self.filter = HoverFilter(self)
+
+		if hasattr(obj, "label"):
+			self.label = LabelItem(scene, obj)
+			scene.addItem(self.label)
 		
 	def disconnect(self):
 		self.obj.deleted.disconnect(self.removeFromScene)

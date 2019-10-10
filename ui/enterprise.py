@@ -395,15 +395,11 @@ class EnterpriseScene:
 			
 	def addPlace(self, obj):
 		item = PlaceNode(self.scene, self.style, obj)
-		label = LabelItem(self.scene, obj)
 		self.scene.addItem(item)
-		self.scene.addItem(label)
 
 	def addTransition(self, obj):
 		item = TransitionNode(self.scene, self.style, obj)
-		label = LabelItem(self.scene, obj)
 		self.scene.addItem(item)
-		self.scene.addItem(label)
 
 	def addInput(self, obj):
 		item = ActiveArrow(self.scene, obj, ArrowType.INPUT)
