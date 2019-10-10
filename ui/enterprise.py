@@ -31,65 +31,6 @@ class ArrowFilter(HoverFilter):
 			pen.setColor(Qt.blue)
 
 
-class LabelItem(EditorItem):
-	def __init__(self, scene, obj):
-		super().__init__(scene)
-
-		self.dragMode = DragMode.SPECIAL
-
-		self.obj = obj
-		self.obj.positionChanged.connect(self.updateLabel)
-		self.obj.labelChanged.connect(self.updateLabel)
-		self.obj.deleted.connect(self.removeFromScene)
-
-		self.font = QFont()
-		self.font.setPixelSize(16)
-		self.fontMetrics = QFontMetrics(self.font)
-
-		self.updateLabel()
-		
-	def disconnect(self):
-		self.obj.positionChanged.disconnect(self.updateLabel)
-		self.obj.labelChanged.disconnect(self.updateLabel)
-		self.obj.deleted.disconnect(self.removeFromScene)
-		
-	def delete(self):
-		self.obj.setLabel("")
-		self.obj.setLabelAngle(math.pi / 2)
-		self.obj.setLabelDistance(35)
-
-	def drag(self, pos):
-		dx = pos.x() - self.obj.x
-		dy = pos.y() - self.obj.y
-
-		dist = math.sqrt(dx * dx + dy * dy)
-		dist = min(max(dist, 20), 60)
-
-		self.obj.setLabelAngle(math.atan2(dy, dx))
-		self.obj.setLabelDistance(dist)
-
-	def updateLabel(self):
-		xoffs = math.cos(self.obj.labelAngle) * self.obj.labelDistance
-		yoffs = math.sin(self.obj.labelAngle) * self.obj.labelDistance
-		self.setPos(self.obj.x + xoffs, self.obj.y + yoffs)
-
-		self.prepareGeometryChange()
-		self.update()
-
-	def boundingRect(self):
-		rect = self.fontMetrics.boundingRect(self.obj.label)
-		rect.moveCenter(QPoint(0, 0))
-		return QRectF(rect.adjusted(-1, -1, 1, 1))
-
-	def paint(self, painter, option, widget):
-		if self.isSelected():
-			pen = QPen(Qt.blue)
-			painter.setPen(pen)
-
-		painter.setFont(self.font)
-		painter.drawText(self.boundingRect(), Qt.AlignCenter, self.obj.label)
-			
-			
 class PlaceNode(ActiveNode):
 	def __init__(self, scene, style, obj):
 		super().__init__(scene, style.shapes["place"], obj, NodeType.PLACE)
