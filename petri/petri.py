@@ -20,10 +20,14 @@ class Place(Node):
 
 class Transition(Node):
 	enabled = Property("enabledChanged", True)
+	source = Property("sourceChanged", True)
+	sink = Property("sinkChanged", True)
 	
 	def __init__(self, x, y):
 		super().__init__(x, y)
 		self.enabledChanged = Signal()
+		self.sourceChanged = Signal()
+		self.sinkChanged = Signal()
 		
 		self.inputs = []
 		self.outputs = []
@@ -37,23 +41,28 @@ class Transition(Node):
 	def updateEnabled(self):
 		self.enabled = self.checkEnabled()
 		
+	def updateProperties(self):
+		self.updateEnabled()
+		self.source = len(self.inputs) == 0
+		self.sink = len(self.outputs) == 0
+		
 	def addInput(self, input):
 		self.inputs.append(input)
-		self.updateEnabled()
+		self.updateProperties()
 		input.tokensChanged.connect(self.updateEnabled)
 		
 	def removeInput(self, input):
-		input.tokensChanged.remove(self.updateEnabled)
+		input.tokensChanged.disconnect(self.updateEnabled)
 		self.inputs.remove(input)
-		self.updateEnabled()
+		self.updateProperties()
 		
 	def addOutput(self, output):
 		self.outputs.append(output)
-		self.updateEnabled()
+		self.updateProperties()
 	
 	def removeOutput(self, output):
 		self.outputs.remove(output)
-		self.updateEnabled()
+		self.updateProperties()
 		
 	def trigger(self):
 		for input in self.inputs:

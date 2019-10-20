@@ -2,9 +2,13 @@
 class Config:
 	types = {
 		"ui.max_label_size": int,
-		
 		"ui.label_distance_min": float,
 		"ui.label_distance_max": float,
+		
+		"ui.message_arrow_distance": float,
+		"ui.message_arrow_length": float,
+		
+		"ui.keyboard_scroll_speed": float
 	}
 	
 	def __init__(self, filename):

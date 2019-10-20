@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
 		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
 		menuBar.view.showGrid.toggled.connect(self.scene.setGridEnabled)
 		menuBar.view.resetCamera.triggered.connect(self.view.resetTransform)
+		menuBar.view.editIndustry.triggered.connect(lambda: self.selectEnterprise(-1))
 		self.setMenuBar(menuBar)
 		
 	def setProject(self, project):

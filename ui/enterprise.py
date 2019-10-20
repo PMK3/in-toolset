@@ -3,9 +3,15 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from petri.petri import *
+from petri.enterprise import *
 from ui.common import *
 import config
+import math
 
+
+class ArrowType:
+	INPUT = 0
+	OUTPUT = 1
 
 class NodeType:
 	PLACE = 0
@@ -15,14 +21,6 @@ NodeTypeMap = {
 	"place": NodeType.PLACE,
 	"transition": NodeType.TRANSITION
 }
-
-			
-class TransitionFilter(HoverFilter):
-	def applyToBrush(self, brush):
-		super().applyToBrush(brush)
-		if self.item.obj.enabled:
-			color = mergeColors(brush.color(), QColor(Qt.green))
-			brush.setColor(color)
 			
 
 class ArrowFilter(HoverFilter):
@@ -30,41 +28,20 @@ class ArrowFilter(HoverFilter):
 		super().applyToPen(pen)
 		if self.item.isSelected():
 			pen.setColor(Qt.blue)
-
-
-class PlaceNode(ActiveNode):
-	def __init__(self, scene, style, obj):
-		super().__init__(scene, style.shapes["place"], obj, NodeType.PLACE)
-		self.obj.tokensChanged.connect(self.update)
-		
-		self.font = QFont()
-		self.font.setPixelSize(16)
-		
-	def disconnect(self):
-		self.obj.tokensChanged.disconnect(self.update)
-	
-	def paint(self, painter, option, widget):
-		super().paint(painter, option, widget)
-		
-		if self.obj.tokens != 0:
-			text = str(self.obj.tokens)
-			painter.setFont(self.font)
-			painter.drawText(self.shp.rect, Qt.AlignCenter, text)
-
 			
-class TransitionNode(ActiveNode):
-	def __init__(self, scene, style, obj):
-		super().__init__(scene, style.shapes["transition"], obj, NodeType.TRANSITION)
-		self.obj.enabledChanged.connect(self.update)
-		self.filter = TransitionFilter(self)
-		
-	def disconnect(self):
-		self.obj.enabledChanged.disconnect(self.update)
-		
-		
-class ArrowType:
-	INPUT = 0
-	OUTPUT = 1
+			
+class MessageArrowFilter(HoverFilter):
+	def applyToPen(self, pen):
+		pen.setColor(QColor(128, 0, 255))
+		super().applyToPen(pen)
+			
+			
+class TransitionFilter(HoverFilter):
+	def applyToBrush(self, brush):
+		super().applyToBrush(brush)
+		if self.item.obj.enabled:
+			color = mergeColors(brush.color(), QColor(Qt.green))
+			brush.setColor(color)
 
 
 class ArrowItem(EditorShape):
@@ -104,8 +81,9 @@ class TemporaryArrow(ArrowItem):
 		self.source = source
 		self.setPoints(source.x(), source.y(), source.x(), source.y())
 
-	def drag(self, pos):
-		self.setPoints(self.source.x(), self.source.y(), pos.x(), pos.y())
+	def drag(self, param):
+		x, y = param.pos.x(), param.pos.y()
+		self.setPoints(self.source.x(), self.source.y(), x, y)
 
 
 class ActiveArrow(ArrowItem):
@@ -152,6 +130,90 @@ class ActiveArrow(ArrowItem):
 		)
 		
 		
+class MessageArrow(ArrowItem):
+	def __init__(self, scene, obj):
+		super().__init__(scene)
+		self.signals = SignalListener()
+		
+		self.filter = MessageArrowFilter(self)
+		
+		self.dragMode = DragMode.SPECIAL
+		
+		self.obj = obj
+		self.signals.connect(self.obj.positionChanged, self.updateArrow)
+		self.signals.connect(self.obj.arrowChanged, self.updateArrow)
+		self.signals.connect(self.obj.typeChanged, self.updateType)
+		self.signals.connect(self.obj.deleted, self.removeFromScene)
+		
+		self.updateType()
+		
+	def disconnect(self):
+		self.signals.disconnect()
+		
+	def drag(self, param):
+		dx = param.mouse.x() - self.obj.x
+		dy = param.mouse.y() - self.obj.y
+		angle = math.atan2(dy, dx)
+		
+		self.obj.setArrowAngle(angle)
+		
+	def updateType(self):
+		if self.obj.type == TransitionType.INTERNAL:
+			self.hide()
+		else:
+			self.updateArrow()
+			self.show()
+		
+	def updateArrow(self):
+		dist = config.get("ui.message_arrow_distance")
+		size = config.get("ui.message_arrow_length")
+		
+		xpos = self.obj.x + math.cos(self.obj.arrowAngle) * dist
+		ypos = self.obj.y + math.sin(self.obj.arrowAngle) * dist
+		xoffs = math.cos(self.obj.arrowAngle) * size
+		yoffs = math.sin(self.obj.arrowAngle) * size
+		
+		self.setPos(xpos, ypos)
+		
+		if self.obj.type == TransitionType.INPUT:
+			self.setPoints(xoffs, yoffs, 0, 0)
+		else:
+			self.setPoints(0, 0, xoffs, yoffs)
+
+
+class PlaceNode(ActiveNode):
+	def __init__(self, scene, style, obj):
+		super().__init__(scene, style.shapes["place"], obj, NodeType.PLACE)
+		self.obj.tokensChanged.connect(self.update)
+		
+		self.font = QFont()
+		self.font.setPixelSize(16)
+		
+	def disconnect(self):
+		self.obj.tokensChanged.disconnect(self.update)
+	
+	def paint(self, painter, option, widget):
+		super().paint(painter, option, widget)
+		
+		if self.obj.tokens != 0:
+			text = str(self.obj.tokens)
+			painter.setFont(self.font)
+			painter.drawText(self.shp.rect, Qt.AlignCenter, text)
+
+			
+class TransitionNode(ActiveNode):
+	def __init__(self, scene, style, obj):
+		super().__init__(scene, style.shapes["transition"], obj, NodeType.TRANSITION)
+		self.obj.enabledChanged.connect(self.update)
+		self.filter = TransitionFilter(self)
+		
+		arrow = MessageArrow(scene, obj)
+		scene.addItem(arrow)
+		
+	def disconnect(self):
+		self.obj.enabledChanged.disconnect(self.update)
+		
+		
 class EnterpriseController:
 	def __init__(self, style, window):
 		self.style = style
@@ -171,7 +233,7 @@ class EnterpriseController:
 			shape = self.style.shapes[type]
 			item = EditorNode(self.scene, shape)
 			item.type = NodeTypeMap[type]
-			item.drag(pos)
+			item.setPos(alignToGrid(pos))
 			return item
 		elif type == "arrow":
 			source = self.scene.findItem(pos, ActiveNode)
@@ -188,7 +250,7 @@ class EnterpriseController:
 					place = Place(x, y)
 					self.net.places.add(place)
 				elif item.type == NodeType.TRANSITION:
-					trans = Transition(x, y)
+					trans = EnterpriseTransition(x, y)
 					self.net.transitions.add(trans)
 
 		elif isinstance(item, TemporaryArrow):
@@ -196,13 +258,22 @@ class EnterpriseController:
 			target = self.scene.findItem(pos, ActiveNode)
 			if target and target.type != source.type:
 				if target.type == NodeType.TRANSITION:
-					arrow = Arrow(ArrowType.INPUT, source.obj, target.obj)
-					self.net.inputs.add(arrow)
+					if target.obj.type != TransitionType.INPUT:
+						arrow = Arrow(ArrowType.INPUT, source.obj, target.obj)
+						self.net.inputs.add(arrow)
 				else:
-					arrow = Arrow(ArrowType.OUTPUT, target.obj, source.obj)
-					self.net.outputs.add(arrow)
+					if source.obj.type != TransitionType.OUTPUT:
+						arrow = Arrow(ArrowType.OUTPUT, target.obj, source.obj)
+						self.net.outputs.add(arrow)
 
 		self.scene.setHoverEnabled(True)
+		
+		
+class SeparatorLine(QFrame):
+	def __init__(self):
+		super().__init__()
+		self.setFrameShape(QFrame.HLine)
+		self.setFrameShadow(QFrame.Sunken)
 		
 		
 class GeneralSettings(QWidget):
@@ -220,12 +291,9 @@ class GeneralSettings(QWidget):
 		self.triggerRandom.setEnabled(not self.net.deadlock)
 		self.triggerRandom.clicked.connect(self.net.triggerRandom)
 
-		self.editIndustry = QPushButton("Edit Industry Level")
-
 		self.layout = QVBoxLayout(self)
 		self.layout.addWidget(self.label)
 		self.layout.addWidget(self.triggerRandom)
-		self.layout.addWidget(self.editIndustry)
 		self.layout.setAlignment(Qt.AlignTop)
 		
 	def cleanup(self):
@@ -290,10 +358,16 @@ class PlaceSettings(QWidget):
 class TransitionSettings(QWidget):
 	def __init__(self, obj):
 		super().__init__()
+		self.signals = SignalListener()
+		
 		self.obj = obj
-		self.obj.positionChanged.connect(self.updatePos)
-		self.obj.labelChanged.connect(self.updateLabel)
-		self.obj.enabledChanged.connect(self.updateEnabled)
+		self.signals.connect(self.obj.positionChanged, self.updatePos)
+		self.signals.connect(self.obj.labelChanged, self.updateLabel)
+		self.signals.connect(self.obj.enabledChanged, self.updateEnabled)
+		self.signals.connect(self.obj.sourceChanged, self.updateSource)
+		self.signals.connect(self.obj.sinkChanged, self.updateSink)
+		self.signals.connect(self.obj.typeChanged, self.updateType)
+		self.signals.connect(self.obj.messageChanged, self.updateMessage)
 
 		self.setStyleSheet("font-size: 16px")
 
@@ -307,17 +381,29 @@ class TransitionSettings(QWidget):
 		self.trigger = QPushButton("Trigger")
 		self.trigger.setEnabled(self.obj.enabled)
 		self.trigger.clicked.connect(self.obj.trigger)
+		self.type = QComboBox()
+		self.type.addItems(["Internal", "Input", "Output"])
+		self.type.setCurrentIndex(self.obj.type)
+		self.type.currentIndexChanged.connect(self.obj.setType)
+		self.message = QLineEdit(obj.message)
+		self.message.setMaxLength(config.get("ui.max_label_size"))
+		self.message.setEnabled(self.obj.type != TransitionType.INTERNAL)
+		self.message.textEdited.connect(self.obj.setMessage)
+		self.updateSource()
+		self.updateSink()
 
 		self.layout = QFormLayout(self)
 		self.layout.addRow("X:", self.x)
 		self.layout.addRow("Y:", self.y)
 		self.layout.addRow("Label:", self.label)
+		self.layout.addRow(SeparatorLine())
+		self.layout.addRow("Type:", self.type)
+		self.layout.addRow("Message:", self.message)
+		self.layout.addRow(SeparatorLine())
 		self.layout.addRow(self.trigger)
 		
 	def cleanup(self):
-		self.obj.positionChanged.disconnect(self.updatePos)
-		self.obj.labelChanged.disconnect(self.updateLabel)
-		self.obj.enabledChanged.disconnect(self.updateEnabled)
+		self.signals.disconnect()
 
 	def updatePos(self):
 		self.x.setText("%i" %(self.obj.x / GRID_SIZE))
@@ -328,6 +414,23 @@ class TransitionSettings(QWidget):
 		
 	def updateEnabled(self):
 		self.trigger.setEnabled(self.obj.enabled)
+		
+	def updateSource(self):
+		model = self.type.model()
+		item = model.item(TransitionType.INPUT)
+		item.setEnabled(self.obj.source)
+	
+	def updateSink(self):
+		model = self.type.model()
+		item = model.item(TransitionType.OUTPUT)
+		item.setEnabled(self.obj.sink)
+		
+	def updateType(self):
+		self.type.setCurrentIndex(self.obj.type)
+		self.message.setEnabled(self.obj.type != TransitionType.INTERNAL)
+		
+	def updateMessage(self):
+		self.message.setText(self.obj.message)
 		
 		
 class EnterpriseScene:
@@ -378,7 +481,6 @@ class EnterpriseScene:
 		self.signals.connect(self.toolbar.selectionChanged, self.updateTool)
 		
 		self.generalSettings = GeneralSettings(self.net)
-		self.signals.connect(self.generalSettings.editIndustry.clicked, lambda: self.selectEnterprise(-1))
 		self.settings.setWidget(self.generalSettings)
 		
 	def cleanup(self):

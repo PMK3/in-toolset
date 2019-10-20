@@ -2,9 +2,10 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
+from common import *
 import json
 import math
-from common import *
+import config
 
 
 GRID_SIZE = 20
@@ -222,7 +223,7 @@ class EditorItem(QGraphicsItem):
 			self.invalid = invalid
 			self.update()
 			
-	def drag(self, pos): pass
+	def drag(self, param): pass
 	def delete(self): pass
 	
 	def removeFromScene(self):
@@ -272,6 +273,12 @@ class EditorShape(EditorItem):
 		self.shp.draw(painter, self.filter)
 	
 	
+class DragParam:
+	def __init__(self, pos, mouse):
+		self.pos = pos
+		self.mouse = mouse
+
+	
 class ObjectDragger:
 	def __init__(self):
 		self.reset()
@@ -296,14 +303,14 @@ class ObjectDragger:
 		if self.isDragging():
 			posDiff = pos - self.dragBase
 			for item, base in zip(self.items, self.itemBase):
-				item.drag(base + posDiff)
+				item.drag(DragParam(base + posDiff, pos))
 			for item in self.items:
 				item.checkCollisions()
 	
 	def finish(self, pos):
 		if any(item.invalid for item in self.items):
 			for item, base in zip(self.items, self.itemBase):
-				item.drag(base)
+				item.drag(DragParam(base, self.dragBase))
 				item.setInvalid(False)
 		
 		for item in self.items:
@@ -410,7 +417,7 @@ class EditorScene(QGraphicsScene):
 		
 		self.dragger.update(e.scenePos())
 		if self.placedItem:
-			self.placedItem.drag(e.scenePos())
+			self.placedItem.drag(DragParam(e.scenePos(), e.scenePos()))
 			self.placedItem.checkCollisions()
 			
 	def mouseReleaseEvent(self, e):
@@ -446,6 +453,8 @@ class EditorView(QGraphicsView):
 		self.handDrag = False
 		
 		self.zoom = 1
+		
+		self.scrollStep = config.get("ui.keyboard_scroll_speed")
 		
 	def updateDragMode(self):
 		if self.handDrag:
@@ -487,13 +496,13 @@ class EditorView(QGraphicsView):
 		
 		key = e.key()
 		if key == Qt.Key_Left:
-			self.translate(10, 0)
+			self.translate(self.scrollStep, 0)
 		elif key == Qt.Key_Right:
-			self.translate(-10, 0)
+			self.translate(-self.scrollStep, 0)
 		elif key == Qt.Key_Up:
-			self.translate(0, 10)
+			self.translate(0, self.scrollStep)
 		elif key == Qt.Key_Down:
-			self.translate(0, -10)
+			self.translate(0, -self.scrollStep)
 		
 	def wheelEvent(self, e):
 		zoom = 1.0008 ** e.angleDelta().y()

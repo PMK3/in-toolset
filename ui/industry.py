@@ -26,7 +26,7 @@ class IndustryController:
 		if type == "enterprise":
 			self.scene.setHoverEnabled(False)
 			item = EditorNode(self.scene, self.style.shapes["enterprise"])
-			item.drag(pos)
+			item.setPos(alignToGrid(pos))
 			return item
 
 	def finishPlacement(self, pos, item):

@@ -58,9 +58,9 @@ class LabelItem(EditorItem):
 		self.obj.setLabelAngle(math.pi / 2)
 		self.obj.setLabelDistance(35)
 
-	def drag(self, pos):
-		dx = pos.x() - self.obj.x
-		dy = pos.y() - self.obj.y
+	def drag(self, param):
+		dx = param.pos.x() - self.obj.x
+		dy = param.pos.y() - self.obj.y
 
 		dist = math.sqrt(dx * dx + dy * dy)
 		dist = min(max(dist, config.get("ui.label_distance_min")), config.get("ui.label_distance_max"))
@@ -96,8 +96,8 @@ class EditorNode(EditorShape):
 		super().__init__(scene, shape)
 		self.dragMode = DragMode.NORMAL
 		
-	def drag(self, pos):
-		self.setPos(alignToGrid(pos))
+	def drag(self, param):
+		self.setPos(alignToGrid(param.pos))
 		
 	def checkCollisions(self):
 		items = self.scene.collidingItems(self)
@@ -131,16 +131,15 @@ class ActiveNode(EditorNode):
 		
 		self.filter = HoverFilter(self)
 
-		if hasattr(obj, "label"):
-			self.label = LabelItem(scene, obj)
-			scene.addItem(self.label)
+		self.label = LabelItem(scene, obj)
+		scene.addItem(self.label)
 		
 	def disconnect(self):
 		self.obj.deleted.disconnect(self.removeFromScene)
 		self.obj.positionChanged.disconnect(self.updatePos)
 
-	def drag(self, pos):
-		pos = alignToGrid(pos)
+	def drag(self, param):
+		pos = alignToGrid(param.pos)
 		self.obj.move(pos.x(), pos.y())
 
 	def delete(self):

@@ -42,10 +42,12 @@ class ViewMenu(QMenu):
 		self.showGrid = Action("Show grid", "Ctrl+1", True)
 		self.showGrid.setChecked(True)
 		self.resetCamera = Action("Reset camera", "Ctrl+R")
+		self.editIndustry = Action("Go to industry net", "Ctrl+I")
 
 		self.addAction(self.showGrid)
 		self.addSeparator()
 		self.addAction(self.resetCamera)
+		self.addAction(self.editIndustry)
 
 
 class MenuBar(QMenuBar):
