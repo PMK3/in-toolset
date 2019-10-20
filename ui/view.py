@@ -212,6 +212,7 @@ class EditorItem(QGraphicsItem):
 		self.scene = scene
 		self.dragMode = DragMode.NONE
 		self.invalid = False
+		
 		self.doubleClicked = Signal()
 	
 	def disconnect(self): pass
@@ -426,7 +427,8 @@ class EditorScene(QGraphicsScene):
 		pos = e.scenePos()
 		if e.button() == Qt.LeftButton:
 			item = self.findItem(pos, EditorItem)
-			item.doubleClicked.emit()
+			if item:
+				item.doubleClicked.emit()
 		
 
 class EditorView(QGraphicsView):
