@@ -14,6 +14,20 @@ class Signal:
 			func(*args)
 			
 	__call__ = emit
+	
+	
+class SignalListener:
+	def __init__(self):
+		self.listeners = []
+		
+	def connect(self, signal, callback):
+		self.listeners.append((signal, callback))
+		signal.connect(callback)
+		
+	def disconnect(self):
+		for signal, callback in self.listeners:
+			signal.disconnect(callback)
+		self.listeners = []
 
 			
 class Property:

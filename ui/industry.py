@@ -1,6 +1,7 @@
 
 from petri.industry import EnterpriseNode
 from ui.common import *
+from common import *
 import config
 
 
@@ -120,12 +121,14 @@ class IndustryScene:
 		self.settings = window.settings
 
 		self.selectEnterprise = Signal()
+		
+		self.signals = SignalListener()
 
 	def load(self, net):
 		self.scene.clear()
 
 		self.net = net
-		self.net.enterprises.added.connect(self.addEnterprise)
+		self.signals.connect(self.net.enterprises.added, self.addEnterprise)
 
 		for enterprise in self.net.enterprises:
 			self.addEnterprise(enterprise)
@@ -133,7 +136,7 @@ class IndustryScene:
 		self.controller.load(net)
 
 		self.scene.setController(self.controller)
-		self.scene.selectionChanged.connect(self.updateSelection)
+		self.signals.connect(self.scene.selectionChanged, self.updateSelection)
 
 		self.view.setHandDrag(False)
 
@@ -141,16 +144,13 @@ class IndustryScene:
 		self.toolbar.addGroup("common")
 		self.toolbar.addGroup("industry")
 		self.toolbar.selectTool("selection")
-		self.toolbar.selectionChanged.connect(self.updateTool)
+		self.signals.connect(self.toolbar.selectionChanged, self.updateTool)
 
 		self.generalSettings = GeneralSettings(self.net)
 		self.settings.setWidget(self.generalSettings)
 
 	def cleanup(self):
-		self.scene.selectionChanged.disconnect(self.updateSelection)
-		self.toolbar.selectionChanged.disconnect(self.updateTool)
-
-		self.net.enterprises.added.disconnect(self.addEnterprise)
+		self.signals.disconnect()
 
 		self.generalSettings.cleanup()
 		if self.settings.widget() != self.generalSettings:

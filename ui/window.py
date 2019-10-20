@@ -15,7 +15,7 @@ class EnterpriseItem(QListWidgetItem):
 		
 		self.enterprise = enterprise
 		self.enterprise.labelChanged.connect(self.updateLabel)
-		self.enterprise.deleted.connect(lambda:self.setHidden(True))
+		self.enterprise.deleted.connect(lambda: self.setHidden(True))
 		
 		self.updateLabel()
 		

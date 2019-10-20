@@ -344,14 +344,16 @@ class EnterpriseScene:
 		self.view = self.window.view
 		self.settings = self.window.settings
 		
+		self.signals = SignalListener()
+		
 	def load(self, enet):
 		self.scene.clear()
 		
 		self.net = enet.net
-		self.net.places.added.connect(self.addPlace)
-		self.net.transitions.added.connect(self.addTransition)
-		self.net.inputs.added.connect(self.addInput)
-		self.net.outputs.added.connect(self.addOutput)
+		self.signals.connect(self.net.places.added, self.addPlace)
+		self.signals.connect(self.net.transitions.added, self.addTransition)
+		self.signals.connect(self.net.inputs.added, self.addInput)
+		self.signals.connect(self.net.outputs.added, self.addOutput)
 		
 		for place in self.net.places:
 			self.addPlace(place)
@@ -365,7 +367,7 @@ class EnterpriseScene:
 		self.controller.load(enet.net)
 		
 		self.scene.setController(self.controller)
-		self.scene.selectionChanged.connect(self.updateSelection)
+		self.signals.connect(self.scene.selectionChanged, self.updateSelection)
 		
 		self.view.setHandDrag(False)
 		
@@ -373,20 +375,14 @@ class EnterpriseScene:
 		self.toolbar.addGroup("common")
 		self.toolbar.addGroup("enterprise")
 		self.toolbar.selectTool("selection")
-		self.toolbar.selectionChanged.connect(self.updateTool)
+		self.signals.connect(self.toolbar.selectionChanged, self.updateTool)
 		
 		self.generalSettings = GeneralSettings(self.net)
-		self.generalSettings.editIndustry.clicked.connect(lambda: self.selectEnterprise(-1))
+		self.signals.connect(self.generalSettings.editIndustry.clicked, lambda: self.selectEnterprise(-1))
 		self.settings.setWidget(self.generalSettings)
 		
 	def cleanup(self):
-		self.scene.selectionChanged.disconnect(self.updateSelection)
-		self.toolbar.selectionChanged.disconnect(self.updateTool)
-		
-		self.net.places.added.disconnect(self.addPlace)
-		self.net.transitions.added.disconnect(self.addTransition)
-		self.net.inputs.added.disconnect(self.addInput)
-		self.net.outputs.added.disconnect(self.addOutput)
+		self.signals.disconnect()
 		
 		self.generalSettings.cleanup()
 		if self.settings.widget() != self.generalSettings:
