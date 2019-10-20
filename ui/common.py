@@ -29,6 +29,7 @@ class HoverFilter:
 			color = mergeColors(brush.color(), QColor(Qt.gray))
 			brush.setColor(color)
 
+
 class LabelItem(EditorItem):
 	def __init__(self, scene, obj):
 		super().__init__(scene)
@@ -77,7 +78,7 @@ class LabelItem(EditorItem):
 	def boundingRect(self):
 		rect = self.fontMetrics.boundingRect(self.obj.label)
 		rect.moveCenter(QPoint(0, 0))
-		return QRectF(rect.adjusted(-1, -1, 1, 1))
+		return QRectF(rect.adjusted(-2, -2, 2, 2))
 
 	def paint(self, painter, option, widget):
 		if self.isSelected():
