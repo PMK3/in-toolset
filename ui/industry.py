@@ -1,6 +1,7 @@
 
 from petri.industry import EnterpriseNode
 from ui.common import *
+import config
 
 
 class EnterpriseItem(ActiveNode):
@@ -81,7 +82,7 @@ class EnterpriseSettings(QWidget):
 		self.y.setAlignment(Qt.AlignRight)
 
 		self.label = QLineEdit(obj.label)
-		self.label.setMaxLength(20)
+		self.label.setMaxLength(config.get("ui.max_label_size"))
 		self.label.textEdited.connect(self.obj.setLabel)
 
 		self.edit = QPushButton("Edit")

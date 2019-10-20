@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from petri.petri import *
 from ui.common import *
+import config
 
 
 class NodeType:
@@ -257,7 +258,7 @@ class PlaceSettings(QWidget):
 		self.y = QLabel("%i" %(obj.y / GRID_SIZE))
 		self.y.setAlignment(Qt.AlignRight)
 		self.label = QLineEdit(obj.label)
-		self.label.setMaxLength(20)
+		self.label.setMaxLength(config.get("ui.max_label_size"))
 		self.label.textEdited.connect(self.obj.setLabel)
 		self.tokens = QSpinBox()
 		self.tokens.setRange(0, 999)
@@ -301,7 +302,7 @@ class TransitionSettings(QWidget):
 		self.y = QLabel("%i" %(obj.y / GRID_SIZE))
 		self.y.setAlignment(Qt.AlignRight)
 		self.label = QLineEdit(obj.label)
-		self.label.setMaxLength(20)
+		self.label.setMaxLength(config.get("ui.max_label_size"))
 		self.label.textEdited.connect(self.obj.setLabel)
 		self.trigger = QPushButton("Trigger")
 		self.trigger.setEnabled(self.obj.enabled)

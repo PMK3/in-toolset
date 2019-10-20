@@ -1,5 +1,6 @@
 
 from ui.view import *
+import config
 
 
 def mergeColors(*colors):
@@ -62,7 +63,7 @@ class LabelItem(EditorItem):
 		dy = pos.y() - self.obj.y
 
 		dist = math.sqrt(dx * dx + dy * dy)
-		dist = min(max(dist, 20), 60)
+		dist = min(max(dist, config.get("ui.label_distance_min")), config.get("ui.label_distance_max"))
 
 		self.obj.setLabelAngle(math.atan2(dy, dx))
 		self.obj.setLabelDistance(dist)
