@@ -81,6 +81,7 @@ class ActiveArrow(ArrowItem):
 			self.target = self.obj.place
 
 		self.connect(self.obj.deleted, self.removeFromScene)
+		self.connect(self.obj.curveChanged, self.updateArrow)
 		self.connect(self.source.positionChanged, self.updateArrow)
 		self.connect(self.target.positionChanged, self.updateArrow)
 
@@ -96,19 +97,21 @@ class ActiveArrow(ArrowItem):
 		my = param.mouse.y()
 		dx = target.x - source.x
 		dy = target.y - source.y
-		dist = dy * mx - dx * my + target.x * source.y - target.y * source.x
-		dist /= math.sqrt(dx * dx + dy * dy)
-		self.setCurve(-dist)
+		length = math.sqrt(dx * dx + dy * dy)
+		dist = (dy * mx - dx * my + target.x * source.y - target.y * source.x) / length
 		
-		self.updateArrow()
+		angle = math.atan2(dy, dx) + math.atan2(self.obj.curve, length / 2)
+		self.obj.setCurve(-dist * 2 - math.sin(angle) * 70)
 
 	def updateArrow(self):
 		dx = self.target.x - self.source.x
 		dy = self.target.y - self.source.y
 		length = math.sqrt(dx * dx + dy * dy)
 		
-		angle1 = math.atan2(dy, dx) + math.atan2(self.arrow.curve, length / 2)
-		angle2 = math.atan2(dy, dx) - math.atan2(self.arrow.curve, length / 2)
+		angle1 = math.atan2(dy, dx) + math.atan2(self.obj.curve, length / 2)
+		angle2 = math.atan2(dy, dx) - math.atan2(self.obj.curve, length / 2)
+		
+		self.setCurve(self.obj.curve)
 		
 		self.setPoints(
 			self.source.x + math.cos(angle1) * 35,

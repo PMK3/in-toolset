@@ -76,8 +76,12 @@ class ArrowType:
 	OUTPUT = 1
 
 class Arrow(Object):
+	curve = Property("curveChanged", 0)
+	
 	def __init__(self, type, place, transition):
 		super().__init__()
+		self.curveChanged = Signal()
+		
 		self.type = type
 		self.place = place
 		self.transition = transition
@@ -89,6 +93,8 @@ class Arrow(Object):
 		self.deleted.connect(self.unregister)
 		
 		self.register()
+		
+	def setCurve(self, curve): self.curve = curve
 		
 	def register(self):
 		if self.type == ArrowType.INPUT:
