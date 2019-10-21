@@ -65,6 +65,7 @@ class ShapePart:
 		self.elements = []
 		
 	def setPen(self, pen): self.pen = pen
+	def setBrush(self, brush): self.brush = brush
 	
 	def addElement(self, element):
 		self.elements.append(element)

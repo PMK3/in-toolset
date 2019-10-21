@@ -1,12 +1,64 @@
 
-from petri.industry import EnterpriseNode
+from petri.industry import *
 from ui.common import *
 from common import *
 import config
 
 
-class EnterpriseItem(ActiveNode):
-	pass
+class EnterpriseItem(ActiveNode): pass
+
+class MessageNode(EditorShape):
+	def __init__(self, scene, enterprise, transition):
+		super().__init__(scene)
+		
+		self.filter = HoverFilter(self)
+		
+		self.dragMode = DragMode.SPECIAL
+		
+		self.enterprise = enterprise
+		self.enterprise.positionChanged.connect(self.updatePos)
+		self.transition = transition
+		self.transition.industryArrowChanged.connect(self.updatePos)
+		
+		circle = ShapeElement(
+			"circle", x=0, y=0, r=8
+		)
+		
+		pen = QPen(Qt.NoPen)
+		if self.transition.type == TransitionType.INPUT:
+			brush = QBrush(QColor(255, 128, 0))
+		else:
+			brush = QBrush(Qt.red)
+		
+		part = ShapePart()
+		part.setPen(pen)
+		part.setBrush(brush)
+		part.addElement(circle)
+		
+		shape = Shape()
+		shape.addPart(part)
+		
+		self.setShape(shape)
+		
+		self.updatePos()
+		
+	def disconnect(self):
+		self.enterprise.positionChanged.disconnect(self.updatePos)
+		self.transition.industryArrowChanged.disconnect(self.updatePos)
+		
+	def drag(self, param):
+		dx = param.pos.x() - self.enterprise.x
+		dy = param.pos.y() - self.enterprise.y
+		angle = math.atan2(dy, dx)
+		
+		self.transition.setIndustryAngle(angle)
+		
+	def updatePos(self):
+		angle = self.transition.industryAngle
+		posx = self.enterprise.x + math.cos(angle) * 40
+		posy = self.enterprise.y + math.sin(angle) * 40
+		
+		self.setPos(posx, posy)
 
 
 class IndustryController:
@@ -160,8 +212,13 @@ class IndustryScene:
 
 	def addEnterprise(self, obj):
 		item = EnterpriseItem(self.scene, self.style.shapes["enterprise"], obj)
-		item.doubleClicked.connect(lambda:self.window.selectEnterprise(obj.id))
+		item.doubleClicked.connect(lambda: self.window.selectEnterprise(obj.id))
 		self.scene.addItem(item)
+		
+		for transition in obj.net.transitions:
+			if transition.type != TransitionType.INTERNAL:
+				item = MessageNode(self.scene, obj, transition)
+				self.scene.addItem(item)
 
 	def updateSelection(self):
 		if self.settings.widget() != self.generalSettings:

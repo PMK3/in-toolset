@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from petri.petri import *
-from petri.enterprise import *
+from petri.industry import *
 from ui.common import *
 import config
 import math
@@ -23,25 +23,31 @@ NodeTypeMap = {
 }
 			
 
-class ArrowFilter(HoverFilter):
+class ArrowFilter:
+	def __init__(self, item):
+		self.hover = HoverFilter(item)
+		self.item = item
+		
 	def applyToPen(self, pen):
-		super().applyToPen(pen)
+		self.hover.applyToPen(pen)
 		if self.item.isSelected():
 			pen.setColor(Qt.blue)
 			
+	def applyToBrush(self, brush): pass
 			
-class MessageArrowFilter(HoverFilter):
+			
+class TransitionFilter:
+	def __init__(self, item):
+		self.hover = HoverFilter(item)
+		self.item = item
+		
 	def applyToPen(self, pen):
-		pen.setColor(QColor(128, 0, 255))
-		super().applyToPen(pen)
-			
-			
-class TransitionFilter(HoverFilter):
+		self.hover.applyToPen(pen)
+	
 	def applyToBrush(self, brush):
-		super().applyToBrush(brush)
 		if self.item.obj.enabled:
-			color = mergeColors(brush.color(), QColor(Qt.green))
-			brush.setColor(color)
+			brush.setColor(Qt.green)
+		self.hover.applyToBrush(brush)
 
 
 class ArrowItem(EditorShape):
@@ -53,18 +59,21 @@ class ArrowItem(EditorShape):
 			"arrow", x1=0, y1=0, x2=0, y2=0, stretch=10
 		)
 
-		pen = QPen()
-		pen.setCapStyle(Qt.RoundCap)
-		pen.setWidth(2)
+		self.pen = QPen()
+		self.pen.setCapStyle(Qt.RoundCap)
+		self.pen.setWidth(2)
 
 		part = ShapePart()
-		part.setPen(pen)
+		part.setPen(self.pen)
 		part.addElement(self.arrow)
 
 		shape = Shape()
 		shape.addPart(part)
 
 		self.setShape(shape)
+		
+	def setColor(self, color):
+		self.pen.setColor(color)
 
 	def setPoints(self, x1, y1, x2, y2):
 		self.arrow.x1 = x1
@@ -135,7 +144,7 @@ class MessageArrow(ArrowItem):
 		super().__init__(scene)
 		self.signals = SignalListener()
 		
-		self.filter = MessageArrowFilter(self)
+		self.filter = HoverFilter(self)
 		
 		self.dragMode = DragMode.SPECIAL
 		
@@ -144,6 +153,8 @@ class MessageArrow(ArrowItem):
 		self.signals.connect(self.obj.arrowChanged, self.updateArrow)
 		self.signals.connect(self.obj.typeChanged, self.updateType)
 		self.signals.connect(self.obj.deleted, self.removeFromScene)
+		
+		self.setColor(QColor(128, 0, 255))
 		
 		self.updateType()
 		

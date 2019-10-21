@@ -1,7 +1,7 @@
 
 ui.max_label_size = 25
 ui.label_distance_min = 0
-ui.label_distance_max = 60
+ui.label_distance_max = 80
 
 ui.message_arrow_distance = 30
 ui.message_arrow_length = 40
