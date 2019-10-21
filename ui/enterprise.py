@@ -457,6 +457,7 @@ class EnterpriseScene:
 		
 	def load(self, enet):
 		self.scene.clear()
+		self.view.resetTransform()
 		
 		self.net = enet.net
 		self.signals.connect(self.net.places.added, self.addPlace)

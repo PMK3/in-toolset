@@ -126,6 +126,7 @@ class IndustryScene:
 
 	def load(self, net):
 		self.scene.clear()
+		self.view.resetTransform()
 
 		self.net = net
 		self.signals.connect(self.net.enterprises.added, self.addEnterprise)
