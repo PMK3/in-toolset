@@ -50,40 +50,6 @@ class TransitionFilter:
 		self.hover.applyToBrush(brush)
 
 
-class ArrowItem(EditorShape):
-	def __init__(self, scene):
-		super().__init__(scene)
-		self.setZValue(-1)
-
-		self.arrow = ShapeElement(
-			"arrow", x1=0, y1=0, x2=0, y2=0, stretch=10
-		)
-
-		self.pen = QPen()
-		self.pen.setCapStyle(Qt.RoundCap)
-		self.pen.setWidth(2)
-
-		part = ShapePart()
-		part.setStroke(20)
-		part.setPen(self.pen)
-		part.addElement(self.arrow)
-
-		shape = Shape()
-		shape.addPart(part)
-
-		self.setShape(shape)
-		
-	def setColor(self, color):
-		self.pen.setColor(color)
-
-	def setPoints(self, x1, y1, x2, y2):
-		self.arrow.x1 = x1
-		self.arrow.y1 = y1
-		self.arrow.x2 = x2
-		self.arrow.y2 = y2
-		self.updateShape()
-
-
 class TemporaryArrow(ArrowItem):
 	def __init__(self, scene, source):
 		super().__init__(scene)
@@ -101,6 +67,8 @@ class ActiveArrow(ArrowItem):
 		super().__init__(scene)
 
 		self.filter = ArrowFilter(self)
+		
+		self.dragMode = DragMode.SPECIAL
 
 		self.obj = obj
 		self.type = type
@@ -120,17 +88,33 @@ class ActiveArrow(ArrowItem):
 		
 	def delete(self):
 		self.obj.delete()
+		
+	def drag(self, param):
+		source, target = self.source, self.target
+		
+		mx = param.mouse.x()
+		my = param.mouse.y()
+		dx = target.x - source.x
+		dy = target.y - source.y
+		dist = dy * mx - dx * my + target.x * source.y - target.y * source.x
+		dist /= math.sqrt(dx * dx + dy * dy)
+		self.setCurve(-dist)
+		
+		self.updateArrow()
 
 	def updateArrow(self):
 		dx = self.target.x - self.source.x
 		dy = self.target.y - self.source.y
-		angle = math.atan2(dy, dx)
-
+		length = math.sqrt(dx * dx + dy * dy)
+		
+		angle1 = math.atan2(dy, dx) + math.atan2(self.arrow.curve, length / 2)
+		angle2 = math.atan2(dy, dx) - math.atan2(self.arrow.curve, length / 2)
+		
 		self.setPoints(
-			self.source.x + math.cos(angle) * 30,
-			self.source.y + math.sin(angle) * 30,
-			self.target.x - math.cos(angle) * 30,
-			self.target.y - math.sin(angle) * 30
+			self.source.x + math.cos(angle1) * 35,
+			self.source.y + math.sin(angle1) * 35,
+			self.target.x - math.cos(angle2) * 35,
+			self.target.y - math.sin(angle2) * 35
 		)
 		
 		

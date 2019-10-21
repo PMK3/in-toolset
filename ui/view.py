@@ -51,6 +51,7 @@ class ShapeElement:
 			self.x1, self.y1 = data["x1"], data["y1"]
 			self.x2, self.y2 = data["x2"], data["y2"]
 			self.stretch = data["stretch"]
+			self.curve = data["curve"]
 		elif self.type == "polygon":
 			self.points = data["points"]
 		else:
@@ -115,21 +116,30 @@ class ShapePart:
 			elif element.type == "arrow":
 				dx = element.x2 - element.x1
 				dy = element.y2 - element.y1
-				angle = math.atan2(dy, dx)
+				length = math.sqrt(dx * dx + dy * dy)
+				
+				angle1 = math.atan2(dy, dx)
+				angle2 = angle1 - math.atan2(element.curve, length / 2)
+				
+				centerx = (element.x1 + element.x2) / 2
+				centery = (element.y1 + element.y2) / 2
+				
+				controlx = centerx + math.cos(angle1 + math.pi / 2) * element.curve
+				controly = centery + math.sin(angle1 + math.pi / 2) * element.curve
 				
 				self.path.moveTo(element.x1, element.y1)
-				self.path.lineTo(element.x2, element.y2)
+				self.path.quadTo(controlx, controly, element.x2, element.y2)
 				
 				self.path.moveTo(element.x2, element.y2)
 				self.path.lineTo(
-					element.x2 + element.stretch * math.cos(angle + math.pi * .75),
-					element.y2 + element.stretch * math.sin(angle + math.pi * .75)
+					element.x2 + element.stretch * math.cos(angle2 + math.pi * .75),
+					element.y2 + element.stretch * math.sin(angle2 + math.pi * .75)
 				)
 				
 				self.path.moveTo(element.x2, element.y2)
 				self.path.lineTo(
-					element.x2 + element.stretch * math.cos(angle - math.pi * .75),
-					element.y2 + element.stretch * math.sin(angle - math.pi * .75)
+					element.x2 + element.stretch * math.cos(angle2 - math.pi * .75),
+					element.y2 + element.stretch * math.sin(angle2 - math.pi * .75)
 				)
 		
 		if self.stroke > 0:
@@ -261,8 +271,8 @@ class EditorShape(EditorItem):
 		self.updateShape()
 		
 	def updateShape(self):
-		self.shp.update()
 		self.prepareGeometryChange()
+		self.shp.update()
 		self.update()
 		
 	def setHover(self, hover):

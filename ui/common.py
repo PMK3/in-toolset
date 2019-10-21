@@ -31,6 +31,44 @@ class HoverFilter:
 			brush.setColor(color)
 
 
+class ArrowItem(EditorShape):
+	def __init__(self, scene):
+		super().__init__(scene)
+		self.setZValue(-1)
+
+		self.arrow = ShapeElement(
+			"arrow", x1=0, y1=0, x2=0, y2=0, curve=0, stretch=10
+		)
+
+		self.pen = QPen()
+		self.pen.setCapStyle(Qt.RoundCap)
+		self.pen.setWidth(2)
+
+		part = ShapePart()
+		part.setStroke(20)
+		part.setPen(self.pen)
+		part.addElement(self.arrow)
+
+		shape = Shape()
+		shape.addPart(part)
+
+		self.setShape(shape)
+		
+	def setColor(self, color):
+		self.pen.setColor(color)
+		
+	def setCurve(self, curve):
+		self.arrow.curve = curve
+		self.updateShape()
+
+	def setPoints(self, x1, y1, x2, y2):
+		self.arrow.x1 = x1
+		self.arrow.y1 = y1
+		self.arrow.x2 = x2
+		self.arrow.y2 = y2
+		self.updateShape()
+
+
 class LabelItem(EditorItem):
 	def __init__(self, scene, obj):
 		super().__init__(scene)
@@ -83,8 +121,7 @@ class LabelItem(EditorItem):
 			painter.setPen(pen)
 
 		painter.setFont(self.font)
-		painter.drawText(self.boundingRect(), Qt.AlignCenter, self.obj.label)
-			
+		painter.drawText(self.boundingRect(), Qt.AlignCenter, self.obj.label)			
 			
 
 class EditorNode(EditorShape):
