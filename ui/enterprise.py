@@ -96,9 +96,11 @@ class ActiveArrow(ArrowItem):
 		my = param.mouse.y()
 		dx = target.x - source.x
 		dy = target.y - source.y
-		dist = dy * mx - dx * my + target.x * source.y - target.y * source.x
-		dist /= math.sqrt(dx * dx + dy * dy)
-		self.setCurve(-dist)
+		length = math.sqrt(dx * dx + dy * dy)
+		dist = (dy * mx - dx * my + target.x * source.y - target.y * source.x) / length
+		
+		angle = math.atan2(dy, dx) + math.atan2(self.arrow.curve, length / 2)
+		self.setCurve(-dist * 2 - math.sin(angle) * 70)
 		
 		self.updateArrow()
 

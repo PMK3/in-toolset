@@ -129,6 +129,7 @@ class ShapePart:
 				
 				self.path.moveTo(element.x1, element.y1)
 				self.path.quadTo(controlx, controly, element.x2, element.y2)
+				self.path.quadTo(controlx, controly, element.x1, element.y1)
 				
 				self.path.moveTo(element.x2, element.y2)
 				self.path.lineTo(
