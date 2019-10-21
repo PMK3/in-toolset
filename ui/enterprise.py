@@ -352,7 +352,7 @@ class TransitionSettings(QWidget):
 		self.signals.connect(self.obj.sourceChanged, self.updateSource)
 		self.signals.connect(self.obj.sinkChanged, self.updateSink)
 		self.signals.connect(self.obj.typeChanged, self.updateType)
-		self.signals.connect(self.obj.messageChanged, self.updateMessage)
+		self.signals.connect(self.obj.messageTypeChanged, self.updateMessageType)
 
 		self.setStyleSheet("font-size: 16px")
 
@@ -370,10 +370,10 @@ class TransitionSettings(QWidget):
 		self.type.addItems(["Internal", "Input", "Output"])
 		self.type.setCurrentIndex(self.obj.type)
 		self.type.currentIndexChanged.connect(self.obj.setType)
-		self.message = QLineEdit(obj.message)
-		self.message.setMaxLength(config.get("ui.max_label_size"))
-		self.message.setEnabled(self.obj.type != TransitionType.INTERNAL)
-		self.message.textEdited.connect(self.obj.setMessage)
+		self.messageType = QLineEdit(obj.messageType)
+		self.messageType.setMaxLength(config.get("ui.max_label_size"))
+		self.messageType.setEnabled(self.obj.type != TransitionType.INTERNAL)
+		self.messageType.textEdited.connect(self.obj.setMessageType)
 		self.updateSource()
 		self.updateSink()
 
@@ -383,7 +383,7 @@ class TransitionSettings(QWidget):
 		self.layout.addRow("Label:", self.label)
 		self.layout.addRow(SeparatorLine())
 		self.layout.addRow("Type:", self.type)
-		self.layout.addRow("Message:", self.message)
+		self.layout.addRow("Message Type:", self.messageType)
 		self.layout.addRow(SeparatorLine())
 		self.layout.addRow(self.trigger)
 		
@@ -412,10 +412,10 @@ class TransitionSettings(QWidget):
 		
 	def updateType(self):
 		self.type.setCurrentIndex(self.obj.type)
-		self.message.setEnabled(self.obj.type != TransitionType.INTERNAL)
+		self.messageType.setEnabled(self.obj.type != TransitionType.INTERNAL)
 		
-	def updateMessage(self):
-		self.message.setText(self.obj.message)
+	def updateMessageType(self):
+		self.messageType.setText(self.obj.messageType)
 		
 		
 class EnterpriseScene:

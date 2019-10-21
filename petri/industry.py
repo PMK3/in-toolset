@@ -43,19 +43,19 @@ class TransitionType:
 
 class EnterpriseTransition(Transition):
 	type = Property("typeChanged", TransitionType.INTERNAL)
-	message = Property("messageChanged", "")
+	messageType = Property("messageTypeChanged", "")
 	arrowAngle = Property("arrowChanged", math.pi)
 	industryAngle = Property("industryArrowChanged", math.pi)
 	
 	def __init__(self, x, y):
 		super().__init__(x, y)
 		self.typeChanged = Signal()
-		self.messageChanged = Signal()
+		self.messageTypeChanged = Signal()
 		self.arrowChanged = Signal()
 		self.industryArrowChanged = Signal()
 		
 	def setType(self, type): self.type = type
-	def setMessage(self, message): self.message = message
+	def setMessageType(self, messageType): self.messageType = messageType
 	def setArrowAngle(self, angle): self.arrowAngle = angle
 	def setIndustryAngle(self, angle): self.industryAngle = angle
 
