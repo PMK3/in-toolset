@@ -64,6 +64,7 @@ class ArrowItem(EditorShape):
 		self.pen.setWidth(2)
 
 		part = ShapePart()
+		part.setStroke(20)
 		part.setPen(self.pen)
 		part.addElement(self.arrow)
 

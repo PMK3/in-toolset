@@ -63,9 +63,11 @@ class ShapePart:
 		self.brush = QBrush()
 		self.path = QPainterPath()
 		self.elements = []
+		self.stroke = 0
 		
 	def setPen(self, pen): self.pen = pen
 	def setBrush(self, brush): self.brush = brush
+	def setStroke(self, stroke): self.stroke = stroke
 	
 	def addElement(self, element):
 		self.elements.append(element)
@@ -130,11 +132,13 @@ class ShapePart:
 					element.y2 + element.stretch * math.sin(angle - math.pi * .75)
 				)
 		
-		stroker = QPainterPathStroker(self.pen)
-		shapePath = stroker.createStroke(self.path)
-		
-		self.shapePath = QPainterPath(self.path)
-		self.shapePath.addPath(shapePath)
+		if self.stroke > 0:
+			stroker = QPainterPathStroker()
+			stroker.setWidth(self.stroke)
+			shapePath = stroker.createStroke(self.path)
+			self.shapePath = self.path.united(shapePath)
+		else:
+			self.shapePath = self.path
 	
 	
 class Shape:
