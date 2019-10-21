@@ -16,9 +16,10 @@ class MessageNode(EditorShape):
 		self.dragMode = DragMode.SPECIAL
 		
 		self.enterprise = enterprise
-		self.enterprise.positionChanged.connect(self.updatePos)
 		self.transition = transition
-		self.transition.industryArrowChanged.connect(self.updatePos)
+		
+		self.connect(self.enterprise.positionChanged, self.updatePos)
+		self.connect(self.transition.industryArrowChanged, self.updatePos)
 		
 		circle = ShapeElement(
 			"circle", x=0, y=0, r=8
@@ -41,10 +42,6 @@ class MessageNode(EditorShape):
 		self.setShape(shape)
 		
 		self.updatePos()
-		
-	def disconnect(self):
-		self.enterprise.positionChanged.disconnect(self.updatePos)
-		self.transition.industryArrowChanged.disconnect(self.updatePos)
 		
 	def drag(self, param):
 		dx = param.pos.x() - self.enterprise.x

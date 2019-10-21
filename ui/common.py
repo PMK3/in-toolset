@@ -38,20 +38,16 @@ class LabelItem(EditorItem):
 		self.dragMode = DragMode.SPECIAL
 
 		self.obj = obj
-		self.obj.positionChanged.connect(self.updateLabel)
-		self.obj.labelChanged.connect(self.updateLabel)
-		self.obj.deleted.connect(self.removeFromScene)
+		self.connect(self.obj.positionChanged, self.updateLabel)
+		self.connect(self.obj.positionChanged, self.updateLabel)
+		self.connect(self.obj.labelChanged, self.updateLabel)
+		self.connect(self.obj.deleted, self.removeFromScene)
 
 		self.font = QFont()
 		self.font.setPixelSize(16)
 		self.fontMetrics = QFontMetrics(self.font)
 
 		self.updateLabel()
-		
-	def disconnect(self):
-		self.obj.positionChanged.disconnect(self.updateLabel)
-		self.obj.labelChanged.disconnect(self.updateLabel)
-		self.obj.deleted.disconnect(self.removeFromScene)
 		
 	def delete(self):
 		self.obj.setLabel("")
@@ -125,8 +121,8 @@ class ActiveNode(EditorNode):
 		self.type = type
 
 		self.obj = obj
-		self.obj.deleted.connect(self.removeFromScene)
-		self.obj.positionChanged.connect(self.updatePos)
+		self.connect(self.obj.deleted, self.removeFromScene)
+		self.connect(self.obj.positionChanged, self.updatePos)
 		self.setPos(obj.x, obj.y)
 		
 		self.filter = HoverFilter(self)
@@ -134,10 +130,6 @@ class ActiveNode(EditorNode):
 		self.label = LabelItem(scene, obj)
 		scene.addItem(self.label)
 		
-	def disconnect(self):
-		self.obj.deleted.disconnect(self.removeFromScene)
-		self.obj.positionChanged.disconnect(self.updatePos)
-
 	def drag(self, param):
 		pos = alignToGrid(param.pos)
 		self.obj.move(pos.x(), pos.y())

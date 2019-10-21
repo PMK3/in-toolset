@@ -215,13 +215,19 @@ class EditorItem(QGraphicsItem):
 		super().__init__()
 		self.setFlag(QGraphicsItem.ItemIsSelectable)
 		
+		self.signals = SignalListener()
+		
 		self.scene = scene
 		self.dragMode = DragMode.NONE
 		self.invalid = False
 		
 		self.doubleClicked = Signal()
 	
-	def disconnect(self): pass
+	def connect(self, signal, callback):
+		self.signals.connect(signal, callback)
+	
+	def disconnect(self):
+		self.signals.disconnect()
 	
 	def setInvalid(self, invalid):
 		if self.invalid != invalid:

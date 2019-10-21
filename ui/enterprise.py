@@ -102,10 +102,8 @@ class ActiveArrow(ArrowItem):
 
 		self.filter = ArrowFilter(self)
 
-		self.type = type
-
 		self.obj = obj
-		self.obj.deleted.connect(self.removeFromScene)
+		self.type = type
 
 		if type == ArrowType.INPUT:
 			self.source = self.obj.place
@@ -114,16 +112,12 @@ class ActiveArrow(ArrowItem):
 			self.source = self.obj.transition
 			self.target = self.obj.place
 
-		self.source.positionChanged.connect(self.updateArrow)
-		self.target.positionChanged.connect(self.updateArrow)
+		self.connect(self.obj.deleted, self.removeFromScene)
+		self.connect(self.source.positionChanged, self.updateArrow)
+		self.connect(self.target.positionChanged, self.updateArrow)
 
 		self.updateArrow()
 		
-	def disconnect(self):
-		self.obj.deleted.disconnect(self.removeFromScene)
-		self.source.positionChanged.disconnect(self.updateArrow)
-		self.target.positionChanged.disconnect(self.updateArrow)
-
 	def delete(self):
 		self.obj.delete()
 
@@ -143,24 +137,19 @@ class ActiveArrow(ArrowItem):
 class MessageArrow(ArrowItem):
 	def __init__(self, scene, obj):
 		super().__init__(scene)
-		self.signals = SignalListener()
-		
 		self.filter = HoverFilter(self)
 		
 		self.dragMode = DragMode.SPECIAL
 		
 		self.obj = obj
-		self.signals.connect(self.obj.positionChanged, self.updateArrow)
-		self.signals.connect(self.obj.arrowChanged, self.updateArrow)
-		self.signals.connect(self.obj.typeChanged, self.updateType)
-		self.signals.connect(self.obj.deleted, self.removeFromScene)
+		self.connect(self.obj.positionChanged, self.updateArrow)
+		self.connect(self.obj.arrowChanged, self.updateArrow)
+		self.connect(self.obj.typeChanged, self.updateType)
+		self.connect(self.obj.deleted, self.removeFromScene)
 		
 		self.setColor(QColor(128, 0, 255))
 		
 		self.updateType()
-		
-	def disconnect(self):
-		self.signals.disconnect()
 		
 	def drag(self, param):
 		dx = param.mouse.x() - self.obj.x
@@ -202,13 +191,10 @@ class MessageArrow(ArrowItem):
 class PlaceNode(ActiveNode):
 	def __init__(self, scene, style, obj):
 		super().__init__(scene, style.shapes["place"], obj, NodeType.PLACE)
-		self.obj.tokensChanged.connect(self.update)
+		self.connect(self.obj.tokensChanged, self.update)
 		
 		self.font = QFont()
 		self.font.setPixelSize(16)
-		
-	def disconnect(self):
-		self.obj.tokensChanged.disconnect(self.update)
 	
 	def paint(self, painter, option, widget):
 		super().paint(painter, option, widget)
@@ -222,14 +208,11 @@ class PlaceNode(ActiveNode):
 class TransitionNode(ActiveNode):
 	def __init__(self, scene, style, obj):
 		super().__init__(scene, style.shapes["transition"], obj, NodeType.TRANSITION)
-		self.obj.enabledChanged.connect(self.update)
+		self.connect(self.obj.enabledChanged, self.update)
 		self.filter = TransitionFilter(self)
 		
 		arrow = MessageArrow(scene, obj)
 		scene.addItem(arrow)
-		
-	def disconnect(self):
-		self.obj.enabledChanged.disconnect(self.update)
 		
 		
 class EnterpriseController:
