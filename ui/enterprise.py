@@ -154,6 +154,8 @@ class MessageArrow(ArrowItem):
 		dx = param.mouse.x() - self.obj.x
 		dy = param.mouse.y() - self.obj.y
 		angle = math.atan2(dy, dx)
+		if self.obj.type == TransitionType.OUTPUT:
+			angle -= math.pi
 		
 		self.obj.setArrowAngle(angle)
 		
@@ -168,10 +170,14 @@ class MessageArrow(ArrowItem):
 		dist = config.get("ui.message_arrow_distance")
 		size = config.get("ui.message_arrow_length")
 		
-		xpos = self.obj.x + math.cos(self.obj.arrowAngle) * dist
-		ypos = self.obj.y + math.sin(self.obj.arrowAngle) * dist
-		xoffs = math.cos(self.obj.arrowAngle) * size
-		yoffs = math.sin(self.obj.arrowAngle) * size
+		angle = self.obj.arrowAngle
+		if self.obj.type == TransitionType.OUTPUT:
+			angle += math.pi
+		
+		xpos = self.obj.x + math.cos(angle) * dist
+		ypos = self.obj.y + math.sin(angle) * dist
+		xoffs = math.cos(angle) * size
+		yoffs = math.sin(angle) * size
 		
 		self.setPos(xpos, ypos)
 		
