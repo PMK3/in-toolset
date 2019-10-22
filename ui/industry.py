@@ -22,8 +22,10 @@ class MessageArrowItem(ArrowItem):
 		self.target = obj.input
 
 		self.connect(self.obj.deleted, self.removeFromScene)
-		#self.connect(self.source.positionChanged, self.updateArrow)
-		#self.connect(self.target.positionChanged, self.updateArrow)
+		self.connect(self.source.enterpriseNode.positionChanged, self.updateArrow)
+		self.connect(self.target.enterpriseNode.positionChanged, self.updateArrow)
+		self.connect(self.source.industryArrowChanged, self.updateArrow)
+		self.connect(self.target.industryArrowChanged, self.updateArrow)
 
 		self.updateArrow()
 
@@ -31,11 +33,16 @@ class MessageArrowItem(ArrowItem):
 		self.obj.delete()
 
 	def updateArrow(self):
+		sourceX = self.source.enterpriseNode.x + math.cos(self.source.industryAngle)*40
+		sourceY = self.source.enterpriseNode.y + math.sin(self.source.industryAngle)*40
+		targetX = self.target.enterpriseNode.x + math.cos(self.target.industryAngle)*40
+		targetY = self.target.enterpriseNode.y + math.sin(self.target.industryAngle)*40
+
 		self.setPoints(
-			self.source.x,
-			self.source.y,
-			self.target.x,
-			self.target.y,
+			sourceX,
+			sourceY,
+			targetX,
+			targetY
 		)
 
 

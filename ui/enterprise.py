@@ -238,7 +238,7 @@ class EnterpriseController:
 					place = Place(x, y)
 					self.net.places.add(place)
 				elif item.type == NodeType.TRANSITION:
-					trans = EnterpriseTransition(x, y)
+					trans = EnterpriseTransition(x, y, self.net.node)
 					self.net.transitions.add(trans)
 
 		elif isinstance(item, TemporaryArrow):

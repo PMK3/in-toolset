@@ -48,8 +48,9 @@ class EnterpriseTransition(Transition):
 	arrowAngle = Property("arrowChanged", math.pi)
 	industryAngle = Property("industryArrowChanged", math.pi)
 	
-	def __init__(self, x, y):
+	def __init__(self, x, y, enterpriseNode):
 		super().__init__(x, y)
+		self.enterpriseNode = enterpriseNode
 		self.typeChanged = Signal()
 		self.messageTypeChanged = Signal()
 		self.messageChanged = Signal()
@@ -86,6 +87,7 @@ class EnterpriseNode(Node):
 
 		self.net = PetriNet()
 		self.net.changed.connect(self.changed)
+		self.net.node = self
 
 
 class IndustryNet:
