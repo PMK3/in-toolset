@@ -78,6 +78,7 @@ class Message(Object):
 		self.input.deleted.connect(self.delete)
 		self.output.deleted.connect(self.delete)
 
+
 class EnterpriseNode(Node):
 	def __init__(self, x, y):
 		super().__init__(x, y)
@@ -102,8 +103,8 @@ class IndustryNet:
 			return False
 		if not input.messageType == output.messageType:
 			return False
-		if input.net == output.net:
-			return False
+		#if input.net == output.net:
+		#	return False
 		return True
 
 	def connect(self, input, output):

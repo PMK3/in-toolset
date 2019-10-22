@@ -1,11 +1,66 @@
 
 from petri.industry import *
 from ui.common import *
+from ui.enterprise import ArrowFilter
 from common import *
 import config
 
 
 class EnterpriseItem(ActiveNode): pass
+
+class MessageArrowItem(ArrowItem):
+	def __init__(self, scene, obj):
+		super().__init__(scene)
+
+		#self.filter =  ArrowFilter(self)
+
+		self.dragMode = DragMode.SPECIAL
+
+		self.obj = obj
+
+		self.source = obj.output
+		self.target = obj.input
+
+		self.connect(self.obj.deleted, self.removeFromScene)
+		#self.connect(self.source.positionChanged, self.updateArrow)
+		#self.connect(self.target.positionChanged, self.updateArrow)
+
+		self.updateArrow()
+
+	def delete(self):
+		self.obj.delete()
+
+	def updateArrow(self):
+		self.setPoints(
+			self.source.x,
+			self.source.y,
+			self.target.x,
+			self.target.y,
+		)
+
+
+class TemporaryMessageArrow(ArrowItem):
+	def __init__(self, scene, obj):
+		super().__init__(scene)
+
+		self.obj = obj
+		self.setPoints(obj.x(), obj.y(), obj.x(), obj.y())
+
+		self.fixedInput = False
+		if obj.transition.type == TransitionType.INPUT:
+			self.fixedInput = True
+		elif obj.transition.type == TransitionType.OUTPUT:
+			self.fixedInput = False
+		else:
+			raise ValueError("Invalid object")
+
+	def drag(self, param):
+		x, y = param.pos.x(), param.pos.y()
+		if self.fixedInput:
+			self.setPoints(x, y, self.obj.x(), self.obj.y())
+		else:
+			self.setPoints(self.obj.x(), self.obj.y(), x, y)
+
 
 class MessageNode(EditorShape):
 	def __init__(self, scene, enterprise, transition):
@@ -77,6 +132,10 @@ class IndustryController:
 			item = EditorNode(self.scene, self.style.shapes["enterprise"])
 			item.setPos(alignToGrid(pos))
 			return item
+		elif type == "message":
+			obj = self.scene.findItem(pos, MessageNode)
+			if obj:
+				return TemporaryMessageArrow(self.scene, obj)
 
 	def finishPlacement(self, pos, item):
 		if isinstance(item, EditorNode):
@@ -86,6 +145,19 @@ class IndustryController:
 			if not item.invalid:
 				enterprise = EnterpriseNode(x, y)
 				self.net.enterprises.add(enterprise)
+		elif isinstance(item, TemporaryMessageArrow):
+			if item.fixedInput:
+				input = item.obj
+				output = self.scene.findItem(pos, MessageNode)
+			else:
+				input = self.scene.findItem(pos, MessageNode)
+				output = item.obj
+
+			if isinstance(input, MessageNode) and isinstance(output, MessageNode):
+				input = input.transition
+				output = output.transition
+				if input and output and self.net.canConnect(input, output):
+					self.net.connect(input, output)
 
 		self.scene.setHoverEnabled(True)
 
@@ -179,6 +251,7 @@ class IndustryScene:
 
 		self.net = net
 		self.signals.connect(self.net.enterprises.added, self.addEnterprise)
+		self.signals.connect(self.net.messages.added, self.addMessage)
 
 		for enterprise in self.net.enterprises:
 			self.addEnterprise(enterprise)
@@ -216,6 +289,10 @@ class IndustryScene:
 			if transition.type != TransitionType.INTERNAL:
 				item = MessageNode(self.scene, obj, transition)
 				self.scene.addItem(item)
+
+	def addMessage(self, obj):
+		item = MessageArrowItem(self.scene, obj)
+		self.scene.addItem(item)
 
 	def updateSelection(self):
 		if self.settings.widget() != self.generalSettings:
