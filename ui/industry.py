@@ -194,6 +194,28 @@ class GeneralSettings(QWidget):
 		else:
 			self.label.setText("%i items selected" %len(items))
 
+class MessageNodeSettings(QWidget):
+	def __init__(self, obj, industryScene):
+		super().__init__()
+		self.obj = obj
+		self.industryScene = industryScene
+		self.obj.transition.messageTypeChanged.connect(self.updateType)
+
+		self.setStyleSheet("font-size: 16px")
+
+		self.type = QLineEdit(obj.transition.messageType)
+		self.type.setMaxLength(config.get("ui.max_label_size"))
+		self.type.textEdited.connect(self.obj.transition.setMessageType)
+
+		self.layout = QFormLayout(self)
+		self.layout.addRow("Message Type:", self.type)
+
+	def cleanup(self):
+		self.obj.transition.messageTypeChanged.disconnect(self.updateType)
+
+	def updateType(self):
+		self.type.setText(self.obj.transition.messageType)
+
 
 class EnterpriseSettings(QWidget):
 	def __init__(self, obj, industryScene):
@@ -310,8 +332,11 @@ class IndustryScene:
 		self.settings.setWidget(widget)
 
 	def createSettingsWidget(self, items):
-		if len(items) == 1 and isinstance(items[0], EnterpriseItem):
-			return EnterpriseSettings(items[0].obj, self)
+		if len(items) == 1:
+			if isinstance(items[0], EnterpriseItem):
+				return EnterpriseSettings(items[0].obj, self)
+			elif isinstance(items[0], MessageNode):
+				return MessageNodeSettings(items[0], self)
 
 		self.generalSettings.setSelection(items)
 		return self.generalSettings
