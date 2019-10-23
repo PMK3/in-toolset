@@ -1,6 +1,6 @@
 
 from petri.petri import PetriNet, Place, Transition, Arrow, ArrowType
-from petri.industry import IndustryNet, EnterpriseNode
+from petri.industry import IndustryNet, EnterpriseNode, EnterpriseTransition, TransitionType
 from common import Signal, Property
 import json
 
@@ -13,20 +13,31 @@ class ProjectReader:
 		for info in data["enterprises"]:
 			enterprise = self.loadEnterprise(info)
 			self.net.enterprises.add(enterprise, info["id"])
+		for info in data["messages"]:
+			self.loadMessage(info)
 			
 	def loadEnterprise(self, info):
 		node = EnterpriseNode(info["x"], info["y"])
-		self.loadPetriNet(info["net"], node.net)
+		self.loadPetriNet(info["net"], node.net, node)
 		self.readNode(node, info)
 		return node
+
+	def loadMessage(self, info):
+		input = self.net.enterprises[info["inputEnterpriseId"]].net.transitions[info["inputTransitionId"]]
+		output = self.net.enterprises[info["outputEnterpriseId"]].net.transitions[info["outputTransitionId"]]
+		if self.net.canConnect(input, output):
+			self.net.connect(input, output)
 		
-	def loadPetriNet(self, data, net):
+	def loadPetriNet(self, data, net, node=None):
+		if node is not None:
+			net.node = node
+
 		for info in data["places"]:
 			place = self.loadPlace(info)
 			net.places.add(place, info["id"])
 
 		for info in data["transitions"]:
-			transition = self.loadTransition(info)
+			transition = self.loadTransition(info, node)
 			net.transitions.add(transition, info["id"])
 			
 		for info in data["inputs"]:
@@ -43,8 +54,16 @@ class ProjectReader:
 		self.readNode(place, info)
 		return place
 		
-	def loadTransition(self, info):
-		trans = Transition(info["x"], info["y"])
+	def loadTransition(self, info, node):
+		if node is not None:
+			trans = EnterpriseTransition(info["x"], info["y"], node)
+			trans.type = info["type"]
+			trans.arrowAngle = info["arrowAngle"]
+			trans.industryAngle = info["industryAngle"]
+			trans.messageType = info["messageType"]
+		else :
+			trans = Transition(info["x"], info["y"])
+
 		self.readNode(trans, info)
 		return trans
 		
@@ -66,8 +85,10 @@ class ProjectWriter:
 		
 	def save(self):
 		enterprises = [self.saveEnterprise(e) for e in self.net.enterprises]
+		messages = [self.saveMessage(m) for m in self.net.messages]
 		return {
-			"enterprises": enterprises
+			"enterprises": enterprises,
+			"messages": messages
 		}
 	
 	def saveEnterprise(self, enterprise):
@@ -93,12 +114,26 @@ class ProjectWriter:
 		return data
 		
 	def saveTransition(self, transition):
-		return self.saveNode(transition)
+		data = self.saveNode(transition)
+		if isinstance(transition, EnterpriseTransition):
+			data["type"] = transition.type
+			data["messageType"] = transition.messageType
+			data["arrowAngle"] = transition.arrowAngle
+			data["industryAngle"] = transition.industryAngle
+		return data
 		
 	def saveArrow(self, arrow):
 		data = self.saveObject(arrow)
 		data["place"] = arrow.place.id
 		data["transition"] = arrow.transition.id
+		return data
+
+	def saveMessage(self, message):
+		data = self.saveObject(message)
+		data["inputTransitionId"] = message.input.id
+		data["inputEnterpriseId"] = message.input.enterpriseNode.id
+		data["outputTransitionId"] = message.output.id
+		data["outputEnterpriseId"] = message.output.enterpriseNode.id
 		return data
 		
 	def saveNode(self, node):
