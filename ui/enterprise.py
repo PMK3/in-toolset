@@ -363,20 +363,26 @@ class TransitionSettings(QWidget):
 		self.x.setAlignment(Qt.AlignRight)
 		self.y = QLabel("%i" %(obj.y / GRID_SIZE))
 		self.y.setAlignment(Qt.AlignRight)
+
 		self.label = QLineEdit(obj.label)
 		self.label.setMaxLength(config.get("ui.max_label_size"))
 		self.label.textEdited.connect(self.obj.setLabel)
+
 		self.trigger = QPushButton("Trigger")
 		self.trigger.setEnabled(self.obj.enabled)
 		self.trigger.clicked.connect(self.obj.trigger)
+
 		self.type = QComboBox()
 		self.type.addItems(["Internal", "Input", "Output"])
 		self.type.setCurrentIndex(self.obj.type)
 		self.type.currentIndexChanged.connect(self.obj.setType)
+		self.type.setEnabled(self.obj.message is None)
+
 		self.messageType = QLineEdit(obj.messageType)
 		self.messageType.setMaxLength(config.get("ui.max_label_size"))
 		self.messageType.setEnabled(self.obj.type != TransitionType.INTERNAL)
 		self.messageType.textEdited.connect(self.obj.setMessageType)
+
 		self.updateSource()
 		self.updateSink()
 

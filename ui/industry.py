@@ -22,6 +22,8 @@ class MessageArrowItem(ArrowItem):
 		self.target = obj.input
 
 		self.connect(self.obj.deleted, self.removeFromScene)
+		self.connect(self.target.deleted, self.removeFromScene)
+		self.connect(self.source.deleted, self.removeFromScene)
 		self.connect(self.source.enterpriseNode.positionChanged, self.updateArrow)
 		self.connect(self.target.enterpriseNode.positionChanged, self.updateArrow)
 		self.connect(self.source.industryArrowChanged, self.updateArrow)
@@ -54,9 +56,14 @@ class TemporaryMessageArrow(ArrowItem):
 		self.setPoints(obj.x(), obj.y(), obj.x(), obj.y())
 
 		self.fixedInput = False
-		if obj.transition.type == TransitionType.INPUT:
-			self.fixedInput = True
-		elif obj.transition.type == TransitionType.OUTPUT:
+		if isinstance(obj, MessageNode):
+			if obj.transition.type == TransitionType.INPUT:
+				self.fixedInput = True
+			elif obj.transition.type == TransitionType.OUTPUT:
+				self.fixedInput = False
+			else:
+				raise ValueError("Invalid object")
+		elif isinstance(obj, EnterpriseItem):
 			self.fixedInput = False
 		else:
 			raise ValueError("Invalid object")
@@ -82,6 +89,9 @@ class MessageNode(EditorShape):
 		
 		self.connect(self.enterprise.positionChanged, self.updatePos)
 		self.connect(self.transition.industryArrowChanged, self.updatePos)
+		self.connect(self.enterprise.deleted, self.transition.delete)
+		self.connect(self.enterprise.deleted, self.removeFromScene)
+		self.connect(self.transition.deleted, self.removeFromScene)
 		
 		circle = ShapeElement(
 			"circle", x=0, y=0, r=8
@@ -141,8 +151,11 @@ class IndustryController:
 			return item
 		elif type == "message":
 			obj = self.scene.findItem(pos, MessageNode)
+			if not obj:
+				obj = self.scene.findItem(pos, EnterpriseItem)
 			if obj:
 				return TemporaryMessageArrow(self.scene, obj)
+
 
 	def finishPlacement(self, pos, item):
 		if isinstance(item, EditorNode):
@@ -284,6 +297,9 @@ class IndustryScene:
 
 		for enterprise in self.net.enterprises:
 			self.addEnterprise(enterprise)
+
+		for message in self.net.messages:
+			self.addMessage(message)
 
 		self.controller.load(net)
 
