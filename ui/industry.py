@@ -12,7 +12,7 @@ class MessageArrowItem(ArrowItem):
 	def __init__(self, scene, obj):
 		super().__init__(scene)
 
-		#self.filter =  ArrowFilter(self)
+		self.filter =  ArrowFilter(self)
 
 		self.dragMode = DragMode.SPECIAL
 
