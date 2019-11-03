@@ -101,12 +101,12 @@ class IndustryNet:
 		self.messages.changed.connect(self.changed)
 
 	def canConnect(self, input, output):
-		if not (input.type == TransitionType.INPUT and output.type == TransitionType.OUTPUT):
+		if input.type != TransitionType.INPUT or output.type != TransitionType.OUTPUT:
 			return False
-		if not input.messageType == output.messageType:
+		if input.messageType != output.messageType:
 			return False
-		#if input.net == output.net:
-		#	return False
+		if input.enterpriseNode == output.enterpriseNode:
+			return False
 		return True
 
 	def connect(self, input, output):
