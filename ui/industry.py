@@ -168,14 +168,42 @@ class IndustryController:
 		elif isinstance(item, TemporaryMessageArrow):
 			if item.fixedInput:
 				input = item.obj
-				output = self.scene.findItem(pos, MessageNode)
+				output = self.scene.findItem(pos, (MessageNode,EnterpriseItem))
 			else:
-				input = self.scene.findItem(pos, MessageNode)
+				input = self.scene.findItem(pos, (MessageNode,EnterpriseItem))
 				output = item.obj
 
-			if isinstance(input, MessageNode) and isinstance(output, MessageNode):
-				input = input.transition
-				output = output.transition
+			if (isinstance(input, MessageNode) or isinstance(input, EnterpriseItem)) and (isinstance(output, EnterpriseItem) or isinstance(output, MessageNode)):
+				message = None
+
+				if isinstance(input, MessageNode):
+					input = input.transition
+					message = input.message
+				else:
+					enterprise = input.obj
+					input = EnterpriseTransition(0,0,enterprise)
+					input.type = TransitionType.INPUT
+					enterprise.net.transitions.add(input)
+
+				if isinstance(output, MessageNode):
+					output = output.transition
+					if not message or output.message == input.message:
+						message = output.message
+					else:
+						return
+				else:
+					enterprise = output.obj
+					output = EnterpriseTransition(0,0,enterprise)
+					output.type = TransitionType.OUTPUT
+					output.message = message
+					enterprise.net.transitions.add(output)
+
+				if not message:
+					message = ""
+
+				input.message = message
+				output.message = message
+
 				if input and output and self.net.canConnect(input, output):
 					self.net.connect(input, output)
 
@@ -329,11 +357,15 @@ class IndustryScene:
 		item = EnterpriseItem(self.scene, self.style.shapes["enterprise"], obj)
 		item.doubleClicked.connect(lambda: self.window.selectEnterprise(obj.id))
 		self.scene.addItem(item)
+		self.signals.connect(obj.net.transitions.added, self.addTransition)
 		
 		for transition in obj.net.transitions:
-			if transition.type != TransitionType.INTERNAL:
-				item = MessageNode(self.scene, obj, transition)
-				self.scene.addItem(item)
+			self.addTransition(transition)
+
+	def addTransition(self, obj):
+		if obj.type != TransitionType.INTERNAL:
+			item = MessageNode(self.scene, obj.enterpriseNode, obj)
+			self.scene.addItem(item)
 
 	def addMessage(self, obj):
 		item = MessageArrowItem(self.scene, obj)
