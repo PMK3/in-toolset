@@ -170,6 +170,11 @@ class IndustryController:
 			)
 			return False
 			
+		if not source.transition.message:
+			source.transition.message = target.transition.message
+		if not target.transition.message:
+			target.transition.message = source.transition.message
+			
 		if source.transition.message != target.transition.message:
 			QMessageBox.warning(
 				self.window, "Incompatible message type",
