@@ -9,7 +9,6 @@ class ProjectReader:
 	def load(self, data):
 		self.loadPlaces(data)
 		self.loadTransitions(data)
-		self.loadConnections(data)
 		self.loadEnterprises(data)
 		
 		industry = UIPetriNet()
@@ -34,12 +33,6 @@ class ProjectReader:
 			transition.type = info["type"]
 			transition.message = info["message"]
 			self.transitions.append(transition)
-
-	def loadConnections(self, data):
-		for info in data["connections"]["in"]:
-			self.places[info[0]].connect(self.transitions[info[1]])
-		for info in data["connections"]["out"]:
-			self.transitions[info[0]].connect(self.places[info[1]])
 			
 	def loadEnterprises(self, data):
 		self.enterprises = []
@@ -113,7 +106,6 @@ class ProjectWriter:
 		data = {}
 		data["places"] = self.savePlaces(industry)
 		data["transitions"] = self.saveTransitions(industry)
-		data["connections"] = self.saveConnections(industry)
 		data["enterprises"] = self.saveEnterprises(industry)
 		data["industry"] = self.saveGraph(industry.graph)
 		return data
@@ -134,22 +126,6 @@ class ProjectWriter:
 				"message": trans.message
 			})
 		return transitions
-		
-	def saveConnections(self, industry):
-		inp = []
-		for place in industry.net.places:
-			for trans in place.postset:
-				inp.append([place.id, trans.id])
-				
-		outp = []
-		for trans in industry.net.transitions:
-			for place in trans.postset:
-				outp.append([trans.id, place.id])
-				
-		return {
-			"in": inp,
-			"out": outp
-		}
 		
 	def saveEnterprises(self, industry):
 		enterprises = []
