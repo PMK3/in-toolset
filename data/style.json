@@ -28,13 +28,26 @@
 				{"type": "rect", "x": -18, "y": -18, "w": 36, "h": 36}
 			]
 		}],
+		
+		"triangle": [{
+			"pen": {"color": "red", "width": 1},
+			"brush": {"color": "lightred"},
+			"elements": [
+				{
+					"type": "polygon",
+					"points": [
+						[-8, -8], [8, 0], [-8, 8], [-8, -8]
+					]
+				}
+			]
+		}],
 
 		"arrow": [{
 			"pen": {"color": "black", "width": 2},
 			"elements": [
-				{"type": "line", "x1": -18, "y1": 0, "x2": 18, "y2": 0},
-				{"type": "line", "x1": 18, "y1": 0, "x2": 10, "y2": 8},
-				{"type": "line", "x1": 18, "y1": 0, "x2": 10, "y2": -8}
+				{"type": "line", "curve": 0, "x1": -18, "y1": 0, "x2": 18, "y2": 0},
+				{"type": "line", "curve": 0, "x1": 18, "y1": 0, "x2": 10, "y2": 8},
+				{"type": "line", "curve": 0, "x1": 18, "y1": 0, "x2": 10, "y2": -8}
 			]
 		}],
 
@@ -42,8 +55,8 @@
 			"pen": {"color": "black", "width": 2},
 			"elements": [
 				{"type": "rect", "x": -18, "y": -13, "w": 36, "h": 26},
-				{"type": "line", "x1": -18, "y1": -13, "x2": 0, "y2": -1},
-				{"type": "line", "x1": 18, "y1": -13, "x2": 0, "y2": -1}
+				{"type": "line", "curve": 0, "x1": -18, "y1": -13, "x2": 0, "y2": -1},
+				{"type": "line", "curve": 0, "x1": 18, "y1": -13, "x2": 0, "y2": -1}
 			]
 		}],
 
@@ -91,10 +104,10 @@
 				"pen": {"color": "black", "width": 2},
 				"elements": [
 					{"type": "arc", "x": -10, "y": -5, "w": 20, "h": 20, "start": 180, "span": 180},
-					{"type": "line", "x1": -10, "y1": 5, "x2": -10, "y2": -5},
-					{"type": "line", "x1": 10, "y1": 5, "x2": 10, "y2": -5},
-					{"type": "line", "x1": -10, "y1": 0, "x2": 10, "y2": 0},
-					{"type": "line", "x1": 0, "y1": 0, "x2": 0, "y2": -15},
+					{"type": "line", "curve": 0, "x1": -10, "y1": 5, "x2": -10, "y2": -5},
+					{"type": "line", "curve": 0, "x1": 10, "y1": 5, "x2": 10, "y2": -5},
+					{"type": "line", "curve": 0, "x1": -10, "y1": 0, "x2": 10, "y2": 0},
+					{"type": "line", "curve": 0, "x1": 0, "y1": 0, "x2": 0, "y2": -15},
 					{"type": "arc", "x": -10, "y": -15, "w": 20, "h": 20, "start": 0, "span": 90}
 				]
 			},
@@ -117,10 +130,10 @@
 				"pen": {"color": "black", "width": 2},
 				"elements": [
 					{"type": "arc", "x": -10, "y": -5, "w": 20, "h": 20, "start": 180, "span": 180},
-					{"type": "line", "x1": -10, "y1": 5, "x2": -10, "y2": -5},
-					{"type": "line", "x1": 10, "y1": 5, "x2": 10, "y2": -5},
-					{"type": "line", "x1": -10, "y1": 0, "x2": 10, "y2": 0},
-					{"type": "line", "x1": 0, "y1": 0, "x2": 0, "y2": -15},
+					{"type": "line", "curve": 0, "x1": -10, "y1": 5, "x2": -10, "y2": -5},
+					{"type": "line", "curve": 0, "x1": 10, "y1": 5, "x2": 10, "y2": -5},
+					{"type": "line", "curve": 0, "x1": -10, "y1": 0, "x2": 10, "y2": 0},
+					{"type": "line", "curve": 0, "x1": 0, "y1": 0, "x2": 0, "y2": -15},
 					{"type": "arc", "x": -10, "y": -15, "w": 20, "h": 20, "start": 90, "span": 90}
 				]
 			},

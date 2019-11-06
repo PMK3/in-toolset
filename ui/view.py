@@ -18,6 +18,18 @@ def alignToGrid(pos):
 	x = round(pos.x(), GRID_SIZE)
 	y = round(pos.y(), GRID_SIZE)
 	return QPointF(x, y)
+	
+def mergeColors(*colors):
+	r = g = b = 0
+	for color in colors:
+		r += color.red()
+		g += color.green()
+		b += color.blue()
+	
+	r //= len(colors)
+	g //= len(colors)
+	b //= len(colors)
+	return QColor(r, g, b)
 
 
 ShapeColors = {
@@ -28,6 +40,7 @@ ShapeColors = {
 	"green": QColor(0, 255, 0),
 	"blue": QColor(0, 0, 255),
 	
+	"lightred": QColor(255, 128, 128),
 	"lightblue": QColor(128, 128, 255)
 }
 
@@ -37,6 +50,7 @@ class ShapeElement:
 		if self.type == "line":
 			self.x1, self.y1 = data["x1"], data["y1"]
 			self.x2, self.y2 = data["x2"], data["y2"]
+			self.curve = data["curve"]
 		elif self.type == "arc":
 			self.x, self.y = data["x"], data["y"]
 			self.w, self.h = data["w"], data["h"]
@@ -94,8 +108,19 @@ class ShapePart:
 		for element in self.elements:
 		
 			if element.type == "line":
+				dx = element.x2 - element.x1
+				dy = element.y2 - element.y1
+				angle = math.atan2(dy, dx)
+				
+				centerx = (element.x1 + element.x2) / 2
+				centery = (element.y1 + element.y2) / 2
+				
+				controlx = centerx + math.cos(angle + math.pi / 2) * element.curve
+				controly = centery + math.sin(angle + math.pi / 2) * element.curve
+				
 				self.path.moveTo(element.x1, element.y1)
-				self.path.lineTo(element.x2, element.y2)
+				self.path.quadTo(controlx, controly, element.x2, element.y2)
+				self.path.quadTo(controlx, controly, element.x1, element.y1)
 			
 			elif element.type == "arc":
 				self.path.arcMoveTo(element.x, element.y, element.w, element.h, element.start)
@@ -219,7 +244,7 @@ class DragMode:
 	NONE = 0
 	NORMAL = 1
 	SPECIAL = 2
-	
+
 	
 class EditorItem(QGraphicsItem):
 	def __init__(self, scene):
@@ -257,11 +282,28 @@ class EditorItem(QGraphicsItem):
 	def checkCollisions(self): pass
 	
 	
+class ShapeFilter:
+	def __init__(self, item):
+		self.item = item
+
+	def applyToPen(self, pen):
+		if self.item.isSelected():
+			pen.setColor(Qt.blue)
+		if self.item.hover:
+			color = mergeColors(pen.color(), QColor(Qt.gray))
+			pen.setColor(color)
+
+	def applyToBrush(self, brush):
+		if self.item.hover:
+			color = mergeColors(brush.color(), QColor(Qt.gray))
+			brush.setColor(color)
+	
+	
 class EditorShape(EditorItem):
 	def __init__(self, scene, shape=None):
 		super().__init__(scene)
 		self.hover = False
-		self.filter = None
+		self.filter = ShapeFilter(self)
 		
 		self.shp = shape
 		if self.shp is None:

@@ -3,15 +3,15 @@ class Signal:
 	def __init__(self):
 		self.callbacks = []
 		
-	def connect(self, func):
-		self.callbacks.append(func)
+	def connect(self, func, *param):
+		self.callbacks.append((func, param))
 		
-	def disconnect(self, func):
-		self.callbacks.remove(func)
+	def disconnect(self, func, *param):
+		self.callbacks.remove((func, param))
 		
 	def emit(self, *args):
-		for func in self.callbacks:
-			func(*args)
+		for func, param in self.callbacks:
+			func(*args, *param)
 			
 	__call__ = emit
 	

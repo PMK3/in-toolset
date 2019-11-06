@@ -9,36 +9,56 @@ from common import Signal
 import os
 
 
+class IndustryItem(QListWidgetItem):
+	def __init__(self, industry):
+		super().__init__("Industry")
+		self.obj = industry
+		
+		
 class EnterpriseItem(QListWidgetItem):
-	def __init__(self, enterprise):
+	def __init__(self, node):
 		super().__init__()
 		
-		self.enterprise = enterprise
-		self.enterprise.labelChanged.connect(self.updateLabel)
-		self.enterprise.deleted.connect(lambda: self.setHidden(True))
+		self.obj = node
+		self.obj.label.textChanged.connect(self.updateText)
+		self.updateText()
 		
-		self.updateLabel()
-		
-	def updateLabel(self):
-		name = self.enterprise.label
+	def updateText(self):
+		name = self.obj.label.text
 		if not name:
 			name = "Enterprise"
 		self.setText(name)
 
 
 class NetListWidget(QListWidget):
+	def __init__(self):
+		super().__init__()
+		self.enterpriseSelected = Signal()
+	
 	def setProject(self, project):
 		self.clear()
 		
-		project.industry.enterprises.added.connect(self.addEnterprise)
+		project.industry.graph.nodes.added.connect(self.addEnterprise)
+		project.industry.graph.nodes.removed.connect(self.removeEnterprise)
 		
-		self.addItem("Industry")
-		for enterprise in project.industry.enterprises:
+		self.addItem(IndustryItem(project.industry))
+		for enterprise in project.industry.graph.nodes:
 			self.addEnterprise(enterprise)
+			
+		self.itemActivated.connect(self.handleItemActivated)
 			
 	def addEnterprise(self, enterprise):
 		item = EnterpriseItem(enterprise)
 		self.addItem(item)
+		
+	def removeEnterprise(self, enterprise):
+		for i in range(self.count()):
+			if self.item(i).obj == enterprise:
+				self.takeItem(i)
+				return
+		
+	def handleItemActivated(self, item):
+		self.enterpriseSelected.emit(item.obj)
 
 
 class MainWindow(QMainWindow):
@@ -46,7 +66,7 @@ class MainWindow(QMainWindow):
 		super().__init__()
 		self.newProject = Signal()
 		self.loadProject = Signal()
-		self.selectEnterprise = Signal()
+		self.enterpriseSelected = Signal()
 		
 		self.setContextMenuPolicy(Qt.PreventContextMenu)
 
@@ -66,7 +86,7 @@ class MainWindow(QMainWindow):
 		self.addDockWidget(Qt.RightDockWidgetArea, self.settings)
 		
 		self.nets = NetListWidget()
-		self.nets.itemActivated.connect(self.handleEnterpriseSelected)
+		self.nets.enterpriseSelected.connect(self.enterpriseSelected)
 		netsDock = QDockWidget("Enterprises")
 		netsDock.setFixedWidth(200)
 		netsDock.setFeatures(QDockWidget.DockWidgetMovable)
@@ -83,7 +103,7 @@ class MainWindow(QMainWindow):
 		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
 		menuBar.view.showGrid.toggled.connect(self.scene.setGridEnabled)
 		menuBar.view.resetCamera.triggered.connect(self.view.resetTransform)
-		menuBar.view.editIndustry.triggered.connect(lambda: self.selectEnterprise(-1))
+		menuBar.view.editIndustry.triggered.connect(self.selectIndustry)
 		self.setMenuBar(menuBar)
 		
 	def setProject(self, project):
@@ -95,11 +115,8 @@ class MainWindow(QMainWindow):
 		
 		self.updateWindowTitle()
 		
-	def handleEnterpriseSelected(self, item):
-		if isinstance(item, EnterpriseItem):
-			self.selectEnterprise(item.enterprise.id)
-		else:
-			self.selectEnterprise(-1)
+	def selectIndustry(self):
+		self.enterpriseSelected.emit(self.project.industry)
 
 	def closeEvent(self, e):
 		if self.checkUnsaved():

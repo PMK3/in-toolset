@@ -1,6 +1,7 @@
 
 from PyQt5.QtWidgets import *
-from petri.project import Project
+from model.project import Project
+from model.ui import UIPetriNet
 from ui.industry import IndustryScene
 from ui.enterprise import EnterpriseScene
 from ui.window import MainWindow
@@ -18,14 +19,13 @@ class Application:
 		self.window = MainWindow(style)
 		self.window.newProject.connect(self.createProject)
 		self.window.loadProject.connect(self.createProject)
-		self.window.selectEnterprise.connect(self.switchToScene)
+		self.window.enterpriseSelected.connect(self.switchToScene)
 		self.window.show()
 		
-		self.industry = IndustryScene(style, self.window)
-		self.industry.selectEnterprise.connect(self.switchToScene)
+		self.industryScene = IndustryScene(style, self.window)
+		self.industryScene.enterpriseSelected.connect(self.switchToScene)
 
-		self.enterprise = EnterpriseScene(style, self.window)
-		self.enterprise.selectEnterprise.connect(self.switchToScene)
+		self.enterpriseScene = EnterpriseScene(style, self.window)
 		
 		self.currentScene = None
 		
@@ -46,18 +46,18 @@ class Application:
 				QMessageBox.warning(self.window, "Error", text)
 				return
 			
-		self.industryNet = self.project.industry
+		self.industry = self.project.industry
 			
 		self.window.setProject(self.project)
-		self.switchToScene(-1)
+		self.switchToScene(self.industry)
 		
-	def switchToScene(self, index):
+	def switchToScene(self, object):
 		if self.currentScene:
 			self.currentScene.cleanup()
 		
-		if index == -1:
-			self.industry.load(self.industryNet)
-			self.currentScene = self.industry
+		if object == self.industry:
+			self.currentScene = self.industryScene
+			self.currentScene.load(self.industry)
 		else:
-			self.enterprise.load(self.industryNet.enterprises[index])
-			self.currentScene = self.enterprise
+			self.currentScene = self.enterpriseScene
+			self.currentScene.load(self.industry, object)
