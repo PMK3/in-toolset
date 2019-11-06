@@ -134,7 +134,7 @@ class LabelItem(EditorItem):
 
 		self.color = Qt.black
 		self.distMin = 0
-		self.distMax = 80
+		self.distMax = 100
 		
 		self.updateLabel()
 		self.updatePos()
@@ -194,7 +194,7 @@ class LooseArrowItem(EditorShape):
 		
 		self.label = LabelItem(scene, arrow.label)
 		self.label.setColor(QColor(128, 0, 255))
-		self.label.setRange(0, 40)
+		self.label.setRange(0, 60)
 		scene.addItem(self.label)
 		
 		self.connect(self.arrow.restored, self.addToScene)
