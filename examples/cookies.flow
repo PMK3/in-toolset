@@ -1,0 +1,1124 @@
+{
+	"places": [
+		0,
+		0,
+		0,
+		0,
+		10,
+		4,
+		0,
+		0,
+		0,
+		20,
+		15,
+		10,
+		0,
+		0,
+		0,
+		0,
+		0,
+		0
+	],
+	"transitions": [
+		{
+			"type": 2,
+			"message": "cookie order"
+		},
+		{
+			"type": 1,
+			"message": "cookie order"
+		},
+		{
+			"type": 2,
+			"message": "cookie delivery"
+		},
+		{
+			"type": 1,
+			"message": "cookie delivery"
+		},
+		{
+			"type": 2,
+			"message": "insert coin"
+		},
+		{
+			"type": 1,
+			"message": "insert coin"
+		},
+		{
+			"type": 2,
+			"message": "give cookie"
+		},
+		{
+			"type": 1,
+			"message": "give cookie"
+		},
+		{
+			"type": 0,
+			"message": ""
+		},
+		{
+			"type": 0,
+			"message": ""
+		},
+		{
+			"type": 0,
+			"message": ""
+		}
+	],
+	"connections": {
+		"in": [
+			[
+				0,
+				1
+			],
+			[
+				0,
+				1
+			],
+			[
+				0,
+				1
+			],
+			[
+				0,
+				1
+			],
+			[
+				0,
+				1
+			],
+			[
+				1,
+				3
+			],
+			[
+				1,
+				3
+			],
+			[
+				1,
+				3
+			],
+			[
+				1,
+				3
+			],
+			[
+				1,
+				3
+			],
+			[
+				2,
+				5
+			],
+			[
+				2,
+				5
+			],
+			[
+				2,
+				5
+			],
+			[
+				2,
+				5
+			],
+			[
+				2,
+				5
+			],
+			[
+				3,
+				7
+			],
+			[
+				3,
+				7
+			],
+			[
+				3,
+				7
+			],
+			[
+				4,
+				4
+			],
+			[
+				4,
+				4
+			],
+			[
+				6,
+				6
+			],
+			[
+				7,
+				6
+			],
+			[
+				8,
+				0
+			],
+			[
+				9,
+				8
+			],
+			[
+				10,
+				8
+			],
+			[
+				11,
+				8
+			],
+			[
+				12,
+				9
+			],
+			[
+				13,
+				10
+			],
+			[
+				14,
+				9
+			],
+			[
+				15,
+				2
+			],
+			[
+				16,
+				8
+			],
+			[
+				17,
+				2
+			]
+		],
+		"out": [
+			[
+				0,
+				0
+			],
+			[
+				0,
+				0
+			],
+			[
+				0,
+				0
+			],
+			[
+				0,
+				0
+			],
+			[
+				0,
+				0
+			],
+			[
+				1,
+				16
+			],
+			[
+				1,
+				17
+			],
+			[
+				2,
+				1
+			],
+			[
+				2,
+				1
+			],
+			[
+				2,
+				1
+			],
+			[
+				2,
+				1
+			],
+			[
+				2,
+				1
+			],
+			[
+				3,
+				7
+			],
+			[
+				4,
+				2
+			],
+			[
+				4,
+				2
+			],
+			[
+				4,
+				2
+			],
+			[
+				4,
+				2
+			],
+			[
+				4,
+				2
+			],
+			[
+				5,
+				6
+			],
+			[
+				6,
+				3
+			],
+			[
+				6,
+				3
+			],
+			[
+				6,
+				3
+			],
+			[
+				6,
+				8
+			],
+			[
+				7,
+				5
+			],
+			[
+				7,
+				5
+			],
+			[
+				8,
+				12
+			],
+			[
+				9,
+				13
+			],
+			[
+				10,
+				14
+			],
+			[
+				10,
+				15
+			]
+		]
+	},
+	"enterprises": [
+		{
+			"net": {
+				"places": [
+					9,
+					10,
+					11,
+					12,
+					13,
+					14,
+					15,
+					16,
+					17
+				],
+				"transitions": [
+					1,
+					2,
+					8,
+					9,
+					10
+				]
+			},
+			"graph": {
+				"nodes": [
+					{
+						"type": "transition",
+						"id": 1,
+						"pos": [
+							-320.0,
+							0.0
+						],
+						"label": {
+							"text": "",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "transition",
+						"id": 2,
+						"pos": [
+							-280.0,
+							160.0
+						],
+						"label": {
+							"text": "",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "place",
+						"id": 9,
+						"pos": [
+							-260.0,
+							-180.0
+						],
+						"label": {
+							"text": "flour",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "place",
+						"id": 10,
+						"pos": [
+							-260.0,
+							-100.0
+						],
+						"label": {
+							"text": "butter",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "transition",
+						"id": 8,
+						"pos": [
+							-140.0,
+							-160.0
+						],
+						"label": {
+							"text": "make dough",
+							"angle": -0.7392770473829371,
+							"distance": 46.010868281309364
+						}
+					},
+					{
+						"type": "place",
+						"id": 11,
+						"pos": [
+							-200.0,
+							-260.0
+						],
+						"label": {
+							"text": "chocolate",
+							"angle": -1.6784861976277172,
+							"distance": 37.21558813185679
+						}
+					},
+					{
+						"type": "place",
+						"id": 12,
+						"pos": [
+							0.0,
+							-160.0
+						],
+						"label": {
+							"text": "dough ready",
+							"angle": -1.5707963267948966,
+							"distance": 38.0
+						}
+					},
+					{
+						"type": "place",
+						"id": 13,
+						"pos": [
+							60.0,
+							60.0
+						],
+						"label": {
+							"text": " baking",
+							"angle": -3.061762667877556,
+							"distance": 50.15974481593781
+						}
+					},
+					{
+						"type": "place",
+						"id": 14,
+						"pos": [
+							200.0,
+							60.0
+						],
+						"label": {
+							"text": "oven available",
+							"angle": -1.0460005551447893,
+							"distance": 43.9089968002003
+						}
+					},
+					{
+						"type": "transition",
+						"id": 9,
+						"pos": [
+							60.0,
+							-40.0
+						],
+						"label": {
+							"text": "start baking",
+							"angle": -0.06039822471190188,
+							"distance": 67.35172773104273
+						}
+					},
+					{
+						"type": "transition",
+						"id": 10,
+						"pos": [
+							60.0,
+							160.0
+						],
+						"label": {
+							"text": "baking complete",
+							"angle": 0.023805026185069942,
+							"distance": 84.02380615040002
+						}
+					},
+					{
+						"type": "place",
+						"id": 15,
+						"pos": [
+							-100.0,
+							160.0
+						],
+						"label": {
+							"text": "cookies ready",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "place",
+						"id": 16,
+						"pos": [
+							-180.0,
+							-40.0
+						],
+						"label": {
+							"text": "cookies needed",
+							"angle": 0.6162969373960713,
+							"distance": 58.82176467941097
+						}
+					},
+					{
+						"type": "place",
+						"id": 17,
+						"pos": [
+							-180.0,
+							60.0
+						],
+						"label": {
+							"text": "cookies waiting",
+							"angle": 0.564083721049657,
+							"distance": 57.982756057296896
+						}
+					}
+				],
+				"arrows": [
+					{
+						"source": 2,
+						"target": 4,
+						"curve": 0
+					},
+					{
+						"source": 3,
+						"target": 4,
+						"curve": 0
+					},
+					{
+						"source": 5,
+						"target": 4,
+						"curve": 0
+					},
+					{
+						"source": 4,
+						"target": 6,
+						"curve": 0
+					},
+					{
+						"source": 6,
+						"target": 9,
+						"curve": 0
+					},
+					{
+						"source": 8,
+						"target": 9,
+						"curve": 0
+					},
+					{
+						"source": 9,
+						"target": 7,
+						"curve": 0
+					},
+					{
+						"source": 7,
+						"target": 10,
+						"curve": 0
+					},
+					{
+						"source": 10,
+						"target": 8,
+						"curve": 0
+					},
+					{
+						"source": 10,
+						"target": 11,
+						"curve": 0
+					},
+					{
+						"source": 12,
+						"target": 4,
+						"curve": 0
+					},
+					{
+						"source": 0,
+						"target": 12,
+						"curve": 0
+					},
+					{
+						"source": 0,
+						"target": 13,
+						"curve": 0
+					},
+					{
+						"source": 13,
+						"target": 1,
+						"curve": 0
+					},
+					{
+						"source": 11,
+						"target": 1,
+						"curve": 0
+					}
+				],
+				"looseArrows": [
+					{
+						"node": 0,
+						"transition": 1,
+						"angle": 3.141592653589793,
+						"label": {
+							"text": "cookie order",
+							"angle": 0.7411129801375602,
+							"distance": 56.2612417264385
+						}
+					},
+					{
+						"node": 1,
+						"transition": 2,
+						"angle": 3.1415565156372356,
+						"label": {
+							"text": "cookie delivery",
+							"angle": -2.214297435588181,
+							"distance": 50.0
+						}
+					},
+					{
+						"node": 4,
+						"transition": 8,
+						"angle": 3.141592653589793,
+						"label": {
+							"text": "",
+							"angle": 1.5707963267948966,
+							"distance": 15
+						}
+					},
+					{
+						"node": 9,
+						"transition": 9,
+						"angle": 3.141592653589793,
+						"label": {
+							"text": "",
+							"angle": 1.5707963267948966,
+							"distance": 15
+						}
+					},
+					{
+						"node": 10,
+						"transition": 10,
+						"angle": 3.141592653589793,
+						"label": {
+							"text": "",
+							"angle": 1.5707963267948966,
+							"distance": 15
+						}
+					}
+				]
+			}
+		},
+		{
+			"net": {
+				"places": [
+					6,
+					7,
+					8
+				],
+				"transitions": [
+					0,
+					3,
+					5,
+					6
+				]
+			},
+			"graph": {
+				"nodes": [
+					{
+						"type": "transition",
+						"id": 0,
+						"pos": [
+							-220.0,
+							-120.0
+						],
+						"label": {
+							"text": "",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "transition",
+						"id": 3,
+						"pos": [
+							-220.0,
+							-240.0
+						],
+						"label": {
+							"text": "",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "transition",
+						"id": 5,
+						"pos": [
+							-220.0,
+							80.0
+						],
+						"label": {
+							"text": "insert coin",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "transition",
+						"id": 6,
+						"pos": [
+							140.0,
+							-80.0
+						],
+						"label": {
+							"text": "",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "place",
+						"id": 6,
+						"pos": [
+							0.0,
+							80.0
+						],
+						"label": {
+							"text": "coin slot",
+							"angle": 1.5707963267948966,
+							"distance": 34.0
+						}
+					},
+					{
+						"type": "place",
+						"id": 7,
+						"pos": [
+							20.0,
+							-200.0
+						],
+						"label": {
+							"text": "cookie storage",
+							"angle": -1.7161063374305987,
+							"distance": 41.43669871020132
+						}
+					},
+					{
+						"type": "place",
+						"id": 8,
+						"pos": [
+							-60.0,
+							-80.0
+						],
+						"label": {
+							"text": "storage empty",
+							"angle": 1.6914199953749993,
+							"distance": 33.24154027718932
+						}
+					}
+				],
+				"arrows": [
+					{
+						"source": 2,
+						"target": 4,
+						"curve": 0
+					},
+					{
+						"source": 5,
+						"target": 3,
+						"curve": 0
+					},
+					{
+						"source": 1,
+						"target": 5,
+						"curve": 0
+					},
+					{
+						"source": 3,
+						"target": 6,
+						"curve": 0
+					},
+					{
+						"source": 6,
+						"target": 0,
+						"curve": 0
+					},
+					{
+						"source": 4,
+						"target": 3,
+						"curve": 0
+					}
+				],
+				"looseArrows": [
+					{
+						"node": 0,
+						"transition": 0,
+						"angle": -2.6053185927290703,
+						"label": {
+							"text": "cookie order",
+							"angle": -2.6779450445889874,
+							"distance": 55.90169943749477
+						}
+					},
+					{
+						"node": 1,
+						"transition": 3,
+						"angle": -2.295084072124377,
+						"label": {
+							"text": "cookie delivery",
+							"angle": -2.5415424401880395,
+							"distance": 46.04345773288535
+						}
+					},
+					{
+						"node": 2,
+						"transition": 5,
+						"angle": -2.3789029454384814,
+						"label": {
+							"text": "insert coin",
+							"angle": -2.7509856098921066,
+							"distance": 55.15432893255073
+						}
+					},
+					{
+						"node": 3,
+						"transition": 6,
+						"angle": -0.6691028046275371,
+						"label": {
+							"text": "give cookie",
+							"angle": -0.09406123462798634,
+							"distance": 53.23532661682466
+						}
+					}
+				]
+			}
+		},
+		{
+			"net": {
+				"places": [
+					4,
+					5
+				],
+				"transitions": [
+					4,
+					7
+				]
+			},
+			"graph": {
+				"nodes": [
+					{
+						"type": "transition",
+						"id": 4,
+						"pos": [
+							40.0,
+							60.0
+						],
+						"label": {
+							"text": "insert coin",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					},
+					{
+						"type": "transition",
+						"id": 7,
+						"pos": [
+							40.0,
+							-100.0
+						],
+						"label": {
+							"text": "eat cookie",
+							"angle": 1.5707963267948966,
+							"distance": 32.0
+						}
+					},
+					{
+						"type": "place",
+						"id": 4,
+						"pos": [
+							-140.0,
+							60.0
+						],
+						"label": {
+							"text": "wallet",
+							"angle": 1.5405025668761214,
+							"distance": 33.015148038438355
+						}
+					},
+					{
+						"type": "place",
+						"id": 5,
+						"pos": [
+							-140.0,
+							-100.0
+						],
+						"label": {
+							"text": "happiness",
+							"angle": 1.5707963267948966,
+							"distance": 35
+						}
+					}
+				],
+				"arrows": [
+					{
+						"source": 2,
+						"target": 0,
+						"curve": 0
+					},
+					{
+						"source": 1,
+						"target": 3,
+						"curve": 0
+					}
+				],
+				"looseArrows": [
+					{
+						"node": 0,
+						"transition": 4,
+						"angle": -0.4600455991780442,
+						"label": {
+							"text": "insert coin",
+							"angle": -0.34706160353949056,
+							"distance": 49.9799959983992
+						}
+					},
+					{
+						"node": 1,
+						"transition": 7,
+						"angle": -0.31399843911606706,
+						"label": {
+							"text": "give cookie",
+							"angle": -0.20065287731988662,
+							"distance": 60.207972893961475
+						}
+					}
+				]
+			}
+		}
+	],
+	"industry": {
+		"nodes": [
+			{
+				"type": "enterprise",
+				"id": 0,
+				"pos": [
+					-260.0,
+					-40.0
+				],
+				"label": {
+					"text": "Cookie supplier",
+					"angle": -2.7962656381146,
+					"distance": 80
+				}
+			},
+			{
+				"type": "enterprise",
+				"id": 1,
+				"pos": [
+					60.0,
+					-40.0
+				],
+				"label": {
+					"text": "Cookie machine",
+					"angle": -0.2707976022266636,
+					"distance": 83.05017854193044
+				}
+			},
+			{
+				"type": "enterprise",
+				"id": 2,
+				"pos": [
+					60.0,
+					200.0
+				],
+				"label": {
+					"text": "Customer",
+					"angle": 1.5707963267948966,
+					"distance": 35
+				}
+			}
+		],
+		"arrows": [
+			{
+				"source": 0,
+				"target": 1,
+				"curve": 93.16133132727471,
+				"channel": 0
+			},
+			{
+				"source": 2,
+				"target": 3,
+				"curve": 36.041282466895595,
+				"channel": 1
+			},
+			{
+				"source": 4,
+				"target": 5,
+				"curve": 89.53639830688294,
+				"channel": 2
+			},
+			{
+				"source": 6,
+				"target": 7,
+				"curve": 26.323776121588246,
+				"channel": 3
+			}
+		],
+		"looseArrows": [
+			{
+				"node": 1,
+				"transition": 0,
+				"angle": 3.668864644840229,
+				"label": {
+					"text": "cookie order",
+					"angle": -1.699150816220418,
+					"distance": 37.76708182317319
+				}
+			},
+			{
+				"node": 0,
+				"transition": 1,
+				"angle": 5.755913315929151,
+				"label": {
+					"text": "cookie order",
+					"angle": -1.4181038748671917,
+					"distance": 39.011345680077945
+				}
+			},
+			{
+				"node": 0,
+				"transition": 2,
+				"angle": 0.2215600115630357,
+				"label": {
+					"text": "cookie delivery",
+					"angle": 1.6794311032283773,
+					"distance": 30.662809043761325
+				}
+			},
+			{
+				"node": 1,
+				"transition": 3,
+				"angle": 2.9200326420267575,
+				"label": {
+					"text": "cookie delivery",
+					"angle": -3.047576247211855,
+					"distance": 78.98847408510886
+				}
+			},
+			{
+				"node": 2,
+				"transition": 4,
+				"angle": -0.9297723489159252,
+				"label": {
+					"text": "insert coin",
+					"angle": 0.12685498659993835,
+					"distance": 54.10110130172984
+				}
+			},
+			{
+				"node": 1,
+				"transition": 5,
+				"angle": 0.9297723489159253,
+				"label": {
+					"text": "insert coin",
+					"angle": -0.29793655967930877,
+					"distance": 45.349718430803016
+				}
+			},
+			{
+				"node": 1,
+				"transition": 6,
+				"angle": 1.7867406764223506,
+				"label": {
+					"text": "give cookie",
+					"angle": 2.773560854416298,
+					"distance": 59.97088394299026
+				}
+			},
+			{
+				"node": 2,
+				"transition": 7,
+				"angle": 4.496444630757235,
+				"label": {
+					"text": "give cookie",
+					"angle": 3.0726741827733437,
+					"distance": 53.57363453949159
+				}
+			},
+			{
+				"node": 0,
+				"transition": 8,
+				"angle": 3.141592653589793,
+				"label": {
+					"text": "",
+					"angle": 1.5707963267948966,
+					"distance": 15
+				}
+			},
+			{
+				"node": 0,
+				"transition": 9,
+				"angle": 3.141592653589793,
+				"label": {
+					"text": "",
+					"angle": 1.5707963267948966,
+					"distance": 15
+				}
+			},
+			{
+				"node": 0,
+				"transition": 10,
+				"angle": 3.141592653589793,
+				"label": {
+					"text": "",
+					"angle": 1.5707963267948966,
+					"distance": 15
+				}
+			}
+		]
+	}
+}
