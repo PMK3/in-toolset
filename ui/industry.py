@@ -42,6 +42,7 @@ def randomEnterpriseName():
 class EnterpriseItem(NodeItem):
 	def __init__(self, scene, style, obj):
 		super().__init__(scene, style.shapes["enterprise"], obj)
+		self.connect(self.node.obj.net.triggered, self.flash)
 
 
 class ChannelArrowItem(ArrowItem):

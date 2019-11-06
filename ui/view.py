@@ -19,18 +19,12 @@ def alignToGrid(pos):
 	y = round(pos.y(), GRID_SIZE)
 	return QPointF(x, y)
 	
-def mergeColors(*colors):
-	r = g = b = 0
-	for color in colors:
-		r += color.red()
-		g += color.green()
-		b += color.blue()
-	
-	r //= len(colors)
-	g //= len(colors)
-	b //= len(colors)
+def mergeColors(c1, c2, p=.5):
+	r = c1.red() * (1 - p) + c2.red() * p
+	g = c1.green() * (1 - p) + c2.green() * p
+	b = c1.blue() * (1 - p) + c2.blue() * p
 	return QColor(r, g, b)
-
+	
 
 ShapeColors = {
 	"black": QColor(0, 0, 0),

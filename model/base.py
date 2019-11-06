@@ -109,6 +109,8 @@ class Transition(Node):
 		self.enabledChanged = Signal()
 		self.enabledChanged.connect(self.changed)
 		
+		self.triggered = Signal()
+		
 		self.preset.changed.connect(self.updateEnabled)
 		self.postset.changed.connect(self.updateEnabled)
 		
@@ -126,6 +128,7 @@ class Transition(Node):
 			place.take()
 		for place in self.postset:
 			place.give()
+		self.triggered.emit()
 
 
 class PetriNet(Object):
@@ -135,10 +138,19 @@ class PetriNet(Object):
 		super().__init__()
 
 		self.deadlockChanged = Signal()
+		self.triggered = Signal()
 
 		self.places = ObjectList()
 		self.transitions = ObjectList()
 		self.transitions.changed.connect(self.checkDeadlock)
+		self.transitions.added.connect(self.registerTransition)
+		self.transitions.removed.connect(self.unregisterTransition)
+		
+	def registerTransition(self, trans):
+		trans.triggered.connect(self.triggered)
+		
+	def unregisterTransition(self, trans):
+		trans.triggered.disconnect(self.triggered)
 		
 	def enabledTransitions(self):
 		return [t for t in self.transitions if t.enabled]
