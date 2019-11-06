@@ -13,13 +13,13 @@ class TransitionFilter:
 	def __init__(self, item):
 		self.base = ShapeFilter(item)
 		self.item = item
-		
+
 	def applyToPen(self, pen):
 		self.base.applyToPen(pen)
-	
+
 	def applyToBrush(self, brush):
 		if self.item.node.obj.enabled:
-			brush.setColor(Qt.green)
+			brush.setColor(QColor("#c0f6b3"))
 		self.base.applyToBrush(brush)
 
 
@@ -27,31 +27,31 @@ class PlaceItem(NodeItem):
 	def __init__(self, scene, style, node):
 		super().__init__(scene, style.shapes["place"], node)
 		self.connect(self.node.obj.tokensChanged, self.update)
-		
+
 		self.font = QFont()
 		self.font.setPixelSize(16)
-	
+
 	def paint(self, painter, option, widget):
 		super().paint(painter, option, widget)
-		
+
 		if self.node.obj.tokens != 0:
 			text = str(self.node.obj.tokens)
 			painter.setFont(self.font)
 			painter.drawText(self.shp.rect, Qt.AlignCenter, text)
-			
-			
+
+
 class TransitionItem(NodeItem):
 	def __init__(self, scene, style, node):
 		super().__init__(scene, style.shapes["transition"], node)
 		self.connect(self.node.obj.enabledChanged, self.update)
 		self.filter = TransitionFilter(self)
-		
-		
+
+
 class TemporaryPlace(NodeBase):
 	def __init__(self, scene, style):
 		super().__init__(scene, style.shapes["place"])
-		
-		
+
+
 class TemporaryTransition(NodeBase):
 	def __init__(self, scene, style):
 		super().__init__(scene, style.shapes["transition"])
@@ -68,20 +68,20 @@ class TemporaryArrow(ArrowBase):
 
 	def drag(self, param):
 		self.setTarget(param.mouse.x(), param.mouse.y())
-		
-		
+
+
 class EnterpriseController:
 	def __init__(self, style, window, industry, enode):
 		self.style = style
-		
+
 		self.window = window
 		self.toolbar = window.toolbar
 		self.scene = window.scene
-		
+
 		self.industry = industry
 		self.enterprise = enode.obj
 		self.enode = enode
-		
+
 	def startPlacement(self, pos):
 		type = self.toolbar.currentTool("enterprise")
 		if type == "place":
@@ -105,30 +105,30 @@ class EnterpriseController:
 		if isinstance(item, NodeBase):
 			pos = alignToGrid(pos)
 			x, y = pos.x(), pos.y()
-			
+
 			if not item.invalid:
 				if isinstance(item, TemporaryPlace):
 					obj = Place()
 					self.enterprise.net.places.add(obj)
 					self.industry.net.places.add(obj)
-					
+
 					node = UINode(obj)
 					node.move(x, y)
 					self.enterprise.graph.nodes.add(node)
-				
+
 				else:
 					obj = UITransition()
 					self.enterprise.net.transitions.add(obj)
 					self.industry.net.transitions.add(obj)
-					
+
 					node = UINode(obj)
 					node.move(x, y)
 					self.enterprise.graph.nodes.add(node)
-					
+
 					arrow = UILooseArrow(node, obj)
 					arrow.delete()
 					self.enterprise.graph.looseArrows.add(arrow)
-					
+
 					arrow = UILooseArrow(self.enode, obj)
 					arrow.delete()
 					self.industry.graph.looseArrows.add(arrow)
@@ -142,7 +142,7 @@ class EnterpriseController:
 					self.enterprise.graph.arrows.add(arrow)
 
 		self.scene.setHoverEnabled(True)
-		
+
 	def checkConnection(self, source, target):
 		if isinstance(source, PlaceItem) and isinstance(target, PlaceItem):
 			QMessageBox.warning(
@@ -150,31 +150,31 @@ class EnterpriseController:
 				"Places may not be connected to other places."
 			)
 			return False
-			
+
 		if isinstance(source, TransitionItem) and isinstance(target, TransitionItem):
 			QMessageBox.warning(
 				self.window, "Invalid connection",
 				"Transitions may not be connected to other transitions."
 			)
 			return False
-			
+
 		if target.node.obj in source.node.obj.postset:
 			QMessageBox.warning(
 				self.window, "Duplicate arrow",
 				"Only one arrow can be placed from one node to another."
 			)
 			return False
-		
+
 		return True
 
-			
+
 class PlaceSettings(SettingsWidget):
 	def __init__(self, node):
 		super().__init__()
 		self.node = node
 		self.connect(self.node.positionChanged, self.updatePos)
 		self.connect(self.node.label.textChanged, self.updateLabel)
-		
+
 		self.obj = node.obj
 		self.connect(self.obj.tokensChanged, self.updateTokens)
 
@@ -196,25 +196,25 @@ class PlaceSettings(SettingsWidget):
 		self.addField("Y:", self.y)
 		self.addField("Label:", self.label)
 		self.addField("Tokens:", self.tokens)
-		
+
 	def updatePos(self):
 		self.x.setText("%i" %(self.node.x / GRID_SIZE))
 		self.y.setText("%i" %(self.node.y / GRID_SIZE))
 
 	def updateLabel(self):
 		self.label.setText(self.node.label.text)
-		
+
 	def updateTokens(self):
 		self.tokens.setValue(self.obj.tokens)
 
-		
+
 class TransitionSettings(SettingsWidget):
 	def __init__(self, node):
 		super().__init__()
-		
+
 		self.node = node
 		self.obj = node.obj
-		
+
 		self.connect(self.node.positionChanged, self.updatePos)
 		self.connect(self.node.label.textChanged, self.updateLabel)
 		self.connect(self.obj.enabledChanged, self.updateEnabled)
@@ -255,64 +255,64 @@ class TransitionSettings(SettingsWidget):
 		self.addField("Message Type:", self.message)
 		self.addSeparator()
 		self.addWidget(self.trigger)
-		
+
 	def updatePos(self):
 		self.x.setText("%i" %(self.node.x / GRID_SIZE))
 		self.y.setText("%i" %(self.node.y / GRID_SIZE))
 
 	def updateLabel(self):
 		self.label.setText(self.node.label.text)
-		
+
 	def updateEnabled(self):
 		self.trigger.setEnabled(self.obj.enabled)
-		
+
 	def updateType(self):
 		self.type.setCurrentIndex(self.obj.type)
 		self.message.setEnabled(
 			self.obj.type != TransitionType.INTERNAL and not self.obj.channel
 		)
-		
+
 	def updateMessage(self):
 		self.message.setText(self.obj.message)
-		
+
 	def updateChannel(self):
 		self.type.setEnabled(not self.obj.channel)
 		self.message.setEnabled(
 			self.obj.type != TransitionType.INTERNAL and not self.obj.channel
 		)
-		
-		
+
+
 class EnterpriseScene(PetriScene):
 	def load(self, industry, node):
 		self.industry = industry
 		self.enterprise = node.obj
 		self.enode = node
-		
+
 		self.loadPetriNet(node.obj)
-		
+
 	def registerTools(self, toolbar):
 		toolbar.addGroup("enterprise")
 		toolbar.selectTool("place")
-	
+
 	def createController(self):
 		return EnterpriseController(self.style, self.window, self.industry, self.enode)
-		
+
 	def addNode(self, node):
 		if isinstance(node.obj, Place):
 			item = PlaceItem(self.scene, self.style, node)
 		else:
 			item = TransitionItem(self.scene, self.style, node)
 		self.scene.addItem(item)
-		
+
 	def addArrow(self, arrow):
 		item = ArrowItem(self.scene, arrow)
 		item.setDistance(35)
 		self.scene.addItem(item)
-	
+
 	def addLooseArrow(self, arrow):
 		item = LooseArrowItem(self.scene, self.style, arrow)
 		self.scene.addItem(item)
-		
+
 	def createSettingsWidget(self, items):
 		filtered = [i for i in items if isinstance(i, NodeItem)]
 		if len(filtered) == 1:

@@ -28,10 +28,10 @@
 				{"type": "rect", "x": -18, "y": -18, "w": 36, "h": 36}
 			]
 		}],
-		
+
 		"triangle": [{
-			"pen": {"color": "red", "width": 1},
-			"brush": {"color": "lightred"},
+			"pen": {"color": "black", "width": 2},
+			"brush": {"color": "white"},
 			"elements": [
 				{
 					"type": "polygon",
