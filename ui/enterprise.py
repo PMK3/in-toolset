@@ -11,7 +11,7 @@ import math
 
 class TransitionFilter:
 	def __init__(self, item):
-		self.base = ShapeFilter(item)
+		self.base = NodeFilter(item)
 		self.item = item
 
 	def applyToPen(self, pen):
@@ -44,6 +44,7 @@ class TransitionItem(NodeItem):
 	def __init__(self, scene, style, node):
 		super().__init__(scene, style.shapes["transition"], node)
 		self.connect(self.node.obj.enabledChanged, self.update)
+		self.connect(self.node.obj.triggered, self.flash)
 		self.filter = TransitionFilter(self)
 
 

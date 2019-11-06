@@ -258,9 +258,27 @@ class NodeBase(EditorShape):
 			painter.restore()
 			
 			
+class NodeFilter:
+	def __init__(self, item):
+		self.base = ShapeFilter(item)
+		self.flashColor = QColor(100, 100, 255)
+		self.item = item
+		
+	def applyToPen(self, pen):
+		self.base.applyToPen(pen)
+		
+	def applyToBrush(self, brush):
+		color = mergeColors(brush.color(), self.flashColor, self.item.flashValue)
+		brush.setColor(color)
+		
+		self.base.applyToBrush(brush)
+			
+			
 class NodeItem(NodeBase):
 	def __init__(self, scene, shape, node):
 		super().__init__(scene, shape)
+		
+		self.filter = NodeFilter(self)
 		
 		self.label = LabelItem(scene, node.label)
 		scene.addItem(self.label)
@@ -270,6 +288,12 @@ class NodeItem(NodeBase):
 		self.connect(self.node.deleted, self.removeFromScene)
 		self.connect(self.node.positionChanged, self.updatePos)
 		
+		self.flashTimer = QTimer()
+		self.flashTimer.setInterval(100)
+		self.flashTimer.timeout.connect(self.updateFlash)
+		
+		self.flashValue = 0
+		
 		self.updatePos()
 		
 	def drag(self, param):
@@ -277,7 +301,23 @@ class NodeItem(NodeBase):
 		self.node.move(pos.x(), pos.y())
 
 	def delete(self):
+		self.flashTimer.stop()
+		self.flashValue = 0
+		
 		self.node.delete()
 
 	def updatePos(self):
 		self.setPos(self.node.x, self.node.y)
+		
+	def updateFlash(self):
+		self.flashValue -= .5
+		if self.flashValue <= 0:
+			self.flashTimer.stop()
+			self.flashValue = 0
+		
+		self.update()
+		
+	def flash(self):
+		self.flashValue = 1
+		self.flashTimer.start()
+		self.update()
