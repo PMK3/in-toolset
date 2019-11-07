@@ -50,6 +50,9 @@ class ObjectList:
 	def __iter__(self):
 		return (obj for obj in self.objects if obj.active)
 
+	def index(self, index):
+		return self.objects.index(index)
+
 	def add(self, obj):
 		obj.changed.connect(self.changed)
 		obj.statusChanged.connect(self.updateStatus, obj)

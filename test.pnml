@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <pnml>
     <net id="0" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
-        <page id="0">
-            <place id="0"/>
-        </page>
+        <page id="1"/>
     </net>
 </pnml>
