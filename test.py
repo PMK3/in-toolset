@@ -9,8 +9,8 @@ if version < (3, 6):
 
 
 from ui.app import Application
-from petri.petri import PetriNet
-from petri.pnml import PNMLWriter
+from model.base import PetriNet
+from model.pnml import PNMLWriter
 from PyQt5.QtCore import QFile
 from PyQt5.QtCore import QIODevice
 
@@ -21,6 +21,6 @@ if __name__ == "__main__":
 	file = QFile("test.pnml")
 	if file.open(QIODevice.WriteOnly):
 		stream = writer.save(file)
-
-	app = Application()
-	app.start()
+	else:
+		app = Application()
+		app.start()
