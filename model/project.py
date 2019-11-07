@@ -227,7 +227,10 @@ class Project:
 		self.reader = ProjectReader()
 		self.writer = ProjectWriter()
 
+		self.exportname = ""
+
 	def setFilename(self, filename): self.filename = filename
+	def setExportname(self, exportname): self.exportname = exportname
 	def setUnsaved(self, unsaved=True): self.unsaved = unsaved
 
 	def load(self, filename):
@@ -248,8 +251,8 @@ class Project:
 		self.setFilename(filename)
 		self.setUnsaved(False)
 
-	def export(self, filename):
+	def export(self, exportname):
 		writer = PNMLWriter(self.industry.net)
-		file = QFile(filename)
+		file = QFile(exportname)
 		if file.open(QIODevice.WriteOnly):
 			stream = writer.save(file)

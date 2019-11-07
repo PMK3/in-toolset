@@ -99,6 +99,7 @@ class MainWindow(QMainWindow):
 		menuBar.file.open.triggered.connect(self.handleOpen)
 		menuBar.file.save.triggered.connect(self.handleSave)
 		menuBar.file.saveAs.triggered.connect(self.handleSaveAs)
+		menuBar.file.export.triggered.connect(self.handleExport)
 		menuBar.file.exportAs.triggered.connect(self.handleExportAs)
 		menuBar.file.quit.triggered.connect(self.close)
 		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
@@ -173,23 +174,42 @@ class MainWindow(QMainWindow):
 
 	def handleSaveAs(self):
 		filename, filter = QFileDialog.getSaveFileName(
-			self, "Save model", settings.getLastPath(),
-			"Workflow model (*.flow);;All files (*.*)"
+			self,
+			"Save model",
+			settings.getLastPath(),
+			"Workflow model (*.flow);;All files (*.*)",
+			"Workflow model (*.flow)",
+			QFileDialog.DontUseNativeDialog
 		)
 		if not filename:
 			return False
+		if not '.' in filename:
+			filename += ".flow"
 
 		settings.setLastPath(os.path.dirname(filename))
 		self.project.save(filename)
 		return True
 
-	def handleExportAs(self):
-		filename, filter = QFileDialog.getSaveFileName(
-			self, "Export model", settings.getLastPath(),
-			"PNML (*.pnml);;All files (*.*)"
-		)
-		if not filename:
-			return False
+	def handleExport(self):
+		if not self.project.exportname:
+			return self.handleExportAs()
+		self.project.export(self.project.exportname)
+		return True
 
-		self.project.export(filename)
+	def handleExportAs(self):
+		exportname, filter = QFileDialog.getSaveFileName(
+			self,
+			"Export model",
+			settings.getLastPath(),
+			"PNML (*.pnml);;All files (*.*)",
+			"PNML (*.pnml)",
+			QFileDialog.DontUseNativeDialog
+		)
+		if not exportname:
+			return False
+		if not '.' in exportname:
+			exportname += ".pnml"
+
+		self.project.export(exportname)
+		self.project.exportname = exportname
 		return True

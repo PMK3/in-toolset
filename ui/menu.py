@@ -17,6 +17,7 @@ class FileMenu(QMenu):
 		self.open = Action("Open", "Ctrl+O")
 		self.save = Action("Save", "Ctrl+S")
 		self.saveAs = Action("Save as", "Ctrl+Shift+S")
+		self.export = Action("Export", "Ctrl+E")
 		self.exportAs = Action("Export as", "Ctrl+Shift+E")
 		self.quit = Action("Quit", "Ctrl+Q")
 
@@ -24,6 +25,7 @@ class FileMenu(QMenu):
 		self.addAction(self.open)
 		self.addAction(self.save)
 		self.addAction(self.saveAs)
+		self.addAction(self.export)
 		self.addAction(self.exportAs)
 		self.addAction(self.quit)
 
