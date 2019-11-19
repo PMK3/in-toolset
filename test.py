@@ -48,6 +48,30 @@ class TestPetriNet(unittest.TestCase):
         net.triggerRandom()
         self.assertTrue(net.places[0].tokens == 0)
 
+    def testSetTokens(self):
+        net = PetriNet()
+        net.places.add(Place())
+        net.places[0].setTokens(9001)
+        self.assertTrue(net.places[0].tokens > 9000)
+        self.assertFalse(net.places[0].tokens > 9001)
+
+    def testGive(self):
+        net = PetriNet()
+        net.places.add(Place())
+        net.places[0].give()
+        self.assertTrue(net.places[0].tokens == 1)
+        net.places[0].give()
+        self.assertTrue(net.places[0].tokens == 2)
+
+    def testTake(self):
+        net = PetriNet()
+        net.places.add(Place())
+        net.places[0].setTokens(2)
+        self.assertTrue(net.places[0].tokens == 2)
+        net.places[0].take()
+        self.assertFalse(net.places[0].tokens > 1)
+        self.assertTrue(net.places[0].tokens > 0)
+
 
 if __name__ == '__main__':
     unittest.main()
