@@ -113,8 +113,50 @@ class ArrowItem(ArrowBase):
 			target.y - math.sin(angle2) * self.distance
 		)
 
+
+class LabelBase(EditorItem):
+	def __init__(self, scene):
+		super().__init__(scene)
 		
-class LabelItem(EditorItem):
+		self.font = QFont()
+		self.font.setPixelSize(16)
+		self.fontMetrics = QFontMetrics(self.font)
+		
+		self.color = Qt.black
+		self.text = ""
+		
+	def setFontSize(self, size):
+		self.font.setPixelSize(size)
+		self.updateLabel()
+		
+	def setColor(self, color):
+		self.color = color
+		self.update()
+		
+	def setText(self, text):
+		self.text = text
+		self.updateLabel()
+		
+	def updateLabel(self):
+		self.prepareGeometryChange()
+		self.update()
+		
+	def boundingRect(self):
+		rect = self.fontMetrics.boundingRect(self.text)
+		rect.moveCenter(QPoint(0, 0))
+		return QRectF(rect.adjusted(-2, -2, 2, 2))
+		
+	def paint(self, painter, option, widget):
+		pen = QPen(self.color)
+		if self.isSelected():
+			pen.setColor(Qt.blue)
+		painter.setPen(pen)
+
+		painter.setFont(self.font)
+		painter.drawText(self.boundingRect(), Qt.AlignCenter, self.text)
+
+		
+class LabelItem(LabelBase):
 	def __init__(self, scene, label):
 		super().__init__(scene)
 
@@ -123,20 +165,15 @@ class LabelItem(EditorItem):
 		self.label = label
 		self.connect(self.label.restored, self.addToScene)
 		self.connect(self.label.deleted, self.removeFromScene)
-		self.connect(self.label.textChanged, self.updateLabel)
+		self.connect(self.label.textChanged, self.updateText)
 		self.connect(self.label.angleChanged, self.updatePos)
 		self.connect(self.label.distanceChanged, self.updatePos)
 		self.connect(self.label.positionChanged, self.updatePos)
-
-		self.font = QFont()
-		self.font.setPixelSize(16)
-		self.fontMetrics = QFontMetrics(self.font)
-
-		self.color = Qt.black
+		
 		self.distMin = 0
 		self.distMax = 100
 		
-		self.updateLabel()
+		self.updateText()
 		self.updatePos()
 		
 	def delete(self):
@@ -152,36 +189,17 @@ class LabelItem(EditorItem):
 		self.label.setAngle(math.atan2(dy, dx))
 		self.label.setDistance(dist)
 		
-	def setColor(self, color):
-		self.color = color
-		self.update()
-		
 	def setRange(self, min, max):
 		self.distMin = min
 		self.distMax = max
+		
+	def updateText(self):
+		self.setText(self.label.text)
 		
 	def updatePos(self):
 		xoffs = math.cos(self.label.angle) * self.label.distance
 		yoffs = math.sin(self.label.angle) * self.label.distance
 		self.setPos(self.label.x + xoffs, self.label.y + yoffs)
-		
-	def updateLabel(self):
-		self.prepareGeometryChange()
-		self.update()
-
-	def boundingRect(self):
-		rect = self.fontMetrics.boundingRect(self.label.text)
-		rect.moveCenter(QPoint(0, 0))
-		return QRectF(rect.adjusted(-2, -2, 2, 2))
-
-	def paint(self, painter, option, widget):
-		pen = QPen(self.color)
-		if self.isSelected():
-			pen.setColor(Qt.blue)
-		painter.setPen(pen)
-
-		painter.setFont(self.font)
-		painter.drawText(self.boundingRect(), Qt.AlignCenter, self.label.text)
 
 
 class LooseArrowItem(EditorShape):
@@ -261,7 +279,7 @@ class NodeBase(EditorShape):
 class NodeFilter:
 	def __init__(self, item):
 		self.base = ShapeFilter(item)
-		self.flashColor = QColor(100, 100, 255)
+		self.flashColor = QColor(128, 128, 255)
 		self.item = item
 		
 	def applyToPen(self, pen):

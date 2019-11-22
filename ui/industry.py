@@ -45,6 +45,52 @@ class EnterpriseItem(NodeItem):
 		self.connect(self.node.obj.net.triggered, self.flash)
 
 
+class ChannelArrowLabel(LabelBase):
+	def __init__(self, scene, arrow):
+		super().__init__(scene)
+		
+		self.arrow = arrow
+		self.connect(self.arrow.curveChanged, self.updatePos)
+		self.connect(self.arrow.source.node.positionChanged, self.updatePos)
+		self.connect(self.arrow.target.node.positionChanged, self.updatePos)
+		self.connect(self.arrow.channel.tokensChanged, self.updateText)
+		
+		self.setFontSize(18)
+		
+		self.updateText()
+		self.updatePos()
+		
+	def updateText(self):
+		if self.arrow.channel.tokens:
+			self.setText("%i" %self.arrow.channel.tokens)
+		else:
+			self.setText("")
+		
+	def updatePos(self):
+		source = self.arrow.source
+		target = self.arrow.target
+		
+		dx = target.x - source.x
+		dy = target.y - source.y
+		length = math.sqrt(dx * dx + dy * dy)
+		
+		angle1 = math.atan2(dy, dx)
+		angle2 = angle1 - math.atan2(self.arrow.curve, length / 2)
+		
+		centerx = (source.x + target.x) / 2
+		centery = (source.y + target.y) / 2
+		
+		if self.arrow.curve > 0:
+			distance = self.arrow.curve / 2 + 20
+		else:
+			distance = self.arrow.curve / 2 - 20
+		
+		posx = centerx + math.cos(angle1 + math.pi / 2) * distance
+		posy = centery + math.sin(angle1 + math.pi / 2) * distance
+		
+		self.setPos(posx, posy)
+
+
 class ChannelArrowItem(ArrowItem):
 	def __init__(self, scene, arrow):
 		super().__init__(scene, arrow)
@@ -305,7 +351,9 @@ class IndustryScene(PetriScene):
 
 	def addArrow(self, arrow):
 		item = ChannelArrowItem(self.scene, arrow)
+		label = ChannelArrowLabel(self.scene, arrow)
 		self.scene.addItem(item)
+		self.scene.addItem(label)
 		
 	def addLooseArrow(self, arrow):
 		item = LooseArrowItem(self.scene, self.style, arrow)
