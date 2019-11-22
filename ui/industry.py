@@ -50,6 +50,7 @@ class ChannelArrowLabel(LabelBase):
 		super().__init__(scene)
 		
 		self.arrow = arrow
+		self.connect(self.arrow.deleted, self.removeFromScene)
 		self.connect(self.arrow.curveChanged, self.updatePos)
 		self.connect(self.arrow.source.node.positionChanged, self.updatePos)
 		self.connect(self.arrow.target.node.positionChanged, self.updatePos)
