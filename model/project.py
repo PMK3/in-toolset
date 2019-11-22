@@ -246,8 +246,8 @@ class Project:
 	def save(self, filename):
 		data = self.writer.save(self.industry)
 		with open(filename, "w") as f:
-			json.dump(data, f, indent="\t")
-
+			json.dump(data, f)
+		
 		self.setFilename(filename)
 		self.setUnsaved(False)
 
