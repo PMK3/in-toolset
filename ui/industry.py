@@ -74,9 +74,7 @@ class ChannelArrowLabel(LabelBase):
 		dx = target.x - source.x
 		dy = target.y - source.y
 		length = math.sqrt(dx * dx + dy * dy)
-		
-		angle1 = math.atan2(dy, dx)
-		angle2 = angle1 - math.atan2(self.arrow.curve, length / 2)
+		angle = math.atan2(dy, dx)
 		
 		centerx = (source.x + target.x) / 2
 		centery = (source.y + target.y) / 2
@@ -86,21 +84,94 @@ class ChannelArrowLabel(LabelBase):
 		else:
 			distance = self.arrow.curve / 2 - 20
 		
-		posx = centerx + math.cos(angle1 + math.pi / 2) * distance
-		posy = centery + math.sin(angle1 + math.pi / 2) * distance
+		posx = centerx + math.cos(angle + math.pi / 2) * distance
+		posy = centery + math.sin(angle + math.pi / 2) * distance
 		
 		self.setPos(posx, posy)
+		
+
+class MessageAnimItem(EditorShape):
+	def __init__(self, scene, style, arrow, isTarget):
+		super().__init__(scene, style.shapes["messageAnim"])
+		
+		self.isTarget = isTarget
+		
+		self.arrow = arrow
+		self.connect(self.arrow.deleted, self.kill)
+		self.connect(self.arrow.source.positionChanged, self.updatePos)
+		self.connect(self.arrow.target.positionChanged, self.updatePos)
+		self.connect(self.arrow.curveChanged, self.updatePos)
+		
+		self.step = 0
+		
+		self.timer = QTimer()
+		self.timer.setInterval(50)
+		self.timer.timeout.connect(self.updateStep)
+		self.timer.start()
+		
+		self.updatePos()
+		
+	def kill(self):
+		self.timer.stop()
+		self.removeFromScene()
+
+	def updateStep(self):
+		self.step += .1
+		if self.step >= 1:
+			self.kill()
+		else:
+			self.updatePos()
+		
+	def updatePos(self):
+		step = self.step / 2
+		if self.isTarget:
+			step += .5
+		
+		source = self.arrow.source
+		target = self.arrow.target
+		
+		psource = QPointF(source.x, source.y)
+		ptarget = QPointF(target.x, target.y)
+		center = (psource + ptarget) / 2
+		
+		diff = ptarget - psource
+		length = math.sqrt(diff.x() ** 2 + diff.y() ** 2)
+		angle = math.atan2(diff.y(), diff.x())
+		
+		p0 = psource
+		p2 = ptarget
+		p1 = QPointF(
+			center.x() + math.cos(angle + math.pi / 2) * self.arrow.curve,
+			center.y() + math.sin(angle + math.pi / 2) * self.arrow.curve
+		)
+		
+		t1 = p0 + (p1 - p0) * step
+		t2 = p1 + (p2 - p1) * step
+		pos = t1 + (t2 - t1) * step
+		
+		derivative = (p1 - p0) * (1 - step) + (p2 - p1) * step
+		normal = QPointF(derivative.y(), -derivative.x())
+		length = math.sqrt(normal.x() ** 2 + normal.y() ** 2)
+		
+		if self.arrow.curve > 0:
+			self.setPos(pos - normal / length * 20)
+		else:
+			self.setPos(pos + normal / length * 20)
 
 
 class ChannelArrowItem(ArrowItem):
-	def __init__(self, scene, arrow):
+	def __init__(self, scene, style, arrow):
 		super().__init__(scene, arrow)
+		
+		self.style = style
 		
 		self.setType("line")
 		
 		self.connect(self.arrow.curveChanged, self.updateAngle)
 		self.connect(self.arrow.source.node.positionChanged, self.updateAngle)
 		self.connect(self.arrow.target.node.positionChanged, self.updateAngle)
+		self.connect(self.arrow.source.transition.triggered, self.triggerSource)
+		self.connect(self.arrow.target.transition.triggered, self.triggerTarget)
 		
 	def updateAngle(self):
 		if self.arrow.active:
@@ -115,6 +186,14 @@ class ChannelArrowItem(ArrowItem):
 			angle2 = math.atan2(self.arrow.curve, length / 2)
 			self.arrow.source.setAngle(angle1 + angle2)
 			self.arrow.target.setAngle(angle1 - angle2 + math.pi)
+	
+	def triggerSource(self):
+		item = MessageAnimItem(self.scene, self.style, self.arrow, False)
+		self.scene.addItem(item)
+		
+	def triggerTarget(self):
+		item = MessageAnimItem(self.scene, self.style, self.arrow, True)
+		self.scene.addItem(item)
 
 
 class TemporaryArrowItem(ArrowBase):
@@ -351,7 +430,7 @@ class IndustryScene(PetriScene):
 		self.scene.addItem(item)
 
 	def addArrow(self, arrow):
-		item = ChannelArrowItem(self.scene, arrow)
+		item = ChannelArrowItem(self.scene, self.style, arrow)
 		label = ChannelArrowLabel(self.scene, arrow)
 		self.scene.addItem(item)
 		self.scene.addItem(label)

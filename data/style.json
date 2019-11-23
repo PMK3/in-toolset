@@ -59,6 +59,16 @@
 				{"type": "line", "curve": 0, "x1": 18, "y1": -13, "x2": 0, "y2": -1}
 			]
 		}],
+		
+		"messageAnim": [{
+			"pen": {"color": "black", "width": 2},
+			"brush": {"color": "lightorange"},
+			"elements": [
+				{"type": "rect", "x": -9, "y": -6, "w": 18, "h": 13},
+				{"type": "line", "curve": 0, "x1": -9, "y1": -6, "x2": 0, "y2": 0},
+				{"type": "line", "curve": 0, "x1": 9, "y1": -6, "x2": 0, "y2": 0}
+			]
+		}],
 
 		"selection": [
 			{

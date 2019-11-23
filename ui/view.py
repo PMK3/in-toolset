@@ -35,7 +35,13 @@ ShapeColors = {
 	"blue": QColor(0, 0, 255),
 	
 	"lightred": QColor(255, 128, 128),
-	"lightblue": QColor(128, 128, 255)
+	"lightblue": QColor(128, 128, 255),
+	
+	"yellow": QColor(255, 255, 0),
+	
+	"orange": QColor(255, 128, 0),
+	
+	"lightorange": QColor(255, 192, 128)
 }
 
 class ShapeElement:
