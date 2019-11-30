@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <pnml>
     <net id="0" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
-        <page id="1"/>
+        <page id="1">
+            <place id="2"/>
+            <transition id="3"/>
+            <arc id="5" source="3" target="2"/>
+            <transition id="4"/>
+            <arc id="6" source="2" target="4"/>
+        </page>
     </net>
 </pnml>

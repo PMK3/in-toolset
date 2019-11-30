@@ -166,3 +166,42 @@ class PetriNet(Object):
 
 	def triggerRandom(self):
 		random.choice(self.enabledTransitions()).trigger()
+
+	def combine(self, other):
+		newSource = Place() # The new global source place.
+		leftSource = Place() # The place on the path to self.
+		rightSource = Place() # The place on the path to other.
+
+		leftEnabling = Place() # The first transition on the path to self.
+		rightEnabling = Place() # The first transition on the path to other.
+		leftStart = Place() # The second transition on the path to self.
+		rightStart = Place() # The second transition on the path to other.
+
+		newSource.connect(leftEnabling)
+		newSource.connect(rightEnabling)
+		leftEnabling.connect(leftSource)
+		rightEnabling.connect(leftSource)
+		leftSource.connect(leftStart)
+		rightSource.connect(rightStart)
+
+		# Connect to the old source places.
+		for place in self.places:
+			if len(place.preset) == 0:
+				leftStart.connect(place)
+		for place in other.places:
+			if len(place.preset) == 0:
+				leftStart.connect(place)
+
+		self.places.add(newSource)
+		self.places.add(leftSource)
+		self.places.add(rightSource)
+
+		self.transitions.add(leftEnabling)
+		self.transitions.add(rightEnabling)
+		self.transitions.add(leftStart)
+		self.transitions.add(rightStart)
+
+		for place in other.places:
+			self.places.add(place)
+		for transition in other.transitions:
+			self.transitions.add(transition)

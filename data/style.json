@@ -55,18 +55,18 @@
 			"pen": {"color": "black", "width": 2},
 			"elements": [
 				{"type": "rect", "x": -18, "y": -13, "w": 36, "h": 26},
-				{"type": "line", "curve": 0, "x1": -18, "y1": -13, "x2": 0, "y2": -1},
-				{"type": "line", "curve": 0, "x1": 18, "y1": -13, "x2": 0, "y2": -1}
+				{"type": "line", "curve": 0, "x1": -18, "y1": -13, "x2": 0, "y2": 2},
+				{"type": "line", "curve": 0, "x1": 18, "y1": -13, "x2": 0, "y2": 2}
 			]
 		}],
-		
+
 		"messageAnim": [{
 			"pen": {"color": "black", "width": 2},
 			"brush": {"color": "lightorange"},
 			"elements": [
 				{"type": "rect", "x": -9, "y": -6, "w": 18, "h": 13},
-				{"type": "line", "curve": 0, "x1": -9, "y1": -6, "x2": 0, "y2": 0},
-				{"type": "line", "curve": 0, "x1": 9, "y1": -6, "x2": 0, "y2": 0}
+				{"type": "line", "curve": 0, "x1": -9, "y1": -6, "x2": 0, "y2": 1},
+				{"type": "line", "curve": 0, "x1": 9, "y1": -6, "x2": 0, "y2": 1}
 			]
 		}],
 
