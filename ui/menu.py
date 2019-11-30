@@ -35,8 +35,10 @@ class EditMenu(QMenu):
 		super().__init__("Edit")
 
 		self.selectAll = Action("Select all", "Ctrl+A")
+		self.setInitialMarking = Action("Set Initial Marking", "Ctrl+M")
 
 		self.addAction(self.selectAll)
+		self.addAction(self.setInitialMarking)
 
 
 class ViewMenu(QMenu):

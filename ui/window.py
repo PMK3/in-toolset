@@ -6,6 +6,7 @@ from ui.tools import ToolBar
 from ui.menu import MenuBar
 from ui import settings
 from common import Signal
+from model.project import Project
 import os
 
 
@@ -103,6 +104,7 @@ class MainWindow(QMainWindow):
 		menuBar.file.exportAs.triggered.connect(self.handleExportAs)
 		menuBar.file.quit.triggered.connect(self.close)
 		menuBar.edit.selectAll.triggered.connect(self.scene.selectAll)
+		menuBar.edit.setInitialMarking.triggered.connect(self.handleSetInitialMarking)
 		menuBar.view.showGrid.toggled.connect(self.scene.setGridEnabled)
 		menuBar.view.resetCamera.triggered.connect(self.view.resetTransform)
 		menuBar.view.editIndustry.triggered.connect(self.selectIndustry)
@@ -116,6 +118,9 @@ class MainWindow(QMainWindow):
 		self.project.unsavedChanged.connect(self.updateWindowTitle)
 
 		self.updateWindowTitle()
+
+	def handleSetInitialMarking(self):
+		self.project.industry.net.setInitialMarking()
 
 	def selectIndustry(self):
 		self.enterpriseSelected.emit(self.project.industry)

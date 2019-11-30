@@ -167,6 +167,14 @@ class PetriNet(Object):
 	def triggerRandom(self):
 		random.choice(self.enabledTransitions()).trigger()
 
+	def setInitialMarking(self):
+		for place in self.places:
+			if len(place.preset) == 0:
+				place.tokens = 1
+			else:
+				place.tokens = 0
+
+
 	def combine(self, other):
 		newSource = Place() # The new global source place.
 		leftSource = Place() # The place on the path to self.
