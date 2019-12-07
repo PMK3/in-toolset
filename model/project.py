@@ -247,12 +247,12 @@ class Project:
 		data = self.writer.save(self.industry)
 		with open(filename, "w") as f:
 			json.dump(data, f)
-		
+
 		self.setFilename(filename)
 		self.setUnsaved(False)
 
 	def export(self, exportname):
-		writer = PNMLWriter(self.industry.net)
+		writer = PNMLWriter(self.industry.net, self.industry.graph)
 		file = QFile(exportname)
 		if file.open(QIODevice.WriteOnly):
 			stream = writer.save(file)
