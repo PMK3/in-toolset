@@ -1,5 +1,5 @@
 
-from common import Signal, Property
+from in_toolset.common import Signal, Property
 import random
 
 

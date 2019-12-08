@@ -1,6 +1,6 @@
 
-from .base import Object, ObjectList, PetriNet, Transition, Place
-from common import Signal, Property
+from in_toolset.model.base import Object, ObjectList, PetriNet, Transition, Place
+from in_toolset.common import Signal, Property
 import math
 
 

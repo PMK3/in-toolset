@@ -2,9 +2,10 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from common import Signal
+from in_toolset.common import Signal
 import string
 import json
+import os
 		
 		
 KeyCodes = {string.ascii_uppercase[i]: Qt.Key_A + i for i in range(26)}
@@ -131,7 +132,7 @@ class ToolBar(QToolBar):
 		self.style = style
 		
 		self.tools = ToolList()
-		self.tools.load("data/tools.json")
+		self.tools.load(os.path.join(os.path.dirname(__file__), "../data/tools.json"))
 		
 		self.reset()
 		

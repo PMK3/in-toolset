@@ -1,3 +1,4 @@
+import os
 
 class Config:
 	types = {
@@ -26,8 +27,9 @@ class Config:
 						self.set(field.strip(), value.strip())
 					else:
 						raise ValueError("Syntax error at line %i" %index)
-	
-config = Config("data/config.txt")
+
+
+config = Config(os.path.join(os.path.dirname(__file__), "data/config.txt"))
 
 def get(field):
 	return config.get(field)

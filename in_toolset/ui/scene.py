@@ -1,7 +1,7 @@
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from common import Signal, SignalListener
+from in_toolset.common import Signal, SignalListener
 
 
 class SeparatorLine(QFrame):

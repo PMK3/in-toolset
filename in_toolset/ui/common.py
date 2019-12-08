@@ -1,7 +1,7 @@
 
-from model.ui import *
-from ui.view import *
-import config
+from in_toolset.model.ui import *
+from in_toolset.ui.view import *
+import in_toolset.config
 
 
 class ArrowBase(EditorShape):

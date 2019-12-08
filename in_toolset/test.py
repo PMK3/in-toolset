@@ -7,8 +7,8 @@ if version < (3, 6):
 	raise RuntimeError(msg)
 
 import unittest
-from model.base import *
-from model.ui import *
+from in_toolset.model.base import *
+from in_toolset.model.ui import *
 
 class TestUITransition(unittest.TestCase):
 

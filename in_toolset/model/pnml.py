@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QXmlStreamWriter
-from model.base import Place, Transition
-from model.ui import UIInternalArrow, UIChannelArrow
+from in_toolset.model.base import Place, Transition
+from in_toolset.model.ui import UIInternalArrow, UIChannelArrow
 
 class PNMLWriter:
 	def __init__(self, net, graph):

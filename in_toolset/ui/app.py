@@ -1,12 +1,13 @@
 
 from PyQt5.QtWidgets import *
-from model.project import Project
-from model.ui import UIPetriNet
-from ui.industry import IndustryScene
-from ui.enterprise import EnterpriseScene
-from ui.window import MainWindow
-from ui.view import Style
+from in_toolset.model.project import Project
+from in_toolset.model.ui import UIPetriNet
+from in_toolset.ui.industry import IndustryScene
+from in_toolset.ui.enterprise import EnterpriseScene
+from in_toolset.ui.window import MainWindow
+from in_toolset.ui.view import Style
 import sys
+import os
 
 
 class Application:
@@ -14,7 +15,7 @@ class Application:
 		self.app = QApplication(sys.argv)
 		
 		style = Style()
-		style.load("data/style.json")
+		style.load(os.path.join(os.path.dirname(__file__), "../data/style.json"))
 		
 		self.window = MainWindow(style)
 		self.window.newProject.connect(self.createProject)
