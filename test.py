@@ -8,6 +8,27 @@ if version < (3, 6):
 
 import unittest
 from model.base import *
+from model.ui import *
+
+class TestUITransition(unittest.TestCase):
+
+    def testSetType(self):
+        net = PetriNet()
+        net.transitions.add(UITransition())
+        net.transitions[0].setType("m1")
+        self.assertTrue(net.transitions[0].type == "m1")
+
+    def testSetMessage(self):
+        net = PetriNet()
+        net.transitions.add(UITransition())
+        net.transitions[0].setMessage("m1")
+        self.assertTrue(net.transitions[0].message == "m1")
+
+    def testSetChannel(self):
+        net = PetriNet()
+        net.transitions.add(UITransition())
+        net.transitions[0].setChannel("m1")
+        self.assertTrue(net.transitions[0].channel == "m1")
 
 
 class TestPlace(unittest.TestCase):
