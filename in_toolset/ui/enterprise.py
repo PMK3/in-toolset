@@ -49,16 +49,19 @@ class TransitionItem(NodeItem):
 
 
 class TemporaryPlace(NodeBase):
+	"""A placeholder place to be displayed on the canvas during placement of a place, to show the place of the place currently being placed."""
 	def __init__(self, scene, style):
 		super().__init__(scene, style.shapes["place"])
 
 
 class TemporaryTransition(NodeBase):
+	"""A placeholder transition to be displayed on the canvas during placement of a transition, to show the place of the transition currently being placed."""
 	def __init__(self, scene, style):
 		super().__init__(scene, style.shapes["transition"])
 
 
 class TemporaryArrow(ArrowBase):
+	"""A placeholder arrow to be displayed on the canvas during placement of a arrow (while it is being dragged), to show the orientation and place of the arrow currently being placed."""
 	def __init__(self, scene, source):
 		super().__init__(scene)
 

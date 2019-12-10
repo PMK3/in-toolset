@@ -11,7 +11,11 @@ import os
 
 
 class Application:
+	"""The main class, corresponding to one instance of the graphical toolkit.
+	It manages windows and allows for basic managing of projects."""
+
 	def start(self):
+		"""Start the graphical interface and the program itself"""
 		self.app = QApplication(sys.argv)
 		
 		style = Style()
@@ -35,6 +39,8 @@ class Application:
 		self.app.exec()
 		
 	def createProject(self, filename=None):
+		"""Create a new project or load an existing one"""
+
 		self.project = Project()
 		if filename:
 			try:

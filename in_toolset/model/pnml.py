@@ -3,11 +3,14 @@ from .base import Place, Transition
 from .ui import UIInternalArrow, UIChannelArrow
 
 class PNMLWriter:
+	"""Allows exporting a petrinet and a graph in PNML format"""
+
 	def __init__(self, net, graph):
 		self.net = net
 		self.graph = graph
 
 	def save(self, file):
+		"""Write petrinet corresponding to `self.net` and `self.graph` to `file` in PNML format"""
 		dictionary = {}
 		id = 0
 		stream = QXmlStreamWriter(file)
