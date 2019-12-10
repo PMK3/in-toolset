@@ -7,8 +7,67 @@ if version < (3, 6):
 	raise RuntimeError(msg)
 
 import unittest
-from in_toolset.model.base import *
-from in_toolset.model.ui import *
+from model.base import * #test.py zit al in in_toolset, dus hoeft er hier niet bij
+from model.ui import *
+from model.project import *
+
+class TestProject(unittest.TestCase):
+
+    def testSetFilename(self):
+        pro = Project()
+        pro.setFilename("peter")
+        self.assertTrue(pro.filename == "peter")
+
+    def testSetUnsaved(self):
+        pro = Project()
+        pro.setUnsaved(False)
+        self.assertFalse(pro.unsaved)
+
+    def testSave(self):
+        pro = Project()
+        pro.save("roy")
+        self.assertTrue(pro.filename == "roy")
+        self.assertFalse(pro.unsaved)
+
+    def testLoad(self):
+        pro = Project()
+        pro.save("roy")
+        pro = Project()
+        pro.setFilename("peter")
+        pro.load("roy")
+        self.assertTrue(pro.filename == "roy")
+        self.assertFalse(pro.unsaved)
+
+
+class TestProjectWriter(unittest.TestCase):
+
+    def testSavePlaces(self):
+        industry = UIPetriNet()
+        pro = ProjectWriter()
+        net = PetriNet()
+        places = pro.savePlaces(industry)
+        self.assertTrue(len(industry.net.places) == 0)
+        industry.net.places.add(Place())
+        places = pro.savePlaces(industry)
+        self.assertTrue(len(industry.net.places) == 1)
+
+    def testSaveTransitions(self):
+        industry = UIPetriNet()
+        pro = ProjectWriter()
+        net = PetriNet()
+        transitions = pro.saveTransitions(industry)
+        self.assertTrue(len(industry.net.transitions) == 0)
+        industry.net.transitions.add(Transition())
+        transitions = pro.savePlaces(industry)
+        self.assertTrue(len(industry.net.transitions) == 1)   
+
+
+#class TestProjectReader(unittest.TestCase):
+
+    #def testLoadPlaces(self):
+
+    #def testLoadTransitions(self):
+
 
 class TestUITransition(unittest.TestCase):
 

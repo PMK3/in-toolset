@@ -1,5 +1,5 @@
 
-from in_toolset.common import Signal, Property
+from common import Signal, Property #in_toolset hoeft niet erbij! gaat juist mis!
 import random
 
 
