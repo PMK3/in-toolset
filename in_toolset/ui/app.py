@@ -1,11 +1,11 @@
 
 from PyQt5.QtWidgets import *
-from in_toolset.model.project import Project
-from in_toolset.model.ui import UIPetriNet
-from in_toolset.ui.industry import IndustryScene
-from in_toolset.ui.enterprise import EnterpriseScene
-from in_toolset.ui.window import MainWindow
-from in_toolset.ui.view import Style
+from ..model.project import Project
+from ..model.ui import UIPetriNet
+from .industry import IndustryScene
+from .enterprise import EnterpriseScene
+from .window import MainWindow
+from .view import Style
 import sys
 import os
 

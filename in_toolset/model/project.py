@@ -1,8 +1,8 @@
 
-from common import Signal, Property
-from model.base import *
-from model.ui import *
-from model.pnml import * # 4x in_toolset weg
+from ..common import Signal, Property
+from .base import *
+from .ui import *
+from .pnml import *
 from PyQt5.QtCore import QFile
 from PyQt5.QtCore import QIODevice
 import json

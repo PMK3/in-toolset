@@ -7,9 +7,9 @@ if version < (3, 6):
 	raise RuntimeError(msg)
 
 import unittest
-from model.base import * #test.py zit al in in_toolset, dus hoeft er hier niet bij
-from model.ui import *
-from model.project import *
+from in_toolset.model.base import *
+from in_toolset.model.ui import *
+from in_toolset.model.project import *
 
 class TestProject(unittest.TestCase):
 

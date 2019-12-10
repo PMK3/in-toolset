@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
 	name="in-toolset",
-	version="0.0.11",
+	version="0.0.15",
 	author="Example Author",
 	author_email="author@example.com",
 	description="An editor and simulator for industry workflow nets (inets), a model of interorganisational workflows based on petrinets",

@@ -1,12 +1,12 @@
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from in_toolset.ui.view import EditorScene, EditorView
-from in_toolset.ui.tools import ToolBar
-from in_toolset.ui.menu import MenuBar
-from in_toolset.ui import settings
-from in_toolset.common import Signal
-from in_toolset.model.project import Project
+from .view import EditorScene, EditorView
+from .tools import ToolBar
+from .menu import MenuBar
+from . import settings
+from ..common import Signal
+from ..model.project import Project
 import os
 
 

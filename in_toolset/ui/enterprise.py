@@ -2,10 +2,10 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from in_toolset.model.ui import *
-from in_toolset.ui.common import *
-from in_toolset.ui.scene import *
-import in_toolset.config
+from ..model.ui import *
+from .common import *
+from .scene import *
+from .. import config as config
 import math
 
 

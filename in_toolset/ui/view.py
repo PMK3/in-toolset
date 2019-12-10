@@ -2,8 +2,8 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from in_toolset.common import *
-import in_toolset.config as config
+from ..common import *
+from .. import config as config
 import json
 import math
 

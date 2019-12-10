@@ -1,8 +1,8 @@
 
-from in_toolset.model.ui import *
-from in_toolset.ui.common import *
-from in_toolset.ui.scene import *
-from in_toolset.common import *
+from ..model.ui import *
+from .common import *
+from .scene import *
+from ..common import *
 import in_toolset.config
 import random
 

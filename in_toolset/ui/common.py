@@ -1,6 +1,6 @@
 
-from in_toolset.model.ui import *
-from in_toolset.ui.view import *
+from ..model.ui import *
+from .view import *
 import in_toolset.config
 
 

@@ -8,7 +8,7 @@ def main():
 		msg = "Your Python version is old (%s). Please upgrade to 3.6 or higher." %version
 		raise RuntimeError(msg)
 
-	from in_toolset.ui.app import Application
+	from .ui.app import Application
 
 	app = Application()
 	app.start()
