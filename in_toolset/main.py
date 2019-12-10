@@ -2,6 +2,7 @@
 import sys
 
 def main():
+	"""Start the graphical editor with a new, blank, industry net."""
 	version = sys.version_info
 	if version < (3, 6):
 		version = "%i.%i.%i" %(version.major, version.minor, version.micro)

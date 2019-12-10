@@ -4,6 +4,7 @@ import random
 
 
 class Object:
+	"""A basic object class, objects can be marked as deleted and have :py:class:`~in_toolset.common.Signal`-typed members to signify deletion or changes"""
 	active = Property("statusChanged", True)
 
 	def __init__(self):
@@ -24,15 +25,19 @@ class Object:
 			self.deleted.emit()
 
 	def delete(self):
+		"""Mark the object as deleted"""
 		self.active = False
 
 	def restore(self):
+		"""Mark the object as active"""
 		self.active = True
 
 
 class ObjectList:
+	"""A list of objects of the :py:class:`~in_toolset.model.base.Object` class.
+	When iterating over an ObjectList, deleted or inactive Objects are filtered out."""
 	def __init__(self):
-		self.changed = Signal()
+		self.changed = Signal() 
 		self.added = Signal()
 		self.removed = Signal()
 
@@ -48,12 +53,14 @@ class ObjectList:
 		return self.objects[index]
 
 	def __iter__(self):
+		"""Iterate over all active objects in the list"""
 		return (obj for obj in self.objects if obj.active)
 
 	def index(self, index):
 		return self.objects.index(index)
 
 	def add(self, obj):
+		"""Add an object to the list"""
 		obj.changed.connect(self.changed)
 		obj.statusChanged.connect(self.updateStatus, obj)
 		self.objects.append(obj)
@@ -62,6 +69,7 @@ class ObjectList:
 			self.changed.emit()
 
 	def remove(self, obj):
+		"""Remove an item from the list"""
 		obj.changed.disconnect(self.changed)
 		obj.statusChanged.disconnect(self.updateStatus, obj)
 		self.objects.remove(obj)
@@ -77,23 +85,30 @@ class ObjectList:
 
 
 class Node(Object):
+	"""A special child class of :py:class:`~in_toolset.model.base.Object`.
+	It introduces directional connections between Nodes, which allows for the creation of graphs and the like"""
 	def __init__(self):
 		super().__init__()
 		self.preset = ObjectList()
 		self.postset = ObjectList()
 
 	def connect(self, target):
+		"""Create an outgoing connection from `self` to `target`"""
 		self.postset.add(target)
 		target.preset.add(self)
 		self.changed.emit()
 
 	def disconnect(self, target):
+		"""Remove an outgoing connection from `self` to `target` if present"""
 		self.postset.remove(target)
 		target.preset.remove(self)
 		self.changed.emit()
 
 
 class Place(Node):
+	"""A representation of a place as in petri nets, implemented as a child class of :py:class:`~in_toolset.model.base.Node`.
+	Can contain a positive number of uncoloured tokens,
+	and can be connected to incoming or outgoing transitions transitions."""
 	tokens = Property("tokensChanged", 0)
 
 	def __init__(self):
@@ -101,21 +116,31 @@ class Place(Node):
 		self.tokensChanged = Signal()
 		self.tokensChanged.connect(self.changed)
 
-	def setTokens(self, tokens): self.tokens = tokens
+	def setTokens(self, tokens):
+		"""Set the number of tokens in `self` to `tokens`"""
+		self.tokens = tokens
 
-	def take(self): self.tokens -= 1
-	def give(self): self.tokens += 1
+	def take(self):
+		"""Decrease the number of tokens by 1"""
+		self.tokens -= 1
+
+	def give(self):
+		"""Increase the number of tokens by 1"""
+		self.tokens += 1
 
 
 class Transition(Node):
-	enabled = Property("enabledChanged", True)
+	"""A representation of a transition as in petri nets, implemented as a child class of :py:class:`~in_toolset.model.base.Node`.
+	Can be connected to an arbitrary number of places."""
+	
+	enabled = Property("enabledChanged", True) #:The :py:class:`~in_toolset.common.Property` `enabled` shows whether the transition is currently enabled.
 
 	def __init__(self):
 		super().__init__()
 		self.enabledChanged = Signal()
 		self.enabledChanged.connect(self.changed)
 
-		self.triggered = Signal()
+		self.triggered = Signal() #:The :py:class:`~in_toolset.common.Signal` `triggered` emits when the transition is triggered
 
 		self.preset.changed.connect(self.updateEnabled)
 		self.postset.changed.connect(self.updateEnabled)
@@ -130,6 +155,7 @@ class Transition(Node):
 		self.enabled = self.checkEnabled()
 
 	def trigger(self):
+		"""Trigger `self`, updating the amount of tokens contained in all connected places"""
 		for place in self.preset:
 			place.take()
 		for place in self.postset:
@@ -138,7 +164,10 @@ class Transition(Node):
 
 
 class PetriNet(Object):
-	deadlock = Property("deadlockChanged", True)
+	"""A representation of a petrinet, containing places and transitions, implemented as a child class of :py:class:`~in_toolset.model.base.Object`.
+	Places and transitions are represented as objects of type :py:class:`~in_toolset.model.base.Place` and :py:class:`~in_toolset.model.base.Transition` , respectively"""
+	
+	deadlock = Property("deadlockChanged", True) #:The :py:class:`~in_toolset.common.Property` `deadlock` shows whether the petrinet is currently in deadlock. A petrinet is in deadlock if there are no enabled transitions.
 
 	def __init__(self):
 		super().__init__()
@@ -165,9 +194,13 @@ class PetriNet(Object):
 		self.deadlock = len(self.enabledTransitions()) == 0
 
 	def triggerRandom(self):
+		"""Trigger a random transition, if possible"""
 		random.choice(self.enabledTransitions()).trigger()
 
 	def setInitialMarking(self):
+		"""(Re)Set all places in `self` to the default initial marking.
+			This default initial marking is defined such that all places without any incoming transitions will contain one token,
+			and the others will be empty."""
 		for place in self.places:
 			if len(place.preset) == 0:
 				place.tokens = 1
@@ -176,6 +209,8 @@ class PetriNet(Object):
 
 
 	def combine(self, other):
+		"""Merge `other` and `self` into a new PetriNet and return it.
+		This allows for bisimulation using LTSmin"""
 		newSource = Place() # The new global source place.
 		leftSource = Place() # The place on the path to self.
 		rightSource = Place() # The place on the path to other.
