@@ -8,7 +8,6 @@ copyright = '2019, Daniel Otten, Jakob Wuhrer, Julia Bolt, Ricardo Schaaf, and Y
 author = 'Daniel Otten, Jakob Wuhrer, Julia Bolt, Ricardo Schaaf, and Yannik Marchand'
 release = '0.1.0'
 
-master_doc = 'contents'
 extensions = ['sphinx.ext.autodoc']
 exclude_patterns = []
 

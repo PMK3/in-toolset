@@ -1,3 +1,6 @@
+"""The config module allows for configuration of the behaviour of in-toolset,
+using a text file with key-value items as storage for the settings"""
+
 import os
 
 class Config:
