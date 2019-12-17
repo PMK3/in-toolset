@@ -1,9 +1,9 @@
 
-from model.ui import *
-from ui.common import *
-from ui.scene import *
-from common import *
-import config
+from ..model.ui import *
+from .common import *
+from .scene import *
+from ..common import *
+import in_toolset.config
 import random
 
 

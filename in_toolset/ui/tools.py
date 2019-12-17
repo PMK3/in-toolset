@@ -2,9 +2,10 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from common import Signal
+from ..common import Signal
 import string
 import json
+import os
 		
 		
 KeyCodes = {string.ascii_uppercase[i]: Qt.Key_A + i for i in range(26)}
@@ -122,6 +123,7 @@ class ToolBarHeader(QWidget):
 
 
 class ToolBar(QToolBar):
+	"""The menu bar that can be used to select the active tools for left and right mouse buttons"""
 	def __init__(self, style):
 		super().__init__()
 		self.selectionChanged = Signal()
@@ -131,11 +133,12 @@ class ToolBar(QToolBar):
 		self.style = style
 		
 		self.tools = ToolList()
-		self.tools.load("data/tools.json")
+		self.tools.load(os.path.join(os.path.dirname(__file__), "../data/tools.json"))
 		
 		self.reset()
 		
 	def reset(self):
+		"""Empty the toolbar"""
 		self.clear()
 		
 		self.groups = {}
@@ -143,6 +146,7 @@ class ToolBar(QToolBar):
 		self.shortcuts = {}
 		
 	def addGroup(self, name):
+		"""Make a group of tools availabe, so that their corresponding tool buttons may be visible in the toolbar."""
 		group = self.tools.groups[name]
 		
 		header = ToolBarHeader(self.style, group)
@@ -169,9 +173,12 @@ class ToolBar(QToolBar):
 			self.selectTool(self.shortcuts[key])
 			
 	def selectTool(self, name):
+		"""Select and enable the tool with name `name`"""
 		self.buttons[name].setChecked(True)
 
 	def currentTool(self, group):
+		"""Return the currently active tool for a specific group, if there is an active too in said group.
+		Otherwise, return -1."""
 		button = self.groups[group].checkedButton()
 		if button:
 			return button.name

@@ -1,13 +1,14 @@
 
 from .base import Object, ObjectList, PetriNet, Transition, Place
-from common import Signal, Property
+from ..common import Signal, Property
 import math
 
 
 class TransitionType:
-	INTERNAL = 0
-	INPUT = 1
-	OUTPUT = 2
+	"""An enum for the different possible transition types"""
+	INTERNAL = 0 #: An internal transition "stays" within a single enterprise net and is not connected to other nets
+	INPUT = 1    #: An input transition can receive messages from another enterprise if connected on the industry level
+	OUTPUT = 2   #: An output transition can send messages to another enterprise if enabled and connected on the industry level
 
 class UITransition(Transition):
 	type = Property("typeChanged", TransitionType.INTERNAL)

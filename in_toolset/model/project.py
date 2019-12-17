@@ -1,14 +1,15 @@
 
-from common import Signal, Property
-from model.base import *
-from model.ui import *
-from model.pnml import *
+from ..common import Signal, Property
+from .base import *
+from .ui import *
+from .pnml import *
 from PyQt5.QtCore import QFile
 from PyQt5.QtCore import QIODevice
 import json
 
 
 class ProjectReader:
+	"""Loads a project file (in our own json-based file format) corresponding to an inet into the program."""
 	def load(self, data):
 		self.loadPlaces(data)
 		self.loadTransitions(data)
@@ -105,6 +106,7 @@ class ProjectReader:
 
 
 class ProjectWriter:
+	"""Writes a project to a project file (in our own json-based file format)."""
 	def save(self, industry):
 		data = {}
 		data["places"] = self.savePlaces(industry)
