@@ -1,3 +1,4 @@
+"""This library adds the ability to store data necessary for a visual representation of an industry net."""
 
 from .base import Object, ObjectList, PetriNet, Transition, Place
 from ..common import Signal, Property
