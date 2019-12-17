@@ -2,8 +2,8 @@
 <pnml>
     <net id="0" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
         <page id="1">
-            <place id="2" name="p" initialMarking="5"/>
-            <transition id="3" name="t"/>
+            <transition id="2" name="t1"/>
+            <place id="3" name="p2"/>
             <arc id="4" source="2" target="3"/>
         </page>
     </net>

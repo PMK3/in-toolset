@@ -1,0 +1,2 @@
+~/Downloads/LTSmin\ v3.0.2/bin/pnml2lts-seq --max=100 examples/test.pnml examples/test.gcf
+

@@ -33,6 +33,8 @@ class PNMLWriter:
 				dictionary[node.obj] = id
 				id += 1
 				stream.writeAttribute("name", str(node.label.text))
+				if isinstance(node.obj, Place):
+					stream.writeAttribute("initialMarking", str(node.obj.tokens))
 				stream.writeEndElement()
 			for arrow in graph.arrows:
 				stream.writeStartElement("arc")
