@@ -48,7 +48,7 @@ class PNMLWriter:
 				stream.writeEndElement()
 		for arrow in self.graph.arrows:
 			stream.writeStartElement("place")
-			shannel = str(id)
+			channel = str(id)
 			stream.writeAttribute("id", channel)
 			id += 1
 			stream.writeAttribute("name", str(arrow.source.transition.message))
