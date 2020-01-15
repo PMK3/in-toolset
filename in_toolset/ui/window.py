@@ -31,32 +31,48 @@ class EnterpriseItem(QListWidgetItem):
 		self.setText(name)
 
 
-class NetListWidget(QListWidget):
+class NetListWidget(QWidget):
 	def __init__(self):
 		super().__init__()
 		self.enterpriseSelected = Signal()
+		layout = QVBoxLayout()
+
+		self.editIndustry = QPushButton("Go to industry net")
+		self.editIndustry.clicked.connect(self.handleEditIndustry)
+		layout.addWidget(self.editIndustry)
+
+		self.listWidget = QListWidget()
+		layout.addWidget(self.listWidget)
+
+		self.setLayout(layout)
+		self.show()
 
 	def setProject(self, project):
-		self.clear()
+		self.listWidget.clear()
 
 		project.industry.graph.nodes.added.connect(self.addEnterprise)
 		project.industry.graph.nodes.removed.connect(self.removeEnterprise)
 
-		self.addItem(IndustryItem(project.industry))
+		self.listWidget.addItem(IndustryItem(project.industry))
 		for enterprise in project.industry.graph.nodes:
 			self.addEnterprise(enterprise)
 
-		self.itemActivated.connect(self.handleItemActivated)
+		self.listWidget.itemActivated.connect(self.handleItemActivated)
 
 	def addEnterprise(self, enterprise):
 		item = EnterpriseItem(enterprise)
-		self.addItem(item)
+		self.listWidget.addItem(item)
 
 	def removeEnterprise(self, enterprise):
-		for i in range(self.count()):
-			if self.item(i).obj == enterprise:
-				self.takeItem(i)
+		for i in range(self.listWidget.count()):
+			if self.listWidget.item(i).obj == enterprise:
+				self.listWidget.takeItem(i)
 				return
+
+	def handleEditIndustry(self):
+		industry = self.listWidget.item(0)
+		self.listWidget.setCurrentItem(industry)
+		self.enterpriseSelected.emit(industry.obj)
 
 	def handleItemActivated(self, item):
 		self.enterpriseSelected.emit(item.obj)
@@ -88,7 +104,7 @@ class MainWindow(QMainWindow):
 
 		self.nets = NetListWidget()
 		self.nets.enterpriseSelected.connect(self.enterpriseSelected)
-		netsDock = QDockWidget("Enterprises")
+		netsDock = QDockWidget("Nets")
 		netsDock.setFixedWidth(200)
 		netsDock.setFeatures(QDockWidget.DockWidgetMovable)
 		netsDock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
