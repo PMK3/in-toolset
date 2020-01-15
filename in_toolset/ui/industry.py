@@ -196,7 +196,6 @@ class IndustryController:
 
 		self.net = industry.net
 		self.graph = industry.graph
-		self.enterprises = 0;
 
 	def startPlacement(self, pos):
 		type = self.toolbar.currentTool("industry")
@@ -221,8 +220,14 @@ class IndustryController:
 			x, y = pos.x(), pos.y()
 
 			if not item.invalid:
-				self.enterprises += 1;
-				name = "e" + str(self.enterprises)
+				maxnum = 0
+				for node in self.graph.nodes:
+					prefix = node.label.text[:1]
+					postfix = node.label.text[1:]
+					if prefix == "e" and postfix.isdigit():
+						maxnum = max(int(postfix), maxnum)
+
+				name = "e" + str(maxnum+1)
 
 				enterprise = UIPetriNet()
 				node = UINode(enterprise)
